@@ -1,3 +1,0 @@
-Command Line: /nfs/tools/synopsys/verdi/U-2023.03/platform/LINUXAMD64/bin/vdCov -covdir /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/sim/cov/coverage.vdb
-uname(Linux open01.boscszcluster.com 6.8.0-124-generic #124~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue May 26 21:05:19 UTC  x86_64)
-au time 990.074563 9.178385 11.520598 delta 0 0 total 0 0

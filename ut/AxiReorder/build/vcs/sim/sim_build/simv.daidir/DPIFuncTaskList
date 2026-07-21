@@ -1,3 +1,0 @@
-export_DPI simulation_initializeTrace tb_top
-export_DPI simulation_enableTrace tb_top
-export_DPI simulation_disableTrace tb_top

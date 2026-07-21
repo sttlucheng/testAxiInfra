@@ -1,0 +1,19 @@
+## 编译和工具生成目录
+/.xmake/
+/ut/AxiReorder/.bsp/
+/ut/AxiReorder/.metals/
+/ut/AxiReorder/.vscode/
+/ut/AxiReorder/.xmake/
+/ut/AxiReorder/build/
+/ut/AxiReorder/vdCovLog/
+/ut/AxiReorder/verdiLog/
+/ut/AxiReorder/ChiselTemplate
+
+# 工具生成文件
+/ut/AxiReorder/.fsm.sch.verilog.xml
+/ut/AxiReorder/novas.conf
+/ut/AxiReorder/novas.rc
+/ut/AxiReorder/ucli.key
+
+# 编辑器临时文件
+*.swp
