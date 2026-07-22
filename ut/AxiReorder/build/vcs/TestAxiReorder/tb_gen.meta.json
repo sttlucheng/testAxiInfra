@@ -1,0 +1,753 @@
+{
+    "buildTime": "2026-07-22 12:14:03",
+    "cmdLine": "/nfs/home/yanglucheng/tools/verilua/v3.4.0/tools/testbench_gen --top AxiReorder --tbtop tb_top --nodpi --verbose --out-dir /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder --lua-meta-file build/meta.lua +incdir+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification +incdir+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert +incdir+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assume +incdir+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/cover --single-unit -I /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification -I /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert -I /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assume -I /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/cover /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiAWEtrBundle.sv /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_UInt2.sv /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiWEtrBundle.sv /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/FastQueue_1.sv /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/FastQueue.sv /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiWEtrBundle_1.sv /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/AxiReorder.sv /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_UInt2_1.sv /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-FastQueue_1-Verification.sv /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-FastQueue-Verification.sv /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-AxiReorder-Verification.sv /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/layers-FastQueue-Verification-Assert.sv /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/layers-AxiReorder-Verification-Assert.sv /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/AxiReorder_Verification_Assert.sv /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/FastQueue_Verification_Assert.sv /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/layers-FastQueue_1-Verification-Assert.sv /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/FastQueue_1_Verification_Assert.sv /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assume/layers-AxiReorder-Verification-Assume.sv /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/cover/layers-AxiReorder-Verification-Cover.sv ",
+    "filelist": [
+        "/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiAWEtrBundle.sv",
+        "/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_UInt2.sv",
+        "/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiWEtrBundle.sv",
+        "/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/FastQueue_1.sv",
+        "/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/FastQueue.sv",
+        "/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiWEtrBundle_1.sv",
+        "/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/AxiReorder.sv",
+        "/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_UInt2_1.sv",
+        "/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-FastQueue_1-Verification.sv",
+        "/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-FastQueue-Verification.sv",
+        "/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-AxiReorder-Verification.sv",
+        "/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/layers-FastQueue-Verification-Assert.sv",
+        "/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/layers-AxiReorder-Verification-Assert.sv",
+        "/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/AxiReorder_Verification_Assert.sv",
+        "/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/FastQueue_Verification_Assert.sv",
+        "/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/layers-FastQueue_1-Verification-Assert.sv",
+        "/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/FastQueue_1_Verification_Assert.sv",
+        "/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assume/layers-AxiReorder-Verification-Assume.sv",
+        "/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/cover/layers-AxiReorder-Verification-Cover.sv"
+    ],
+    "othersFileMTime": 1784689980,
+    "outputFiles": [
+        "/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/tb_top.sv",
+        "/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/others.sv"
+    ],
+    "portInfos": [
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 0,
+            "isNet": false,
+            "name": "clock",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 1,
+            "isNet": false,
+            "name": "reset",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 2,
+            "isNet": false,
+            "name": "io_mst_aw_ready",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 3,
+            "isNet": false,
+            "name": "io_mst_aw_valid",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 4,
+            "isNet": false,
+            "name": "io_mst_aw_bits_id",
+            "type": "wire   [11:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 5,
+            "isNet": false,
+            "name": "io_mst_aw_bits_addr",
+            "type": "wire   [47:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 6,
+            "isNet": false,
+            "name": "io_mst_aw_bits_len",
+            "type": "wire   [7:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 7,
+            "isNet": false,
+            "name": "io_mst_aw_bits_size",
+            "type": "wire   [2:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 8,
+            "isNet": false,
+            "name": "io_mst_aw_bits_burst",
+            "type": "wire   [1:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 9,
+            "isNet": false,
+            "name": "io_mst_aw_bits_lock",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 10,
+            "isNet": false,
+            "name": "io_mst_aw_bits_cache",
+            "type": "wire   [3:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 11,
+            "isNet": false,
+            "name": "io_mst_aw_bits_prot",
+            "type": "wire   [2:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 12,
+            "isNet": false,
+            "name": "io_mst_aw_bits_qos",
+            "type": "wire   [3:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 13,
+            "isNet": false,
+            "name": "io_mst_aw_bits_region",
+            "type": "wire   [3:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 14,
+            "isNet": false,
+            "name": "io_mst_ar_ready",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 15,
+            "isNet": false,
+            "name": "io_mst_ar_valid",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 16,
+            "isNet": false,
+            "name": "io_mst_ar_bits_id",
+            "type": "wire   [11:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 17,
+            "isNet": false,
+            "name": "io_mst_ar_bits_addr",
+            "type": "wire   [47:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 18,
+            "isNet": false,
+            "name": "io_mst_ar_bits_len",
+            "type": "wire   [7:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 19,
+            "isNet": false,
+            "name": "io_mst_ar_bits_size",
+            "type": "wire   [2:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 20,
+            "isNet": false,
+            "name": "io_mst_ar_bits_burst",
+            "type": "wire   [1:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 21,
+            "isNet": false,
+            "name": "io_mst_ar_bits_lock",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 22,
+            "isNet": false,
+            "name": "io_mst_ar_bits_cache",
+            "type": "wire   [3:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 23,
+            "isNet": false,
+            "name": "io_mst_ar_bits_prot",
+            "type": "wire   [2:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 24,
+            "isNet": false,
+            "name": "io_mst_ar_bits_qos",
+            "type": "wire   [3:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 25,
+            "isNet": false,
+            "name": "io_mst_ar_bits_region",
+            "type": "wire   [3:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 26,
+            "isNet": false,
+            "name": "io_mst_w_ready",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 27,
+            "isNet": false,
+            "name": "io_mst_w_valid",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 28,
+            "isNet": false,
+            "name": "io_mst_w_bits_data",
+            "type": "wire   [255:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 29,
+            "isNet": false,
+            "name": "io_mst_w_bits_strb",
+            "type": "wire   [31:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 30,
+            "isNet": false,
+            "name": "io_mst_w_bits_last",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 31,
+            "isNet": false,
+            "name": "io_mst_b_ready",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 32,
+            "isNet": false,
+            "name": "io_mst_b_valid",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 33,
+            "isNet": false,
+            "name": "io_mst_b_bits_id",
+            "type": "wire  [11:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 34,
+            "isNet": false,
+            "name": "io_mst_b_bits_resp",
+            "type": "wire  [1:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 35,
+            "isNet": false,
+            "name": "io_mst_r_ready",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 36,
+            "isNet": false,
+            "name": "io_mst_r_valid",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 37,
+            "isNet": false,
+            "name": "io_mst_r_bits_id",
+            "type": "wire  [11:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 38,
+            "isNet": false,
+            "name": "io_mst_r_bits_data",
+            "type": "wire  [255:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 39,
+            "isNet": false,
+            "name": "io_mst_r_bits_resp",
+            "type": "wire  [1:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 40,
+            "isNet": false,
+            "name": "io_mst_r_bits_last",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 41,
+            "isNet": false,
+            "name": "io_slv_aw_ready",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 42,
+            "isNet": false,
+            "name": "io_slv_aw_valid",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 43,
+            "isNet": false,
+            "name": "io_slv_aw_bits_id",
+            "type": "wire  [11:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 44,
+            "isNet": false,
+            "name": "io_slv_aw_bits_addr",
+            "type": "wire  [47:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 45,
+            "isNet": false,
+            "name": "io_slv_aw_bits_len",
+            "type": "wire  [7:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 46,
+            "isNet": false,
+            "name": "io_slv_aw_bits_size",
+            "type": "wire  [2:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 47,
+            "isNet": false,
+            "name": "io_slv_aw_bits_burst",
+            "type": "wire  [1:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 48,
+            "isNet": false,
+            "name": "io_slv_aw_bits_lock",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 49,
+            "isNet": false,
+            "name": "io_slv_aw_bits_cache",
+            "type": "wire  [3:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 50,
+            "isNet": false,
+            "name": "io_slv_aw_bits_prot",
+            "type": "wire  [2:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 51,
+            "isNet": false,
+            "name": "io_slv_aw_bits_qos",
+            "type": "wire  [3:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 52,
+            "isNet": false,
+            "name": "io_slv_aw_bits_region",
+            "type": "wire  [3:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 53,
+            "isNet": false,
+            "name": "io_slv_ar_ready",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 54,
+            "isNet": false,
+            "name": "io_slv_ar_valid",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 55,
+            "isNet": false,
+            "name": "io_slv_ar_bits_id",
+            "type": "wire  [11:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 56,
+            "isNet": false,
+            "name": "io_slv_ar_bits_addr",
+            "type": "wire  [47:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 57,
+            "isNet": false,
+            "name": "io_slv_ar_bits_len",
+            "type": "wire  [7:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 58,
+            "isNet": false,
+            "name": "io_slv_ar_bits_size",
+            "type": "wire  [2:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 59,
+            "isNet": false,
+            "name": "io_slv_ar_bits_burst",
+            "type": "wire  [1:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 60,
+            "isNet": false,
+            "name": "io_slv_ar_bits_lock",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 61,
+            "isNet": false,
+            "name": "io_slv_ar_bits_cache",
+            "type": "wire  [3:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 62,
+            "isNet": false,
+            "name": "io_slv_ar_bits_prot",
+            "type": "wire  [2:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 63,
+            "isNet": false,
+            "name": "io_slv_ar_bits_qos",
+            "type": "wire  [3:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 64,
+            "isNet": false,
+            "name": "io_slv_ar_bits_region",
+            "type": "wire  [3:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 65,
+            "isNet": false,
+            "name": "io_slv_w_ready",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 66,
+            "isNet": false,
+            "name": "io_slv_w_valid",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 67,
+            "isNet": false,
+            "name": "io_slv_w_bits_data",
+            "type": "wire  [255:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 68,
+            "isNet": false,
+            "name": "io_slv_w_bits_strb",
+            "type": "wire  [31:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 69,
+            "isNet": false,
+            "name": "io_slv_w_bits_last",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 70,
+            "isNet": false,
+            "name": "io_slv_b_ready",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 71,
+            "isNet": false,
+            "name": "io_slv_b_valid",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 72,
+            "isNet": false,
+            "name": "io_slv_b_bits_id",
+            "type": "wire   [11:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 73,
+            "isNet": false,
+            "name": "io_slv_b_bits_resp",
+            "type": "wire   [1:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "output",
+            "id": 74,
+            "isNet": false,
+            "name": "io_slv_r_ready",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 75,
+            "isNet": false,
+            "name": "io_slv_r_valid",
+            "type": "wire"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 76,
+            "isNet": false,
+            "name": "io_slv_r_bits_id",
+            "type": "wire   [11:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 77,
+            "isNet": false,
+            "name": "io_slv_r_bits_data",
+            "type": "wire   [255:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 78,
+            "isNet": false,
+            "name": "io_slv_r_bits_resp",
+            "type": "wire   [1:0]"
+        },
+        {
+            "dimSizes": [],
+            "dimensions": [],
+            "dir": "input",
+            "id": 79,
+            "isNet": false,
+            "name": "io_slv_r_bits_last",
+            "type": "wire"
+        }
+    ],
+    "portParamStmts": []
+}

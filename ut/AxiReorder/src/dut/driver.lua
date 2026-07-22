@@ -249,45 +249,45 @@ local axi_memory = AXI4Memory(
         -- 打开后可以模拟下游等待和响应延迟，验证 DUT 的握手保持与背压处理。
 
         -- random_delay 是整个 AXI4Memory 共用的随机模式开关，也会影响已经启用延迟的 AR/AW/W/B 通道。
-        --random_delay = false,
+        random_delay = true,
 
         -- AR：读地址接收延迟。开启后不会始终立即拉高 ARREADY。
-        enable_ar_delay = false,
-        -- ar_delay_min = 1,
-        -- ar_delay_range = 5,
+        enable_ar_delay = true,
+        ar_delay_min = 1,
+        ar_delay_range = 5,
 
         -- AW：写地址接收延迟。开启后可推迟 AWREADY 和写地址握手。
-        enable_aw_delay = false,
-        -- aw_delay_min = 1,
-        -- aw_delay_range = 5,
+        enable_aw_delay = true,
+        aw_delay_min = 1,
+        aw_delay_range = 5,
 
         -- W：写数据接收延迟。开启后可推迟 WREADY，向 DUT 施加写数据背压。
-        enable_w_delay = false,
-        -- w_delay_min = 1,
-        -- w_delay_range = 5,
+        enable_w_delay = true,
+        w_delay_min = 1,
+        w_delay_range = 5,
 
         -- R：读响应发送延迟。开启后可推迟 RVALID/各拍读数据返回；
         -- 后续 read-reorder 测试会重点使用该开关和 shuffle_r 等配置。
-        enable_r_delay = false,
+        enable_r_delay = true,
 
         -- enable_r_delay未开启时，r_delay_min/r_delay_range 不生效。
         -- 控制延迟是固定值r_delay_min还是随机值(r_delay_min,r_delay_min + r_delay_range)。
         -- R 响应的最小延迟周期数。
-        --r_delay_min = 1,
+        r_delay_min = 1,
         -- R 响应的随机延迟范围。实际延迟周期数 = r_delay_min + [0, r_delay_range]。
-        --r_delay_range = 5,
+        r_delay_range = 5,
 
         -- 控制“有多笔待读事务时，先选择哪一笔返回”。shuffle_r = true使得有乱序返回的可能。
---        shuffle_r = false
+        shuffle_r = true,
 
         -- 控制“有多笔待读事务时，先选择哪一笔返回”。shuffle_b = true使得有乱序返回的可能。
---        shuffle_b = false
+        shuffle_b = true,
 
 
         -- B：写响应发送延迟。开启后可推迟 BVALID，模拟下游写响应延迟。
-        enable_b_delay = false,
-        -- b_delay_min = 1,
-        -- b_delay_range = 5,
+        enable_b_delay = true,
+        b_delay_min = 1,
+        b_delay_range = 5,
     }
 )
 

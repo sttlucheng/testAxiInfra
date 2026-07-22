@@ -1,0 +1,9 @@
+#!/bin/sh -h 
+PYTHONHOME=/nfs/tools/synopsys/vcs/U-2023.03/etc/search/pyh
+export PYTHONHOME
+PYTHONPATH=/nfs/tools/synopsys/vcs/U-2023.03/linux64/lib/pylib27
+export PYTHONPATH
+LD_LIBRARY_PATH=/nfs/tools/synopsys/vcs/U-2023.03/linux64/lib:/nfs/tools/synopsys/vcs/U-2023.03/linux64/lib/pylib27
+export LD_LIBRARY_PATH
+/nfs/tools/synopsys/vcs/U-2023.03/linux64/bin/vcsfind_create_index.exe  -z  "/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/sim_build/simv.daidir/debug_dump/fsearch/./idents_HZToGR.xml.gz" "/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/sim_build/simv.daidir/debug_dump/fsearch/./idents_tapi.xml.gz" -o "/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/sim_build/simv.daidir/debug_dump/fsearch/fsearch.db_tmp"
+\mv "/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/sim_build/simv.daidir/debug_dump/fsearch/fsearch.db_tmp" "/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/sim_build/simv.daidir/debug_dump/fsearch/fsearch.db"

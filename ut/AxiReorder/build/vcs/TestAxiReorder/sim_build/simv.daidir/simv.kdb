@@ -1,0 +1,25 @@
+rc file Version 1.0
+
+[Design]
+COMPILE_PATH=/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder
+VCS_HOME=/nfs/tools/synopsys/vcs/U-2023.03
+VERDI_HOME=/nfs/tools/synopsys/verdi/U-2023.03
+SystemC=FALSE
+UUM=FALSE
+KDB=TRUE
+USE_NOVAS_HOME=FALSE
+COSIM=FALSE
+TOP=tb_top 
+OPTION=-ssv -ssy 
+ELAB_OPTION=-ssv -ssy 
+ELAB=TRUE
+SIMV_WRAPPER=FALSE
+[vcs]
+RUN_ELABCOM=unset TURBO_LOG_DIR ;\rm -rf /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/sim_build/simv.daidir/elabcomLog ;/nfs/tools/synopsys/vcs/U-2023.03/linux64/bin/elabcom -logdir /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/sim_build/simv.daidir/elabcomLog  -simvdaidir /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/sim_build/simv.daidir  -lib /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/sim_build/simv.daidir/work  -saveLevel  -elab /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/sim_build/simv.daidir/kdb -simflow -simdir /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/sim_build/simv.daidir/kdb_libs -topfile /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/sim_build/simv.daidir/.elabcomTopFile -ssv -ssy  -Lf work +disable_message+C00380+C00381 +disable_message+C00388+C00389  >& /dev/null  && echo Success >& /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/sim_build/simv.daidir/.elabcomReport || echo Fail >& /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/sim_build/simv.daidir/.elabcomReport; \rm -rf /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/sim_build/simv.daidir/work.lib++ /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/sim_build/simv.daidir/kdb_libs/ 
+
+[Value]
+WREALX=ffff534e50535f58
+WREALZ=ffff534e50535f5a
+
+[CompInfo]
+FLOW_OPTS=-kdb -ssv -ssy 

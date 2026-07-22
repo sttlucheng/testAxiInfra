@@ -17,14 +17,24 @@ local function task_reset()
     local expected = string.rep("5a", 32)
 
     local write_ret = driver.write_single(addr, expected)
-    assert(write_ret == "Success",
-        "post-reset write failed: " .. tostring(write_ret))
+    assert(
+        write_ret == "Success",
+        "\n\n---ERROR---\n\npost-reset write failed: " ..
+            tostring(write_ret) ..
+            "\n\n-----------\n\n"
+    )
 
     local read_ret, actual = driver.read_single(addr)
-    assert(read_ret == "Success",
-        "post-reset read failed: " .. tostring(read_ret))
-    assert(actual:lower() == expected,
-        "post-reset read data mismatch")
+    assert(
+        read_ret == "Success",
+        "\n\n---ERROR---\n\npost-reset read failed: " ..
+            tostring(read_ret) ..
+            "\n\n-----------\n\n"
+    )
+    assert(
+        actual:lower() == expected,
+        "\n\n---ERROR---\n\npost-reset read data mismatch\n\n-----------\n\n"
+    )
 
     print("Post-reset AXI access passed")
 end

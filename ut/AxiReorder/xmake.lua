@@ -1,3 +1,4 @@
+--[====[
 ---@diagnostic disable: undefined-global, undefined-field
 
 -- ============================================================================
@@ -26,11 +27,10 @@ local tc_dir = path.join(prj_dir, "test_cases")
 -- AXI Master/Slave 公共组件所在目录。
 -- test_zhujiang_utils 是一个指向外部组件仓库的软链接。
 local axi_component_dir = path.join(
-    src_dir,
-    "components",
-    "AXI",
-    "test_zhujiang_utils"
+    src_dir, "components", "AXI", "test_zhujiang_utils"
 )
+local common_dir = path.join(src_dir, "common")
+local dut_dir = path.join(src_dir, "dut")
 
 local sim = os.getenv("SIM") or "vcs"
 
@@ -43,6 +43,8 @@ target("rtl", function()
     set_default(false)
     on_run(function()
         local chisel_rtl_dir = path.join(chisel_dir, "build", "rtl")
+        os.tryrm(chisel_rtl_dir)
+        os.mkdir(chisel_rtl_dir)
         os.cd(chisel_dir)
         os.execv("mill", {
             "-i",
@@ -59,6 +61,77 @@ target("rtl", function()
         cprint("${green underline}[INFO]${clear} RTL copied to build/rtl/")
     end)
 end)
+
+
+
+
+local function TestAxiReorderCommon(name)
+    add_rules("verilua")
+    if sim == "vcs" then
+        add_toolchains("@vcs")
+    end
+
+    add_files(
+        path.join(tc_dir, "*.lua"),
+        path.join(src_dir, "*.lua"),
+        path.join(axi_component_dir, "*.lua"),
+        path.join(common_dir, "*.lua"),
+        path.join(dut_dir, "*.lua"),
+        path.join(rtl_dir, "*.sv"),
+        path.join(rtl_dir, "verification", "*.sv"),
+        path.join(rtl_dir, "verification", "assert", "*.sv"),
+        path.join(rtl_dir, "verification", "assume", "*.sv"),
+        path.join(rtl_dir, "verification", "cover", "*.sv")
+    )
+
+    set_values("cfg.build_dir_name", name)
+    set_values("cfg.top", "AxiReorder")
+    set_values("cfg.user_cfg", path.join(prj_dir, "src", "cfg.lua"))
+    add_values("cfg.tb_gen_flags",
+        "+incdir+" .. path.join(rtl_dir, "verification"),
+        "+incdir+" .. path.join(rtl_dir, "verification", "assert"),
+        "+incdir+" .. path.join(rtl_dir, "verification", "assume"),
+        "+incdir+" .. path.join(rtl_dir, "verification", "cover"),
+        "--single-unit"
+    )
+
+    set_values("cfg.vcs_no_initreg", "1")
+    add_values("vcs.flags", "+define+ASSERT_VERBOSE_CO0_test_for_smokeND_=1", "+define+STOP_COND_=1")
+    add_values("vcs.flags",
+        "+incdir+" .. path.join(rtl_dir, "verification"),
+        "+incdir+" .. path.join(rtl_dir, "verification", "assert"),
+        "+incdir+" .. path.join(rtl_dir, "verification", "assume"),
+        "+incdir+" .. path.join(rtl_dir, "verification", "cover")
+    )
+
+    set_values("vcs.run_flags", "+vcs+lic+wait")
+
+    local TC = os.getenv("TC")
+    if TC then
+        TC = TC:sub(1, 3)
+    else
+        TC = "001"
+    end
+    local test_cases = os.files(path.join(tc_dir, "*.lua"))
+    for _, test_case in ipairs(test_cases) do
+        local test_case_file = path.filename(test_case)
+        if test_case_file:startswith(TC) then
+            add_runenvs("TC_NAME", path.basename(test_case_file))
+        end
+    end
+    set_values("cfg.lua_main", "tc_main.lua")
+end
+
+target("TestAR", function()
+    set_default(true)
+    TestAxiReorderCommon("TestAxiReorder")
+end)
+
+
+----------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------
+
 
 target("sim", function()
     set_default(true)
@@ -179,18 +252,18 @@ target("clean", function()
     end)
 end)
 
--- 这里只处理传入值，不在普通 Lua 函数中调用 xmake 的 import。
+    -- 这里只处理传入值，不在普通 Lua 函数中调用 xmake 的 import。
 local function _tc_or_default(tc)
     return tc or os.getenv("TC") or "000"
 end
 
--- Wrapper around the real sim target. This avoids duplicating Verilua/VCS build
--- rules in custom tasks. If target("sim") changes later, these tasks inherit it.
---local function _run_xmake(action, tc)
-    --os.execv("xmake", {action, "-P", prj_dir, "sim"}, {envs = {SIM = "vcs", TC = tc}})
---end
+--Wrapper around the real sim target. This avoids duplicating Verilua/VCS build
+--rules in custom tasks. If target("sim") changes later, these tasks inherit it.
+local function _run_xmake(action, tc)
+    os.execv("xmake", {action, "-P", prj_dir, "sim"}, {envs = {SIM = "vcs", TC = tc}})
+end
 
--- Build only. Equivalent to: SIM=vcs TC=xxx xmake build -P <project> sim
+--Build only. Equivalent to: SIM=vcs TC=xxx xmake build -P <project> sim
 task("vcs", function()
     set_menu {
         usage = "xmake vcs [options]",
@@ -217,8 +290,8 @@ task("vcs", function()
     end)
 end)
 
--- Run only. Requires the sim target to have been built already.
--- Equivalent to: SIM=vcs TC=xxx xmake run -P <project> sim
+--Run only. Requires the sim target to have been built already.
+--Equivalent to: SIM=vcs TC=xxx xmake run -P <project> sim
 task("simrun", function()
     set_menu {
         usage = "xmake simrun [options]",
@@ -244,8 +317,8 @@ task("simrun", function()
     end)
 end)
 
--- Build then run. Use this for the common edit/test loop.
-task("vcsall", function()
+--Build then run. Use this for the common edit/test loop.
+--[[ target("vcsall", function()
     set_menu {
         usage = "xmake vcsall [options]",
         description = "Build and run sim target with VCS",
@@ -257,8 +330,8 @@ task("vcsall", function()
         import("core.base.option")
 
         local tc = _tc_or_default(option.get("tc"))
---        _run_xmake("build", tc)
---        _run_xmake("run", tc)
+       _run_xmake("build", tc)
+       _run_xmake("run", tc)
         -- 先构建仿真目标。
         os.execv(
             "xmake",
@@ -273,11 +346,11 @@ task("vcsall", function()
             {envs = {SIM = "vcs", TC = tc}}
         )
     end)
-end)
+end) ]]
 
--- Open an FSDB with Verdi. If --fsdb is not provided, the task picks the
--- lexicographically last *.fsdb under build/vcs/sim. If your filenames do not
--- sort by testcase/time, pass -f explicitly.
+--Open an FSDB with Verdi. If --fsdb is not provided, the task picks the
+--lexicographically last *.fsdb under build/vcs/sim. If your filenames do not
+--sort by testcase/time, pass -f explicitly.
 task("verdi", function()
     set_menu {
         usage = "xmake verdi [options]",
@@ -299,9 +372,9 @@ task("verdi", function()
     end)
 end)
 
--- 打开 VCS 代码覆盖率。此 task 与 `xmake verdi` 分工不同：后者查看
--- FSDB 时序波形；本 task 以 `-cov` 直接打开包含 RTL shape 与 testcase
--- 命中数据的 coverage.vdb，显示 RTL 行、条件、分支等覆盖率。
+    -- 打开 VCS 代码覆盖率。此 task 与 `xmake verdi` 分工不同：后者查看
+    -- FSDB 时序波形；本 task 以 `-cov` 直接打开包含 RTL shape 与 testcase
+    -- 命中数据的 coverage.vdb，显示 RTL 行、条件、分支等覆盖率。
 task("verdi_cov", function()
     set_menu {
         usage = "xmake verdi_cov",
@@ -317,5 +390,827 @@ task("verdi_cov", function()
         -- 缺失 VDB 通常说明尚未执行带覆盖率的 VCS 编译和仿真。
         assert(os.isdir(vdb), "no coverage VDB found: " .. vdb .. "; run xmake vcsall -t <tc> first")
         os.execv("verdi", {"-cov", "-covdir", vdb})
+    end)
+end)
+]====]
+
+---@diagnostic disable: undefined-global, undefined-field
+
+-- ============================================================================
+-- AxiReorder verification project
+--
+-- The original xmake.lua is preserved above as a long comment. This active
+-- section follows the supplied verification-project template and is adapted to
+-- this project's Chisel generator, Lua testbench, RTL and testcase layout.
+-- ============================================================================
+
+--[[ local prj_dir = os.curdir()
+local tc_dir = path.join(prj_dir, "test_cases")
+local src_dir = path.join(prj_dir, "src")
+local common_dir = path.join(src_dir, "common")
+local dut_dir = path.join(src_dir, "dut")
+local axi_component_dir = path.join(
+    src_dir, "components", "AXI", "test_zhujiang_utils"
+)
+local chisel_dir = path.join(prj_dir, "ChiselTemplate")
+local build_dir = path.join(prj_dir, "build")
+local rtl_dir = path.join(build_dir, "rtl")
+
+includes(path.join(os.scriptdir(), "TestZhuJiangDocs", "xmake.lua"))
+
+-- Keep compatibility with both the supplied template (`sim`) and Verilua's
+-- conventional environment variable (`SIM`).
+local sim = os.getenv("sim") or "vcs"
+
+local all_testcases = {
+    "000",
+    "001",
+    "002",
+    "003",
+    "004",
+    "005",
+    "006",
+    "007",
+    "008",
+}
+
+local function testcase_id()
+    local tc = os.getenv("TC") or "000"
+    tc = tc:sub(1, 3)
+    if not tc:match("^%d%d%d$") then
+        raise("TC must start with a three-digit testcase id: " .. tc)
+    end
+    return tc
+end
+
+local function testcase_file(tc)
+    local matches = {}
+    for _, file in ipairs(os.files(path.join(tc_dir, "*.lua"))) do
+        if path.filename(file):startswith(tc) then
+            table.insert(matches, file)
+        end
+    end
+
+    if #matches == 0 then
+        raise("no testcase starts with " .. tc .. " under " .. tc_dir)
+    elseif #matches > 1 then
+        raise("multiple testcases start with " .. tc .. " under " .. tc_dir)
+    end
+    return matches[1]
+end
+
+local function add_verification_files()
+    add_files(
+        path.join(tc_dir, "*.lua"),
+        path.join(src_dir, "*.lua"),
+        path.join(common_dir, "*.lua"),
+        path.join(dut_dir, "*.lua"),
+        path.join(axi_component_dir, "*.lua"),
+        path.join(rtl_dir, "*.sv"),
+        path.join(rtl_dir, "verification", "*.sv"),
+        path.join(rtl_dir, "verification", "assert", "*.sv"),
+        path.join(rtl_dir, "verification", "assume", "*.sv"),
+        path.join(rtl_dir, "verification", "cover", "*.sv")
+    )
+end
+
+local function add_rtl_include_flags(tool)
+    add_values(tool .. ".flags",
+        "+incdir+" .. path.join(rtl_dir, "verification"),
+        "+incdir+" .. path.join(rtl_dir, "verification", "assert"),
+        "+incdir+" .. path.join(rtl_dir, "verification", "assume"),
+        "+incdir+" .. path.join(rtl_dir, "verification", "cover")
+    )
+end
+
+local function TestAxiReorderCommon(name, target_sim)
+    target_sim = target_sim or sim
+
+    add_rules("verilua")
+    if target_sim == "verilator" then
+        add_toolchains("@verilator")
+    elseif target_sim == "vcs" then
+        add_toolchains("@vcs")
+    else
+        raise("unsupported simulator: %s (expected vcs or verilator)", target_sim)
+    end
+
+    add_verification_files()
+
+    set_values("verilua.build_dir_name", name)
+    set_values("verilua.top", "AxiReorder")
+    set_values("verilua.user_cfg", path.join(src_dir, "cfg.lua"))
+    set_values("verilua.lua_main", "tc_main.lua")
+    set_values("verilua.vcs_no_initreg", "1")
+    add_values("verilua.tb_gen_flags",
+        "+incdir+" .. path.join(rtl_dir, "verification"),
+        "+incdir+" .. path.join(rtl_dir, "verification", "assert"),
+        "+incdir+" .. path.join(rtl_dir, "verification", "assume"),
+        "+incdir+" .. path.join(rtl_dir, "verification", "cover"),
+        "--single-unit"
+    )
+
+    add_values("vcs.flags",
+        "+define+ASSERT_VERBOSE_CO0_test_for_smokeND_=1",
+        "+define+STOP_COND_=1"
+    )
+    add_rtl_include_flags("vcs")
+    set_values("vcs.run_flags", "+vcs+lic+wait")
+
+    -- XProp needs a separate runtime license on this installation. Keep the
+    -- normal simulation runnable and enable it only when explicitly requested.
+    if os.getenv("VCS_XPROP") == "1" then
+        add_values("vcs.flags", "-xprop")
+    end
+
+    add_values("verilator.flags",
+        "+define+ASSERT_VERBOSE_CO0_test_for_smokeND_=1",
+        "+define+STOP_COND_=1",
+        "--trace",
+        "--no-trace-top",
+        "--threads 4"
+    )
+    add_rtl_include_flags("verilator")
+
+    local tc = testcase_id()
+    local file = testcase_file(tc)
+    add_runenvs("TC", tc)
+    add_runenvs("TC_NAME", path.basename(path.filename(file)))
+
+    -- tc_main.lua requires a numeric seed. Supply a reproducible default while
+    -- still allowing SEED to be overridden for random or regression runs.
+    add_runenvs("SEED", os.getenv("SEED") or "1")
+end
+
+target("TestAxiReorder", function()
+    set_default(true)
+    TestAxiReorderCommon("TestAxiReorder")
+end)
+
+target("TestAxiReorderVcsCov", function()
+    set_default(false)
+    TestAxiReorderCommon("TestAxiReorderVcsCov", "vcs")
+
+    local cm_build_options = {
+        "-cm line+cond+tgl+branch",
+        "-cm_noconst",
+    }
+    local cm_name = string.format(
+        "TC_%s_SEED_%s_MODE_%s",
+        testcase_id(),
+        os.getenv("SEED") or "1",
+        os.getenv("MODE") or "default"
+    )
+    local cm_runtime_options = {
+        "-cm_name " .. cm_name,
+        "-cm line+cond+tgl+branch",
+    }
+
+    for _, flag in ipairs(cm_build_options) do
+        add_values("vcs.flags", flag)
+    end
+
+    local covdir = os.getenv("COVDIR")
+    if covdir and covdir ~= "" then
+        table.insert(cm_runtime_options, "-cm_dir " .. path.absolute(covdir))
+    end
+
+    add_values("vcs.flags", "+define+SYNTHESIS", "-cm_tgl portsonly")
+    for _, flag in ipairs(cm_runtime_options) do
+        add_values("vcs.run_flags", flag)
+    end
+
+    -- Remove only the target's generated coverage database before recompiling;
+    -- testcase hit data can be accumulated separately through COVDIR.
+    set_values("before_build", function(target)
+        local target_build_dir = target:get("build_dir")
+        local sim_build_dir = path.join(target_build_dir, "sim_build")
+        os.tryrm(path.join(sim_build_dir, "simv.vdb"))
+    end)
+end)
+
+local function generate_rtl(runtime_os)
+    local chisel_rtl_dir = path.join(chisel_dir, "build", "rtl")
+
+    if not runtime_os.isdir(chisel_dir) then
+        raise("Chisel project not found: " .. chisel_dir)
+    end
+    runtime_os.tryrm(chisel_rtl_dir)
+    runtime_os.mkdir(chisel_rtl_dir)
+    runtime_os.cd(chisel_dir)
+    runtime_os.execv("mill", {
+        "-i",
+        "test.runMain",
+        "generator.AxiReorderGen",
+        "--target", "systemverilog",
+        "--split-verilog",
+        "-td", chisel_rtl_dir,
+    })
+
+    runtime_os.tryrm(rtl_dir)
+    runtime_os.mkdir(rtl_dir)
+    runtime_os.cp(path.join(chisel_rtl_dir, "*"), rtl_dir)
+end
+
+target("AxiReorderTop", function()
+    set_kind("phony")
+    set_default(false)
+    on_build(function()
+        generate_rtl(os)
+        cprint("${green underline}[INFO]${clear} RTL copied to " .. rtl_dir)
+    end)
+end)
+
+target("rtl", function()
+    set_kind("phony")
+    set_default(false)
+    on_run(function()
+        generate_rtl(os)
+        cprint("${green underline}[INFO]${clear} RTL copied to " .. rtl_dir)
+    end)
+end)
+
+local function task_options(default_tc, tc_option, seed_option)
+    local tc = tc_option or os.getenv("TC") or default_tc or "000"
+    local seed = seed_option or os.getenv("SEED") or "1"
+    return tc:sub(1, 3), seed
+end
+
+local function xmake_envs(tc, seed, extra_envs)
+    local envs = {
+        SIM = "vcs",
+        TC = tc,
+        SEED = seed,
+    }
+    for name, value in pairs(extra_envs or {}) do
+        envs[name] = value
+    end
+    return envs
+end
+
+local function run_xmake(runtime_os, action, target_name, tc, seed, extra_envs)
+    runtime_os.execv("xmake", {action, "-P", prj_dir, target_name}, {
+        envs = xmake_envs(tc, seed, extra_envs),
+    })
+end
+
+local function sim_task_menu(name, description)
+    return {
+        usage = "xmake " .. name .. " [options]",
+        description = description,
+        options = {
+            {"t", "tc", "kv", "000", "testcase id, e.g. 000/001/002"},
+            {"s", "seed", "kv", "1", "numeric random seed"},
+        },
+    }
+end
+
+task("sim", function()
+    set_menu(sim_task_menu("sim", "Build and run one AxiReorder testcase with VCS"))
+    on_run(function()
+        import("core.base.option")
+        local tc, seed = task_options("000", option.get("tc"), option.get("seed"))
+        run_xmake(os, "build", "TestAxiReorder", tc, seed)
+        run_xmake(os, "run", "TestAxiReorder", tc, seed)
+    end)
+end)
+
+task("wave", function()
+    set_menu(sim_task_menu("wave", "Build and run one testcase with FSDB dumping enabled"))
+    on_run(function()
+        import("core.base.option")
+        local tc, seed = task_options("000", option.get("tc"), option.get("seed"))
+        run_xmake(os, "build", "TestAxiReorder", tc, seed)
+        run_xmake(os, "run", "TestAxiReorder", tc, seed, {DUMP = "1"})
+        cprint("${green underline}[INFO]${clear} waveform directory: " ..
+            path.join(build_dir, "vcs", "TestAxiReorder"))
+    end)
+end)
+
+task("verdi", function()
+    set_menu {
+        usage = "xmake verdi [options]",
+        description = "Open an AxiReorder FSDB waveform with Verdi",
+        options = {
+            {"f", "fsdb", "kv", nil, "FSDB file path"},
+        },
+    }
+    on_run(function()
+        import("core.base.option")
+        local fsdb = option.get("fsdb")
+        if not fsdb then
+            local fsdbs = os.files(path.join(
+                build_dir, "vcs", "TestAxiReorder", "*.fsdb"
+            ))
+            table.sort(fsdbs)
+            if #fsdbs == 0 then
+                raise("no FSDB found; run `xmake wave -t <tc>` first")
+            end
+            fsdb = fsdbs[#fsdbs]
+        end
+        os.execv("verdi", {"-ssf", path.absolute(fsdb)})
+    end)
+end)
+
+task("cov", function()
+    set_menu(sim_task_menu("cov", "Build and run one testcase with VCS code coverage"))
+    on_run(function()
+        import("core.base.option")
+        local tc, seed = task_options("000", option.get("tc"), option.get("seed"))
+        run_xmake(os, "build", "TestAxiReorderVcsCov", tc, seed)
+        run_xmake(os, "run", "TestAxiReorderVcsCov", tc, seed)
+    end)
+end)
+
+task("verdi-cov", function()
+    set_menu {
+        usage = "xmake verdi-cov",
+        description = "Open AxiReorder VCS code coverage with Verdi",
+    }
+    on_run(function()
+        local covdir = os.getenv("COVDIR")
+        if not covdir or covdir == "" then
+            covdir = path.join(
+                build_dir,
+                "vcs",
+                "TestAxiReorderVcsCov",
+                "sim_build",
+                "simv.vdb"
+            )
+        end
+        covdir = path.absolute(covdir)
+        if not os.isdir(covdir) then
+            raise("coverage database not found: " .. covdir ..
+                "; run `xmake cov -t <tc>` first")
+        end
+        os.execv("verdi", {"-cov", "-covdir", covdir})
+    end)
+end)
+
+local function split_csv(value)
+    local values = {}
+    for item in value:gmatch("[^,%s]+") do
+        table.insert(values, item)
+    end
+    return values
+end
+
+local function regression_testcases(spec)
+    if spec == "all" then
+        return all_testcases
+    end
+
+    local testcases = split_csv(spec)
+    if #testcases == 0 then
+        raise("regression testcase list is empty")
+    end
+    for _, tc in ipairs(testcases) do
+        if not tc:match("^%d%d%d$") then
+            raise("invalid regression testcase id: " .. tc)
+        end
+        testcase_file(tc)
+    end
+    return testcases
+end
+
+task("regression", function()
+    set_menu {
+        usage = "xmake regression [options]",
+        description = "Run AxiReorder testcases sequentially with optional coverage",
+        options = {
+            {"t", "tc", "kv", "all", "all or comma-separated testcase ids"},
+            {"s", "seed", "kv", "1", "one or more comma-separated seeds"},
+            {"m", "mode", "kv", "normal", "normal or cov"},
+            {"o", "outdir", "kv", ".regression", "regression output directory"},
+        },
+    }
+    on_run(function()
+        import("core.base.option")
+
+        local mode = option.get("mode") or "normal"
+        if mode ~= "normal" and mode ~= "cov" then
+            raise("mode must be normal or cov")
+        end
+
+        local testcases = regression_testcases(option.get("tc") or "all")
+        local seeds = split_csv(option.get("seed") or "1")
+        if #seeds == 0 then
+            raise("regression seed list is empty")
+        end
+        for _, seed in ipairs(seeds) do
+            if not tonumber(seed) then
+                raise("regression seed must be numeric: " .. seed)
+            end
+        end
+
+        local outdir = path.absolute(option.get("outdir") or ".regression")
+        local target_name = mode == "cov" and
+            "TestAxiReorderVcsCov" or "TestAxiReorder"
+        local covdir = path.join(outdir, "cov.vdb")
+        local extra_envs = {}
+        if mode == "cov" then
+            extra_envs.COVDIR = covdir
+        end
+
+        os.mkdir(outdir)
+        run_xmake(os, "build", target_name, testcases[1], seeds[1], extra_envs)
+
+        local failed = {}
+        for _, tc in ipairs(testcases) do
+            for _, seed in ipairs(seeds) do
+                local test_name = string.format("TC_%s_SEED_%s", tc, seed)
+                local log_path = path.join(outdir, test_name .. ".log")
+                cprint("${bright}[REGRESSION]${clear} " .. test_name)
+
+                local stdout
+                local stderr
+                local run_error
+                local ok = try {
+                    function()
+                        stdout, stderr = os.iorunv("xmake", {
+                            "run", "-P", prj_dir, target_name,
+                        }, {
+                            envs = xmake_envs(tc, seed, extra_envs),
+                        })
+                        return true
+                    end,
+                    catch {
+                        function(errors)
+                            if type(errors) == "table" then
+                                stdout = errors.stdout
+                                stderr = errors.stderr
+                                run_error = errors.errors
+                            else
+                                run_error = tostring(errors)
+                            end
+                            cprint("${red}[FAILED]${clear} " .. test_name .. ": " .. tostring(errors))
+                            return false
+                        end,
+                    },
+                }
+
+                local log_data = (stdout or "") .. (stderr or "")
+                if run_error then
+                    log_data = log_data .. "\n" .. tostring(run_error) .. "\n"
+                end
+                io.writefile(log_path, log_data)
+                io.write(log_data)
+                if not ok then
+                    table.insert(failed, test_name)
+                end
+            end
+        end
+
+        if mode == "cov" and os.isdir(covdir) then
+            local merged_vdb = path.join(outdir, "merged.vdb")
+            os.tryrm(merged_vdb)
+            os.execv("urg", {
+                "-dir", covdir,
+                "-dbname", merged_vdb,
+                "-noreport",
+            })
+            cprint("${green underline}[INFO]${clear} merged coverage: " .. merged_vdb)
+        end
+
+        if #failed > 0 then
+            raise("regression failed: " .. table.concat(failed, ", "))
+        end
+        cprint(string.format(
+            "${green underline}[PASS]${clear} regression completed: %d testcase run(s)",
+            #testcases * #seeds
+        ))
+    end)
+end)
+ ]]
+
+
+local prj_dir = os.curdir()
+local tc_dir = path.join(prj_dir, "test_cases")
+local src_dir = path.join(prj_dir, "src")
+local common_dir = path.join(src_dir, "common")
+local dut_dir = path.join(src_dir, "dut")
+local axi_component_dir = path.join(
+    src_dir, "components", "AXI", "test_zhujiang_utils"
+)
+local chisel_dir = path.join(prj_dir, "ChiselTemplate")
+local build_dir = path.join(prj_dir, "build")
+local rtl_dir = path.join(build_dir, "rtl")
+
+includes(path.join(os.scriptdir(), "TestZhuJiangDocs", "xmake.lua"))
+
+-- Keep compatibility with both the supplied template (`sim`) and Verilua's
+-- conventional environment variable (`SIM`).
+local sim = os.getenv("sim") or "vcs"
+
+if os.exists(path.join(chisel_dir, "xmake.lua")) then
+    includes(chisel_dir)
+end
+
+target("init", function()
+    set_kind("phony")
+    set_default(false)
+    local function isempty(v)
+        return v == nil or v == ""
+    end
+    local default_proxy = os.getenv("default_proxy_LAN")
+    local http          = os.getenv("http_proxy")
+    local https         = os.getenv("https_proxy")
+    local isProxyEmpty  = isempty(http) or isempty(https)
+    local autoSetProxy  = false
+
+    before_run(function() -- Check whether the environment variables about system proxy is OK or not.
+        if (isProxyEmpty) then
+            cprint("${yellow underline}[WARNING]${clear} http_proxy and https_proxy have not been set.")
+            if (isempty(default_proxy)) then
+                cprint("${red underline}[SEVERE]${clear} There are no proxy set. Initialization operation failed.")
+                local msg = format("Initialization failed")
+                raise(msg)
+            else
+                autoSetProxy = true
+            end
+        end
+    end)
+
+    on_run(function()
+        if (autoSetProxy) then
+            local envs          = {}
+            envs["http_proxy"]  = default_proxy
+            envs["https_proxy"] = default_proxy
+            os.addenvs(envs)
+            cprint(
+                "${green underline}[INFO] Default proxy has been set. Proxy has been configured automatically.${clear}")
+        end
+        cprint("${green underline}[INFO] Updating submodules in this repo... This may take a few seconds.${clear}")
+        os.exec("git submodule update --init")
+        os.cd("ZhuJiang-NG")
+        cprint("${green underline}[INFO] Updating submodules in submodules... This may take a few seconds.${clear}")
+        os.exec("xmake run -P . init")
+    end)
+end)
+
+target("format", function()
+    set_kind("phony")
+    set_default(false)
+    on_run(function()
+        local format_lua = import("TestZhuJiangUtils.xmake.format_lua")
+        format_lua {
+            path.join(tc_dir, "*.lua"),
+            path.join(prj_dir, "*.lua"),
+            path.join(src_dir, "*.lua"),
+            path.join(src_dir, "*", "*.lua"),
+        }
+    end)
+end)
+
+target("lsp-check", function()
+    set_kind("phony")
+    set_default(false)
+    on_run(function()
+        import("TestZhuJiangUtils.xmake.lsp_check_lua")
+        lsp_check_lua {
+            emmyrc = path.join(prj_dir, ".emmyrc.json"),
+            src_dir_vec = {
+                src_dir,
+                tc_dir,
+                path.join(prj_dir, "tests", "src")
+            },
+        }
+    end)
+end)
+
+
+local function TestAxiReorderCommon(name)
+    add_rules("verilua")
+    if sim == "verilator" then
+        add_toolchains("@verilator")
+    elseif sim == "vcs" then
+        add_toolchains("@vcs")
+    end
+
+    add_files(
+        path.join(tc_dir, "*.lua"),
+        path.join(src_dir, "*.lua"),
+        path.join(common_dir, "*.lua"),
+        path.join(dut_dir, "*.lua"),
+        path.join(axi_component_dir, "*.lua"),
+        path.join(rtl_dir, "*.sv"),
+        path.join(rtl_dir, "verification", "*.sv"),
+        path.join(rtl_dir, "verification", "assert", "*.sv"),
+        path.join(rtl_dir, "verification", "assume", "*.sv"),
+        path.join(rtl_dir, "verification", "cover", "*.sv")
+    )
+
+    set_values("cfg.build_dir_name", name)
+    set_values("cfg.top", "AxiReorder")
+    set_values("cfg.user_cfg", path.join(src_dir, "cfg.lua"))
+    set_values("cfg.vcs_no_initreg", "1")
+    add_values("cfg.tb_gen_flags",
+        "+incdir+" .. path.join(rtl_dir, "verification"),
+        "+incdir+" .. path.join(rtl_dir, "verification", "assert"),
+        "+incdir+" .. path.join(rtl_dir, "verification", "assume"),
+        "+incdir+" .. path.join(rtl_dir, "verification", "cover"),
+        "--single-unit"
+    )
+
+    --set_values("vcs.flags", "-xprop")
+    add_values("vcs.flags","+define+ASSERT_VERBOSE_CO0_test_for_smokeND_=1","+define+STOP_COND_=1")
+    add_values("vcs.flags",
+        "+incdir+" .. path.join(rtl_dir, "verification"),
+        "+incdir+" .. path.join(rtl_dir, "verification", "assert"),
+        "+incdir+" .. path.join(rtl_dir, "verification", "assume"),
+        "+incdir+" .. path.join(rtl_dir, "verification", "cover")
+    )
+
+    set_values("vcs.run_flags", "+vcs+lic+wait")
+
+    add_values("verilator.flags","+define+ASSERT_VERBOSE_CO0_test_for_smokeND_=1","+define+STOP_COND_=1")
+   
+    add_values("verilator.flags",
+        "+incdir+" .. path.join(rtl_dir, "verification"),
+        "+incdir+" .. path.join(rtl_dir, "verification", "assert"),
+        "+incdir+" .. path.join(rtl_dir, "verification", "assume"),
+        "+incdir+" .. path.join(rtl_dir, "verification", "cover"),
+        "--trace", "--no-trace-top", "--threads 4"
+    )
+
+    local TC = os.getenv("TC")
+    if TC then
+        TC = TC:sub(1, 3)
+    else
+        TC = "001"
+    end
+    
+    local test_cases = os.files(path.join(tc_dir, "*.lua"))
+    for _, test_case in ipairs(test_cases) do
+        local test_case_file = path.filename(test_case)
+        if test_case_file:startswith(TC) then
+            add_runenvs("TC_NAME", path.basename(test_case_file))
+        end
+    end
+    
+    set_values("cfg.lua_main", "tc_main.lua")
+    
+end
+
+target("TestAxiReorder", function()
+    set_default(true)
+    TestAxiReorderCommon("TestAxiReorder")
+end)
+
+target("TestAxiReorderVcsCov", function()
+    set_default(false)
+    TestAxiReorderCommon("TestAxiReorderVcsCov")
+
+    local cm_build_options = {
+        "-cm line+cond+tgl+branch",
+        "-cm_noconst",
+    }
+    local cm_name = string.format(
+        "TC_%s_SEED_%s_MODE_%s",
+        os.getenv("TC") or "default",
+        os.getenv("SEED") or "default",
+        os.getenv("MODE") or "default"
+    )
+    local cm_runtime_options = {
+        "-cm_name " .. cm_name,
+    }
+    table.join2(cm_runtime_options, cm_build_options)
+
+
+    local covdir = os.getenv("COVDIR")
+    if covdir then
+        table.insert(cm_runtime_options, "-cm_dir " .. covdir)
+    end
+
+    add_values("vcs.flags", "+define+SYNTHESIS")
+    add_values("vcs.flags", table.concat(cm_build_options, " "))
+    add_values("vcs.flags", "-cm_tgl portsonly")
+    add_values("vcs.run_flags", table.concat(cm_runtime_options, " "))
+
+    -- Remove only the target's generated coverage database before recompiling;
+    -- testcase hit data can be accumulated separately through COVDIR.
+    set_values("before_build", function(target)
+        local _build_dir = target:get("build_dir")
+        local sim_build_dir = path.join(_build_dir, "sim_build")
+        os.tryrm(path.join(sim_build_dir, "simv.vdb"))
+    end)
+end)
+
+
+target("AxiReorderTop", function()
+    set_kind("phony")
+    set_default(false)
+    on_build(function()
+        import("core.base.task")
+
+        local main = os.getenv("MAIN") or "Sn"
+
+        os.tryrm(path.join(chisel_dir, "build", "*"))
+        os.tryrm(path.join(chisel_dir, "out", "*.dep"))
+        os.cd(chisel_dir)
+        task.run("rtl", {
+            ["main-function"] = main,
+            ["enable-debug"] = true
+        })
+
+        os.tryrm(rtl_dir)
+        os.mkdir(rtl_dir)
+        os.cp(path.join(chisel_dir, "build", "rtl", "*"), rtl_dir)
+
+        local vfiles = {}
+        table.join2(vfiles, os.files(path.join(rtl_dir, "*.sv")))
+        table.join2(vfiles, os.files(path.join(rtl_dir, "*", "*.sv")))
+
+        for _, f in ipairs(vfiles) do
+            io.replace(f, "assert(1'b0)", "$fatal", { plain = true })
+            -- Redirect assertion output from stderr (0x80000002) to stdout (0x80000001)
+            -- This ensures assertion messages are captured in simulation logs
+            io.replace(f, "$fwrite(32'h80000002", "$fwrite(32'h80000001", { plain = true })
+        end
+    end)
+end)
+
+
+target("jobs-gen", function()
+    set_kind("phony")
+    set_default(false)
+    on_run(function()
+        import("TestZhuJiangUtils.xmake.jobs_gen", { rootdir = prj_dir })
+
+        local outdir = os.getenv("OUTDIR") or path.join(prj_dir, ".regression")
+        local covdir = path.absolute(path.join(outdir, "cov.vdb"))
+
+        jobs_gen {
+            prj_dir = prj_dir,
+            tc_dir = tc_dir,
+            all_targets = {
+                "TestAxiReorder",
+                "TestAxiReorderVcsCov",
+            },
+            default_target = "TestAxiReorder",
+            all_testcases = {
+                "001",
+                "002",
+                "003",
+                "004",
+                "005",
+                "006",
+                "007",
+                "008"
+            },
+            target_configs = {
+                TestAxiReorderVcsCov = {
+                    post_gen = function(ctx)
+                        local simv_vdb = path.join(
+                            prj_dir, "build", "vcs", "TestAxiReorderVcsCov", "sim_build", "simv.vdb"
+                        )
+                        local abs_outdir = path.absolute(ctx.outdir)
+
+                        io.writefile(path.join(abs_outdir, "merge_cov.sh"), string.format([[#!/usr/bin/env bash
+cd "$(dirname "$0")" || exit 1
+rm -rf %s
+cp -r %s %s
+mkdir -p %s
+cp -r %s/* %s || true
+mkdir -p %s
+cp -r %s/* %s || true
+urg -dir ./simv.vdb -dbname ./merged.vdb -noreport
+]],
+                            path.join(abs_outdir, "simv.vdb"),
+                            simv_vdb,
+                            path.join(abs_outdir, "simv.vdb"),
+                            path.join(abs_outdir, "simv.vdb", "snps", "coverage", "db", "testdata"),
+                            path.join(covdir, "snps", "coverage", "db", "testdata"),
+                            path.join(abs_outdir, "simv.vdb", "snps", "coverage", "db", "testdata"),
+                            path.join(abs_outdir, "simv.vdb", "snps", "coverage", "db", "common"),
+                            path.join(covdir, "snps", "coverage", "db", "common"),
+                            path.join(abs_outdir, "simv.vdb", "snps", "coverage", "db", "common")
+                        ))
+
+                        io.writefile(path.join(abs_outdir, "view_cov.sh"), [[#!/usr/bin/env bash
+verdi -cov -covdir simv.vdb
+]])
+
+                        io.writefile(path.join(abs_outdir, "clean_cov.sh"), [[#!/usr/bin/env bash
+rm -rf simv.vdb
+rm -rf vdCovLog
+rm -rf cov.vdb
+]])
+                    end,
+                },
+            },
+            extra_env_gen = function(job_info)
+                local s = ""
+                local ss = ""
+                s = s .. string.format("export COVDIR=%s\\n", covdir)
+                ss = ss .. string.format("export DB_PATH=%s\\n", path.absolute(path.join(job_info.outdir, "db")))
+                ss = ss .. string.format("export DB_FILE_NAME=%s.db\\n", job_info.test_name)
+                if os.getenv("VCS_XPROP") then
+                    s = s .. string.format("export VCS_XPROP=%s\\n", os.getenv("VCS_XPROP"))
+                end
+                return s, ss
+            end,
+            extra_clean = "rm -rf ./db || true",
+        }
     end)
 end)

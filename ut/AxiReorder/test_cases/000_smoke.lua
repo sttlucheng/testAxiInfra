@@ -36,7 +36,9 @@ local function task_smoke()
 
     assert(
         write_ret == "Success",
-        "AXI smoke write failed: " .. tostring(write_ret)
+        "\n\n---ERROR---\n\nAXI smoke write failed: " ..
+            tostring(write_ret) ..
+            "\n\n-----------\n\n"
     )
 
     -- ========================================================
@@ -47,12 +49,14 @@ local function task_smoke()
 
     assert(
         read_ret == "Success",
-        "AXI smoke read failed: " .. tostring(read_ret)
+        "\n\n---ERROR---\n\nAXI smoke read failed: " ..
+            tostring(read_ret) ..
+            "\n\n-----------\n\n"
     )
 
     assert(
         read_data ~= nil,
-        "AXI smoke read completed without data"
+        "\n\n---ERROR---\n\nAXI smoke read completed without data\n\n-----------\n\n"
     )
 
     -- 组件可能返回大写或小写十六进制字符串，
@@ -60,7 +64,7 @@ local function task_smoke()
     assert(
         read_data:lower() == write_data:lower(),
         string.format(
-            "AXI smoke data mismatch:\nexpected: %s\nactual:   %s",
+            "\n\n---ERROR---\n\nAXI smoke data mismatch:\nexpected: %s\nactual:   %s\n\n-----------\n\n",
             write_data,
             read_data
         )

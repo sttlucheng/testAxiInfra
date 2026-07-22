@@ -1,0 +1,22 @@
+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiAWEtrBundle.sv:79 YES:SyncFF
+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_UInt2.sv:60 YES:SyncFF
+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiWEtrBundle.sv:66 YES:SyncFF
+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/FastQueue_1.sv:73 YES:SyncFF
+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/FastQueue.sv:64 YES:SyncFF
+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiWEtrBundle_1.sv:65 YES:SyncFF
+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/AxiReorder.sv:360 YES:SyncFF
+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_UInt2_1.sv:59 YES:SyncFF
+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/AxiReorder_Verification_Assert.sv:31 YES:SyncFF
+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/FastQueue_Verification_Assert.sv:31 YES:SyncFF
+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/FastQueue_1_Verification_Assert.sv:31 YES:SyncFF
+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/tb_top.sv:80 YES:SyncFF
+==================================================
+Unified Inference Statistics
+Number of always_ff:                   0
+Number of always_latch:                0
+Number of always @*:                   0
+Number of always_comb :                0
+Number of always :                     13
+Number of flip-flop candidates:        12
+Number of synchronous flops inferred:  12
+Number of Asynchronous flops inferred: 0

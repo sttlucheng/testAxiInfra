@@ -19,6 +19,17 @@ fork {
             sim.dump_wave((os.getenv "TC" or "sim") .. ".vcd")
         end
 
+        -- 所有 testcase 共用同一个随机数入口。指定相同的 SEED 可以复现
+        -- 完全相同的随机激励；未指定时使用隐式种子 default。
+        local seed_text = os.getenv("SEED") or "1"
+        local seed = assert(
+            tonumber(seed_text),
+            "SEED must be a number, got: " .. seed_text
+        )
+        assert(seed == math.floor(seed), "SEED must be an integer: " .. seed_text)
+        math.randomseed(seed)
+        print(string.format("Testcase: %s, random seed: %d", tc_name, seed))
+
         local tc = require(tc_name)
 
         env.dut_reset()
@@ -28,8 +39,11 @@ fork {
             task()
         end
 
+
         -- 所有driver任务结束后，确认自动scoreboard没有未匹配事务。放在
         -- 公共入口可保证每个testcase都执行收尾检查，无需各自重复调用。
+        -- finish_auto_check() 前等待一个时钟周期，让monitor完成采样
+        env.wait_cycles(1)
         scoreboard.finish_auto_check()
         env.test_success()
         sim.finish()
