@@ -1,6 +1,0 @@
-PLI_STUB_OBJS_OBJ0=_vcs_pli_stub_.o
-PLI_STUB_OBJS_SRC0=_vcs_pli_stub_.c
-PLI_STUB_OBJS += $(PLI_STUB_OBJS_OBJ0)
-$(PLI_STUB_OBJS_OBJ0): $(PLI_STUB_OBJS_SRC0)
-	@$(CC) -I/nfs/tools/synopsys/vcs/U-2023.03/include  -pipe -fPIC -Ofast -march=native -loop-unroll -I/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/include -I/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/include/luajit-2.1 -I/nfs/home/yanglucheng/tools/verilua/v3.4.0/src/include -I/nfs/home/yanglucheng/tools/verilua/v3.4.0/conan_installed/include    -I/nfs/tools/synopsys/vcs/U-2023.03/include  -fPIC -c -o $(PLI_STUB_OBJS_OBJ0) $(PLI_STUB_OBJS_SRC0)
-	@strip -g $(PLI_STUB_OBJS_OBJ0)
