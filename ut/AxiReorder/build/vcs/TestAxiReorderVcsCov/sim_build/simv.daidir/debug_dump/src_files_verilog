@@ -4,8 +4,8 @@
 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiAWEtrBundle.sv
 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiWEtrBundle.sv
 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiWEtrBundle_1.sv
-/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_UInt2.sv
-/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_UInt2_1.sv
+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_UInt6.sv
+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_UInt6_1.sv
 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/AxiReorder_Verification_Assert.sv
 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/FastQueue_1_Verification_Assert.sv
 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/FastQueue_Verification_Assert.sv

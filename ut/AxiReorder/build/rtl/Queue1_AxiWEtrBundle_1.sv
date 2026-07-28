@@ -50,16 +50,16 @@ module Queue1_AxiWEtrBundle_1(	// /nfs/home/yanglucheng/workspace/CodeReading/Ax
   input  [255:0] io_enq_bits_winfo_data,	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:72:14
   input  [31:0]  io_enq_bits_winfo_strb,	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:72:14
   input          io_enq_bits_winfo_last,	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:72:14
-  input  [1:0]   io_enq_bits_entry,	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:72:14
+  input  [5:0]   io_enq_bits_entry,	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:72:14
   input          io_deq_ready,	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:72:14
   output         io_deq_valid,	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:72:14
   output [255:0] io_deq_bits_winfo_data,	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:72:14
   output [31:0]  io_deq_bits_winfo_strb,	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:72:14
   output         io_deq_bits_winfo_last,	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:72:14
-  output [1:0]   io_deq_bits_entry	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:72:14
+  output [5:0]   io_deq_bits_entry	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:72:14
 );
 
-  reg  [290:0] ram;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:73:91
+  reg  [294:0] ram;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:73:91
   reg          maybe_full;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:76:27
   wire         io_deq_valid_0 = io_enq_valid | maybe_full;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:76:27, :102:16, :114:{24,39}
   always @(posedge clock) begin	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:60:7
@@ -100,7 +100,7 @@ module Queue1_AxiWEtrBundle_1(	// /nfs/home/yanglucheng/workspace/CodeReading/Ax
            _RANDOM[4'h6],
            _RANDOM[4'h7],
            _RANDOM[4'h8],
-           _RANDOM[4'h9][3:0]};	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:60:7, :73:91, :76:27
+           _RANDOM[4'h9][7:0]};	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:60:7, :73:91, :76:27
       `endif // RANDOMIZE_REG_INIT
     end // initial
     `ifdef FIRRTL_AFTER_INITIAL	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:60:7
@@ -108,9 +108,9 @@ module Queue1_AxiWEtrBundle_1(	// /nfs/home/yanglucheng/workspace/CodeReading/Ax
     `endif // FIRRTL_AFTER_INITIAL
   `endif // ENABLE_INITIAL_REG_
   assign io_deq_valid = io_deq_valid_0;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:60:7, :102:16, :114:{24,39}
-  assign io_deq_bits_winfo_data = maybe_full ? ram[290:35] : io_enq_bits_winfo_data;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:60:7, :73:91, :76:27, :110:17, :115:17, :116:19
-  assign io_deq_bits_winfo_strb = maybe_full ? ram[34:3] : io_enq_bits_winfo_strb;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:60:7, :73:91, :76:27, :110:17, :115:17, :116:19
-  assign io_deq_bits_winfo_last = maybe_full ? ram[2] : io_enq_bits_winfo_last;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:60:7, :73:91, :76:27, :110:17, :115:17, :116:19
-  assign io_deq_bits_entry = maybe_full ? ram[1:0] : io_enq_bits_entry;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:60:7, :73:91, :76:27, :110:17, :115:17, :116:19
+  assign io_deq_bits_winfo_data = maybe_full ? ram[294:39] : io_enq_bits_winfo_data;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:60:7, :73:91, :76:27, :110:17, :115:17, :116:19
+  assign io_deq_bits_winfo_strb = maybe_full ? ram[38:7] : io_enq_bits_winfo_strb;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:60:7, :73:91, :76:27, :110:17, :115:17, :116:19
+  assign io_deq_bits_winfo_last = maybe_full ? ram[6] : io_enq_bits_winfo_last;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:60:7, :73:91, :76:27, :110:17, :115:17, :116:19
+  assign io_deq_bits_entry = maybe_full ? ram[5:0] : io_enq_bits_entry;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/chisel/src/main/scala/chisel3/util/Queue.scala:60:7, :73:91, :76:27, :110:17, :115:17, :116:19
 endmodule
 

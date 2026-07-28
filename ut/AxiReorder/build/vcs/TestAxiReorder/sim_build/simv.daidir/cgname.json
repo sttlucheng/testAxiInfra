@@ -11,16 +11,40 @@
         "module",
         2
     ],
+    "Queue1_AxiAWEtrBundle": [
+        "Queue1_AxiAWEtrBundle",
+        "c9suY",
+        "module",
+        3
+    ],
+    "FastQueue_1": [
+        "FastQueue_1",
+        "N6Jwe",
+        "module",
+        4
+    ],
+    "FastQueue": [
+        "FastQueue",
+        "B4N0r",
+        "module",
+        5
+    ],
+    "AxiReorder_Verification_Assert": [
+        "AxiReorder_Verification_Assert",
+        "gfuQR",
+        "module",
+        6
+    ],
     "tb_top": [
         "tb_top",
         "jdPWL",
         "module",
-        6
+        7
     ],
     "...MASTER...": [
         "SIM",
         "amcQw",
         "module",
-        7
+        8
     ]
 }

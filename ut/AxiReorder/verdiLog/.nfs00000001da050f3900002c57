@@ -1,3 +1,0 @@
-Command Line: /nfs/tools/synopsys/verdi/U-2023.03/platform/LINUXAMD64/bin/Novas -ssf build/vcs/sim/004.vcd.fsdb
-uname(Linux open01.boscszcluster.com 6.8.0-124-generic #124~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue May 26 21:05:19 UTC  x86_64)
-au time 34.055969 2.991644 0.811443 delta 224788480 224788480 total 763002880 763002880

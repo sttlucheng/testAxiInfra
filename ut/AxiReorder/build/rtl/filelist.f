@@ -1,6 +1,6 @@
 Queue1_AxiAWEtrBundle.sv
-Queue1_UInt2.sv
-Queue1_UInt2_1.sv
+Queue1_UInt6.sv
+Queue1_UInt6_1.sv
 verification/assert/FastQueue_Verification_Assert.sv
 FastQueue.sv
 Queue1_AxiWEtrBundle.sv

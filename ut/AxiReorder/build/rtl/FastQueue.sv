@@ -48,14 +48,14 @@ module FastQueue(	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs
                reset,	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:7:7
   output       io_enq_ready,	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:9:14
   input        io_enq_valid,	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:9:14
-  input  [1:0] io_enq_bits,	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:9:14
+  input  [5:0] io_enq_bits,	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:9:14
   input        io_deq_ready,	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:9:14
   output       io_deq_valid,	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:9:14
-  output [1:0] io_deq_bits	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:9:14
+  output [5:0] io_deq_bits	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:9:14
 );
 
   wire       _holder_io_deq_valid;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:41:24
-  wire [1:0] _holder_io_deq_bits;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:41:24
+  wire [5:0] _holder_io_deq_bits;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:41:24
   wire       _driver_io_enq_ready;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:16:33
   wire       _driver_io_deq_valid;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:16:33
   reg  [2:0] waterline;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:17:34
@@ -91,7 +91,7 @@ module FastQueue(	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs
       `FIRRTL_AFTER_INITIAL	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:7:7
     `endif // FIRRTL_AFTER_INITIAL
   `endif // ENABLE_INITIAL_REG_
-  Queue1_UInt2 driver (	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:16:33
+  Queue1_UInt6 driver (	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:16:33
     .clock        (clock),
     .reset        (reset),
     .io_enq_ready (_driver_io_enq_ready),
@@ -101,7 +101,7 @@ module FastQueue(	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs
     .io_deq_valid (_driver_io_deq_valid),
     .io_deq_bits  (io_deq_bits)
   );	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:16:33
-  Queue1_UInt2_1 holder (	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:41:24
+  Queue1_UInt6_1 holder (	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:41:24
     .clock        (clock),
     .reset        (reset),
     .io_enq_valid (io_enq_valid),

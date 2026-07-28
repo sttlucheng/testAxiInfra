@@ -1012,7 +1012,7 @@ local function TestAxiReorderCommon(name)
         "--single-unit"
     )
 
-    --set_values("vcs.flags", "-xprop")
+    set_values("vcs.flags", "-xprop")
     add_values("vcs.flags","+define+ASSERT_VERBOSE_CO0_test_for_smokeND_=1","+define+STOP_COND_=1")
     add_values("vcs.flags",
         "+incdir+" .. path.join(rtl_dir, "verification"),
@@ -1212,5 +1212,150 @@ rm -rf cov.vdb
             end,
             extra_clean = "rm -rf ./db || true",
         }
+    end)
+end)
+
+-- ============================================================================
+-- 按 testcase 清理仿真产物
+--
+-- 使用方法：
+--   TC=003 KIND=wave xmake r -P . clean-tc-data  # 只删除波形
+--   TC=003 KIND=sim  xmake r -P . clean-tc-data  # 只删除日志和仿真数据库
+--   TC=003 KIND=all  xmake r -P . clean-tc-data  # 两者都删除
+--
+-- 加上 DRY_RUN=1 可以只显示将被删除的文件，不实际删除。
+-- ============================================================================
+
+target("clean-tc-data", function()
+    set_kind("phony")
+    set_default(false)
+
+    on_run(function()
+        local tc = os.getenv("TC")
+        local kind = os.getenv("KIND")
+        local dry_run = os.getenv("DRY_RUN") == "1"
+
+        -- 为避免通配符范围过大，只接受严格的三位 testcase 编号。
+        assert(
+            tc and tc:match("^%d%d%d$"),
+            "TC must be exactly three digits, for example: TC=003"
+        )
+
+        -- 必须能够在 test_cases/ 中唯一找到对应 testcase。
+        -- 这样可以防止 TC 写错后清理到不相关文件。
+        local testcase_files = os.files(path.join(tc_dir, tc .. "*.lua"))
+        assert(#testcase_files > 0, "testcase does not exist: " .. tc)
+        assert(#testcase_files == 1, "multiple testcases start with: " .. tc)
+
+        -- KIND 必须显式指定，避免忘记参数时同时删除所有类型的数据。
+        assert(
+            kind == "wave" or kind == "sim" or kind == "all",
+            "KIND must be wave, sim or all"
+        )
+
+        local testcase_name =
+            path.basename(path.filename(testcase_files[1]))
+        local candidates = {}
+
+        -- 收集匹配文件并去重。这里只收集普通文件，不删除整个目录。
+        local function collect(pattern, predicate)
+            for _, file in ipairs(os.files(pattern)) do
+                file = path.absolute(file)
+                if os.isfile(file)
+                    and (not predicate or predicate(file)) then
+                    candidates[file] = true
+                end
+            end
+        end
+
+        -- 当前两个 target 的编译目录都是共享的，因此只能清理目录中的
+        -- testcase 专属产物，不能删除 sim_build、simv、run.sh 等文件。
+        local artifact_dirs = {}
+        for _, simulator in ipairs({"vcs", "verilator"}) do
+            for _, target_name in ipairs({
+                "TestAxiReorder",
+                "TestAxiReorderVcsCov",
+            }) do
+                table.insert(artifact_dirs, path.join(
+                    build_dir, simulator, target_name
+                ))
+            end
+        end
+
+        if kind == "wave" or kind == "all" then
+            for _, dir in ipairs(artifact_dirs) do
+                -- Verilator 通常产生 <TC>.vcd。
+                collect(path.join(dir, tc .. ".vcd"))
+
+                -- VCS 当前产生 <TC>.vcd.fsdb；这个模式同时匹配其
+                -- .alias、.chain、.lock、.sinf 等配套文件。
+                collect(path.join(dir, tc .. ".vcd.*"))
+
+                -- 兼容以后直接产生 <TC>.fsdb、FST 或 WLF 的情况。
+                collect(path.join(dir, tc .. ".fsdb"))
+                collect(path.join(dir, tc .. ".fsdb.*"))
+                collect(path.join(dir, tc .. ".fst"))
+                collect(path.join(dir, tc .. ".fst.*"))
+                collect(path.join(dir, tc .. ".wlf"))
+                collect(path.join(dir, tc .. ".wlf.*"))
+            end
+        end
+
+        if kind == "sim" or kind == "all" then
+            -- 与 jobs-gen 中现有的 OUTDIR 规则保持一致。
+            local outdir = path.absolute(
+                os.getenv("OUTDIR") or path.join(prj_dir, ".regression")
+            )
+
+            -- 判断日志或数据库路径是否明确包含目标 testcase。
+            -- 支持 TC_003_SEED_1、003_reset、xxx_003_xxx 等命名。
+            local function belongs_to_testcase(file)
+                local relative = path.relative(file, outdir)
+                return relative:find("TC_" .. tc .. "_", 1, true)
+                    or relative:find("_" .. tc .. "_", 1, true)
+                    or relative:sub(1, 4) == tc .. "_"
+            end
+
+            -- 只扫描专用结果目录中的日志和数据库。
+            -- 不进入 cov.vdb，因此不会破坏 VCS 覆盖率数据库结构。
+            collect(path.join(outdir, "*.log"), belongs_to_testcase)
+            collect(path.join(outdir, "*.db"), belongs_to_testcase)
+            collect(path.join(outdir, "logs", "**", "*.log"), belongs_to_testcase)
+            collect(path.join(outdir, "db", "**", "*.db"), belongs_to_testcase)
+
+            -- 直接运行仿真产生的 run.log 是共享文件。只有日志内容明确
+            -- 表明它属于当前 testcase 时才删除，否则保留。
+            for _, dir in ipairs(artifact_dirs) do
+                local run_log = path.join(dir, "run.log")
+                if os.isfile(run_log) then
+                    local content = io.readfile(run_log) or ""
+                    local marker = "Testcase: " .. testcase_name
+                    if content:find(marker, 1, true) then
+                        candidates[path.absolute(run_log)] = true
+                    end
+                end
+            end
+        end
+
+        local files = {}
+        for file, _ in pairs(candidates) do
+            table.insert(files, file)
+        end
+        table.sort(files)
+
+        if #files == 0 then
+            cprint("${yellow}[INFO]${clear} no matching data for TC=" .. tc)
+            return
+        end
+
+        for _, file in ipairs(files) do
+            if dry_run then
+                print("[DRY-RUN] " .. file)
+            else
+                print("[REMOVE] " .. file)
+                os.tryrm(file)
+                assert(not os.exists(file), "failed to remove: " .. file)
+            end
+        end
     end)
 end)

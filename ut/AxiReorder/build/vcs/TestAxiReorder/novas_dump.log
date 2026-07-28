@@ -110,63 +110,64 @@ VCS compile option:
  option[20]: -Mcsrc=
  option[21]: -Mdir=/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/sim_build
  option[22]: -Msyslibs=/nfs/tools/synopsys/verdi/U-2023.03/share/PLI/VCS/LINUX64/pli.a -ldl 
- option[23]: +define+ASSERT_VERBOSE_CO0_test_for_smokeND_=1
- option[24]: +define+STOP_COND_=1
- option[25]: -full64
- option[26]: -debug_access+all
- option[27]: +vpi
- option[28]: +vcsd1
- option[29]: +itf+/nfs/tools/synopsys/vcs/U-2023.03/linux64/lib/vcsdp_lite.tab
- option[30]: -top
- option[31]: tb_top
- option[32]: +v2k
- option[33]: -lca
- option[34]: -kdb
- option[35]: -Xufe=2steps
- option[36]: -j256
- option[37]: -Xcmopt=0x2
- option[38]: -timescale=1ns/1ps
- option[39]: +define+SIM_VCS
- option[40]: +define+VCS
- option[41]: -q
- option[42]: -load
- option[43]: /nfs/home/yanglucheng/tools/verilua/v3.4.0/shared/libverilua_vcs.so
- option[44]: -o
- option[45]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/sim_build/simv
- option[46]: -picarchive
- option[47]: -P
- option[48]: /nfs/tools/synopsys/verdi/U-2023.03/share/PLI/VCS/LINUX64/verdi.tab
- option[49]: -fsdb
- option[50]: -sverilog
- option[51]: -gen_obj
- option[52]: +incdir+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification
- option[53]: +incdir+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert
- option[54]: +incdir+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assume
- option[55]: +incdir+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/cover
- option[56]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiAWEtrBundle.sv
- option[57]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_UInt2.sv
- option[58]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiWEtrBundle.sv
- option[59]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/FastQueue_1.sv
- option[60]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/FastQueue.sv
- option[61]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiWEtrBundle_1.sv
- option[62]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/AxiReorder.sv
- option[63]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_UInt2_1.sv
- option[64]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-FastQueue_1-Verification.sv
- option[65]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-FastQueue-Verification.sv
- option[66]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-AxiReorder-Verification.sv
- option[67]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/layers-FastQueue-Verification-Assert.sv
- option[68]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/layers-AxiReorder-Verification-Assert.sv
- option[69]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/AxiReorder_Verification_Assert.sv
- option[70]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/FastQueue_Verification_Assert.sv
- option[71]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/layers-FastQueue_1-Verification-Assert.sv
- option[72]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/FastQueue_1_Verification_Assert.sv
- option[73]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assume/layers-AxiReorder-Verification-Assume.sv
- option[74]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/cover/layers-AxiReorder-Verification-Cover.sv
- option[75]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/tb_top.sv
- option[76]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/others.sv
- option[77]: -load
- option[78]: /nfs/tools/synopsys/verdi/U-2023.03/share/PLI/VCS/LINUX64/libnovas.so:FSDBDumpCmd
- option[79]: timescale=1ns/1ps
+ option[23]: -xprop
+ option[24]: +define+ASSERT_VERBOSE_CO0_test_for_smokeND_=1
+ option[25]: +define+STOP_COND_=1
+ option[26]: -full64
+ option[27]: -debug_access+all
+ option[28]: +vpi
+ option[29]: +vcsd1
+ option[30]: +itf+/nfs/tools/synopsys/vcs/U-2023.03/linux64/lib/vcsdp_lite.tab
+ option[31]: -top
+ option[32]: tb_top
+ option[33]: +v2k
+ option[34]: -lca
+ option[35]: -kdb
+ option[36]: -Xufe=2steps
+ option[37]: -j256
+ option[38]: -Xcmopt=0x2
+ option[39]: -timescale=1ns/1ps
+ option[40]: +define+SIM_VCS
+ option[41]: +define+VCS
+ option[42]: -q
+ option[43]: -load
+ option[44]: /nfs/home/yanglucheng/tools/verilua/v3.4.0/shared/libverilua_vcs.so
+ option[45]: -o
+ option[46]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/sim_build/simv
+ option[47]: -picarchive
+ option[48]: -P
+ option[49]: /nfs/tools/synopsys/verdi/U-2023.03/share/PLI/VCS/LINUX64/verdi.tab
+ option[50]: -fsdb
+ option[51]: -sverilog
+ option[52]: -gen_obj
+ option[53]: +incdir+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification
+ option[54]: +incdir+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert
+ option[55]: +incdir+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assume
+ option[56]: +incdir+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/cover
+ option[57]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiAWEtrBundle.sv
+ option[58]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_UInt6.sv
+ option[59]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiWEtrBundle.sv
+ option[60]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/FastQueue_1.sv
+ option[61]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/FastQueue.sv
+ option[62]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_UInt6_1.sv
+ option[63]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiWEtrBundle_1.sv
+ option[64]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/AxiReorder.sv
+ option[65]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-FastQueue_1-Verification.sv
+ option[66]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-FastQueue-Verification.sv
+ option[67]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-AxiReorder-Verification.sv
+ option[68]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/layers-FastQueue-Verification-Assert.sv
+ option[69]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/layers-AxiReorder-Verification-Assert.sv
+ option[70]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/AxiReorder_Verification_Assert.sv
+ option[71]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/FastQueue_Verification_Assert.sv
+ option[72]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/layers-FastQueue_1-Verification-Assert.sv
+ option[73]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/FastQueue_1_Verification_Assert.sv
+ option[74]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assume/layers-AxiReorder-Verification-Assume.sv
+ option[75]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/cover/layers-AxiReorder-Verification-Cover.sv
+ option[76]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/tb_top.sv
+ option[77]: /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/others.sv
+ option[78]: -load
+ option[79]: /nfs/tools/synopsys/verdi/U-2023.03/share/PLI/VCS/LINUX64/libnovas.so:FSDBDumpCmd
+ option[80]: timescale=1ns/1ps
 Chronologic Simulation VCS Release U-2023.03_Full64
 Linux 6.8.0-124-generic #124~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue May 26 21:05:19 UTC  x86_64
 CPU cores: 256
@@ -175,7 +176,7 @@ Limit information:
 cputime		unlimited
 filesize		unlimited
 datasize		unlimited
-stacksize		unlimited
+stacksize		8325 kbytes
 coredumpsize		0 kbytes
 memoryuse		unlimited
 vmemoryuse		unlimited
@@ -186,11 +187,12 @@ maxproc		4126031
 (Special)Runtime environment variables:
 
 Runtime environment variables:
-TC=003
+TC=009
 DUMP=1
+LOOP=500000
 SHELL=/bin/bash
 COLORTERM=truecolor
-TERM_PROGRAM_VERSION=1.129.1
+TERM_PROGRAM_VERSION=1.130.0
 COPILOT_DEBUG_NONCE=575e8cbf03eb87a8239f27d8788b2153
 VCS_HOME=/nfs/tools/synopsys/vcs/U-2023.03
 LC_ADDRESS=zh_CN.UTF-8
@@ -205,21 +207,21 @@ LOGNAME=yanglucheng
 VCS_TOOL=/nfs/tools/synopsys/vcs/U-2023.03/bin/vcs
 XDG_SESSION_TYPE=tty
 LUA_LINK=shared
-VSCODE_GIT_ASKPASS_NODE=/nfs/home/yanglucheng/.vscode-server/cli/servers/Stable-8a7abeba6e03ea3af87bfbce9a1b7e48fed567b8/server/node
+VSCODE_GIT_ASKPASS_NODE=/nfs/home/yanglucheng/.vscode-server/cli/servers/Stable-1b6a188127eeaf9194f945eb6eb89a657e93c54c/server/node
 MOTD_SHOWN=pam
 HOME=/nfs/home/yanglucheng
 LANG=en_US.UTF-8
 LC_PAPER=zh_CN.UTF-8
 LUA_LIB=/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/lib
 NIX_SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
-GIT_ASKPASS=/nfs/home/yanglucheng/.vscode-server/cli/servers/Stable-8a7abeba6e03ea3af87bfbce9a1b7e48fed567b8/server/extensions/git/dist/askpass.sh
+GIT_ASKPASS=/nfs/home/yanglucheng/.vscode-server/cli/servers/Stable-1b6a188127eeaf9194f945eb6eb89a657e93c54c/server/extensions/git/dist/askpass.sh
 https_proxy=http://172.58.2.9:7890
-SSH_CONNECTION=172.58.2.9 49670 172.60.20.1 22
+SSH_CONNECTION=172.58.2.9 56507 172.60.20.1 22
 NVM_DIR=/nfs/home/yanglucheng/.nvm
 VSCODE_GIT_ASKPASS_EXTRA_ARGS=
 VSCODE_PYTHON_AUTOACTIVATE_GUARD=1
 CONFIG_TCCDIR=/nfs/home/yanglucheng/tools/verilua/v3.4.0/extern/luajit_tcc/tinycc/install
-CLAUDE_CODE_SSE_PORT=10305
+CLAUDE_CODE_SSE_PORT=18666
 BREKER_LICENSE=1819@172.59.60.1
 XDG_SESSION_CLASS=user
 TERM=xterm-256color
@@ -234,19 +236,19 @@ LC_TELEPHONE=zh_CN.UTF-8
 HTTPS_PROXY=http://172.58.2.9:7890
 HTTP_PROXY=http://172.58.2.9:7890
 LC_MEASUREMENT=zh_CN.UTF-8
-XDG_SESSION_ID=14567
+XDG_SESSION_ID=20681
 http_proxy=http://172.58.2.9:7890
 LM_LICENSE_FILE=27000@172.59.60.1:28000@172.59.60.1:29000@172.59.60.1:30000@172.59.60.1:31000@172.59.60.1:32000@172.59.60.1:33000@172.59.60.1:35000@172.59.60.1:36000@172.59.60.1:37000@172.59.60.1:1819@172.59.60.1:8273@172.59.60.1:8275@172.59.60.1
 LD_LIBRARY_PATH=/nfs/home/yanglucheng/tools/verilua/v3.4.0/shared:/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/target/release:/nfs/home/yanglucheng/tools/verilua/v3.4.0/wave_vpi/target/release:/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/lib/lua/5.1/socket:/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/lib/lua/5.1:/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/lib:/nfs/tools/synopsys/verdi/U-2023.03/share/PLI/VCS/linux64:/nfs/tools/synopsys/verdi/U-2023.03/share/PLI/VCS/linux64:/nfs/home/yanglucheng/tools/verilua/v3.4.0/shared:/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/target/release:/nfs/home/yanglucheng/tools/verilua/v3.4.0/wave_vpi/target/release:/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/lib/lua/5.1/socket:/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/lib/lua/5.1:/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/lib:
 XDG_RUNTIME_DIR=/run/user/1467000158
-SSH_CLIENT=172.58.2.9 49670 22
+SSH_CLIENT=172.58.2.9 56507 22
 LC_TIME=zh_CN.UTF-8
 LUA_CPATH=/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/lib/lua/5.1/?.so;/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/lib/lua/5.1/?/?.so;
 VERILUA_HOME=/nfs/home/yanglucheng/tools/verilua/v3.4.0
-VSCODE_GIT_ASKPASS_MAIN=/nfs/home/yanglucheng/.vscode-server/cli/servers/Stable-8a7abeba6e03ea3af87bfbce9a1b7e48fed567b8/server/extensions/git/dist/askpass-main.js
+VSCODE_GIT_ASKPASS_MAIN=/nfs/home/yanglucheng/.vscode-server/cli/servers/Stable-1b6a188127eeaf9194f945eb6eb89a657e93c54c/server/extensions/git/dist/askpass-main.js
 XDG_DATA_DIRS=/usr/share/gnome:/nfs/home/yanglucheng/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share:/usr/share:/nfs/home/yanglucheng/.nix-profile/share:/nix/var/nix/profiles/default/share:/var/lib/snapd/desktop:/nfs/home/yanglucheng/.nix-profile/share:/nix/var/nix/profiles/default/share
-BROWSER=/nfs/home/yanglucheng/.vscode-server/cli/servers/Stable-8a7abeba6e03ea3af87bfbce9a1b7e48fed567b8/server/bin/helpers/browser.sh
-PATH=/nfs/home/yanglucheng/node-v18.20.3-linux-x64/bin:/nfs/home/yanglucheng/lua-5.4.7/src:/nfs/home/yanglucheng/.local/bin:/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/bin:/nfs/home/yanglucheng/tools/verilua/v3.4.0/tools:/nfs/home/yanglucheng/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/nfs/share/opt/graalvm-ce-java11-22.3.2/bin:/nfs/tools/synopsys/verdi/U-2023.03/bin:/nfs/tools/synopsys/vcs/U-2023.03/bin:/nfs/share/opt/riscv-isa-sim/bin:/nfs/share/opt/bin:/nfs/share/opt/riscv/bin:/nfs/share/opt/verilator/bin:/nfs/home/yanglucheng/.vscode-server/data/User/globalStorage/github.copilot-chat/debugCommand:/nfs/home/yanglucheng/.vscode-server/data/User/globalStorage/github.copilot-chat/copilotCli:/nfs/home/yanglucheng/.vscode-server/cli/servers/Stable-8a7abeba6e03ea3af87bfbce9a1b7e48fed567b8/server/bin/remote-cli:/nfs/home/yanglucheng/.local/bin:/nfs/home/yanglucheng/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/nfs/share/opt/graalvm-ce-java11-22.3.2/bin:/nfs/tools/synopsys/verdi/U-2023.03/bin:/nfs/tools/synopsys/vcs/U-2023.03/bin:/nfs/share/opt/riscv-isa-sim/bin:/nfs/share/opt/bin:/nfs/share/opt/riscv/bin:/nfs/share/opt/verilator/bin:/nfs/home/yanglucheng/node-v18.20.3-linux-x64/bin:/nfs/home/yanglucheng/lua-5.4.7/src:/nfs/home/yanglucheng/.local/bin:/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/bin:/nfs/home/yanglucheng/tools/verilua/v3.4.0/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+BROWSER=/nfs/home/yanglucheng/.vscode-server/cli/servers/Stable-1b6a188127eeaf9194f945eb6eb89a657e93c54c/server/bin/helpers/browser.sh
+PATH=/nfs/home/yanglucheng/node-v18.20.3-linux-x64/bin:/nfs/home/yanglucheng/lua-5.4.7/src:/nfs/home/yanglucheng/.local/bin:/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/bin:/nfs/home/yanglucheng/tools/verilua/v3.4.0/tools:/nfs/home/yanglucheng/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/nfs/share/opt/graalvm-ce-java11-22.3.2/bin:/nfs/tools/synopsys/verdi/U-2023.03/bin:/nfs/tools/synopsys/vcs/U-2023.03/bin:/nfs/share/opt/riscv-isa-sim/bin:/nfs/share/opt/bin:/nfs/share/opt/riscv/bin:/nfs/share/opt/verilator/bin:/nfs/home/yanglucheng/.vscode-server/data/User/globalStorage/github.copilot-chat/debugCommand:/nfs/home/yanglucheng/.vscode-server/data/User/globalStorage/github.copilot-chat/copilotCli:/nfs/home/yanglucheng/.vscode-server/cli/servers/Stable-1b6a188127eeaf9194f945eb6eb89a657e93c54c/server/bin/remote-cli:/nfs/home/yanglucheng/.local/bin:/nfs/home/yanglucheng/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/nfs/share/opt/graalvm-ce-java11-22.3.2/bin:/nfs/tools/synopsys/verdi/U-2023.03/bin:/nfs/tools/synopsys/vcs/U-2023.03/bin:/nfs/share/opt/riscv-isa-sim/bin:/nfs/share/opt/bin:/nfs/share/opt/riscv/bin:/nfs/share/opt/verilator/bin:/nfs/home/yanglucheng/node-v18.20.3-linux-x64/bin:/nfs/home/yanglucheng/lua-5.4.7/src:/nfs/home/yanglucheng/.local/bin:/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/bin:/nfs/home/yanglucheng/tools/verilua/v3.4.0/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1467000158/bus
 LUA_PATH=./?.lua;/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/share/lua/5.1/?.lua;/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/share/lua/5.1/?/init.lua;/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/share/luajit-2.1/?.lua;/nfs/home/yanglucheng/tools/verilua/v3.4.0/src/lua/?.lua;/nfs/home/yanglucheng/tools/verilua/v3.4.0/src/lua/verilua/?.lua;/nfs/home/yanglucheng/tools/verilua/v3.4.0/src/lua/verilua/vpiml/?.lua;/nfs/home/yanglucheng/tools/verilua/v3.4.0/src/lua/verilua/sv/?.lua;/nfs/home/yanglucheng/tools/verilua/v3.4.0/src/lua/verilua/coverage/?.lua;/nfs/home/yanglucheng/tools/verilua/v3.4.0/src/lua/verilua/handles/?.lua;/nfs/home/yanglucheng/tools/verilua/v3.4.0/src/lua/verilua/scheduler/?.lua;/nfs/home/yanglucheng/tools/verilua/v3.4.0/src/lua/verilua/random/?.lua;/nfs/home/yanglucheng/tools/verilua/v3.4.0/src/lua/verilua/utils/?.lua;/nfs/home/yanglucheng/tools/verilua/v3.4.0/src/lua/thirdparty_lib/?.lua;/nfs/home/yanglucheng/tools/verilua/v3.4.0/extern/debugger.lua/?.lua;/nfs/home/yanglucheng/tools/verilua/v3.4.0/extern/luajit_tcc/?.lua;/nfs/home/yanglucheng/tools/verilua/v3.4.0/extern/luajit_tcc/?/?.lua;/nfs/home/yanglucheng/tools/verilua/v3.4.0/extern/luajit_tcc/?.lua;;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/src/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/src/lua/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/test_cases/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/src/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/src/common/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/src/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/src/dut/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/src/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/src/components/AXI/test_zhujiang_utils/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/src/components/AXI/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/src/components/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/src/?.lua;./?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/test_cases/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/src/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/src/common/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/src/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/src/dut/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/src/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/src/components/AXI/test_zhujiang_utils/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/src/components/AXI/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/src/components/?.lua;/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/?.lua
 LC_NUMERIC=zh_CN.UTF-8
@@ -254,9 +256,9 @@ RISCV=/nfs/share/opt/riscv
 OLDPWD=/nfs/home/yanglucheng/.vscode-server
 NOVAS_HOME=/nfs/tools/synopsys/verdi/U-2023.03
 TERM_PROGRAM=vscode
-VSCODE_IPC_HOOK_CLI=/run/user/1467000158/vscode-ipc-4ac90d77-856d-40bd-9421-ac8dc28c33d8.sock
+VSCODE_IPC_HOOK_CLI=/run/user/1467000158/vscode-ipc-5492df74-0acc-4e8e-be2d-226bae0ef4b6.sock
 _=/usr/bin/xmake
-TC_NAME=003_different_id_write
+TC_NAME=009
 VERILUA_CFG=/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/verilua_cfg.lua
 VCS_PATHMAP_PRELOAD_DONE=1
 VCS_STACK_EXEC=true
@@ -271,89 +273,63 @@ Runtime command line arguments:
 argv[0]=/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/sim_build/simv
 argv[1]=+notimingcheck
 argv[2]=+vcs+lic+wait
-273 profile - 100
-          CPU/Mem usage: 0.090 sys,  0.190 user,  1302.79M mem
-274 Elapsed time:    0:00:01    Wed Jul 22 17:05:08 2026
-275 User CPU time used: 0 seconds
-276 System CPU time used: 0 seconds
-277 pliAppInit
-278 [SC]Init: MemoryConsumed=0.00MB ElapsedTime=0hour 0min. 0sec.
-279 FSDB_GATE is set.
-280 FSDB_RTL is set.
-281 FSDB_ALIAS_ARRAY_ELEM is set to 4294967295.
-282 Enable Parallel Dumping.
-283 pliAppMiscSet: New Sim Round
-284 pliEntryInit
-285 LIBSSCORE=found /nfs/tools/synopsys/verdi/U-2023.03/share/PLI/lib/LINUXAMD64/libsscore_vcs202303.so through $NOVAS_HOME setting.
-286 FSDB Dumper for VCS, Release Verdi_U-2023.03, Linux x86_64/64bit, 02/16/2023
-287 (C) 1996 - 2023 by Synopsys, Inc.
-288 sps_call_fsdbDumpfile_main at 0 : /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/tb_top.sv(341)
-289 argv[0]: (003.vcd.fsdb)
-290 *Verdi* : Create FSDB file '003.vcd.fsdb'
-291 [spi_vcs_vd_ppi_create_root]: no upf option
-292 compile option from '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/sim_build/simv.daidir/vcs_rebuild'.
-293   "vcs '+define+ASSERT_VERBOSE_CO0_test_for_smokeND_=1' '+define+STOP_COND_=1' '+incdir+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification' '+incdir+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert' '+incdir+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assume' '+incdir+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/cover' '-sverilog' '-full64' '-debug_access+all' '-top' 'tb_top' '-Mdir=/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/sim_build' '+v2k' '-lca' '-kdb' '-j256' '-timescale=1ns/1ps' '+define+SIM_VCS' '+define+VCS' '-q' '-CFLAGS' '-Ofast -march=native -loop-unroll' '-LDFLAGS' '-flto -Wl,--no-as-needed' '-LDFLAGS' '-Wl,-rpath,/nfs/home/yanglucheng/tools/verilua/v3.4.0/shared' '-LDFLAGS' '-Wl,-rpath,/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/lib' '-LDFLAGS' '-L/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/lib -lluajit-5.1 -lverilua_vcs -lz' '-load' '/nfs/home/yanglucheng/tools/verilua/v3.4.0/shared/libverilua_vcs.so' '-o' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/sim_build/simv' '-cc' '/usr/bin/gcc' '-cpp' '/usr/bin/g++' '-ld' '/usr/bin/g++' '-CFLAGS' '-I/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/include' '-CFLAGS' '-I/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/include/luajit-2.1' '-CFLAGS' '-I/nfs/home/yanglucheng/tools/verilua/v3.4.0/src/include' '-CFLAGS' '-I/nfs/home/yanglucheng/tools/verilua/v3.4.0/conan_installed/include' '-LDFLAGS' '-L/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/lib' '-LDFLAGS' '-L/nfs/home/yanglucheng/tools/verilua/v3.4.0/shared' '-LDFLAGS' '-L/nfs/home/yanglucheng/tools/verilua/v3.4.0/conan_installed/lib' '-LDFLAGS' '-Wl,-rpath,/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/lib' '-LDFLAGS' '-Wl,-rpath,/nfs/home/yanglucheng/tools/verilua/v3.4.0/shared' '-LDFLAGS' '-Wl,-rpath,/nfs/home/yanglucheng/tools/verilua/v3.4.0/conan_installed/lib' '-LDFLAGS' '-lverilua_vcs' '-LDFLAGS' '-lstdc++' '-LDFLAGS' '-lluajit-5.1' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiAWEtrBundle.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_UInt2.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiWEtrBundle.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/FastQueue_1.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/FastQueue.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiWEtrBundle_1.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/AxiReorder.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_UInt2_1.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-FastQueue_1-Verification.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-FastQueue-Verification.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-AxiReorder-Verification.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/layers-FastQueue-Verification-Assert.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/layers-AxiReorder-Verification-Assert.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/AxiReorder_Verification_Assert.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/FastQueue_Verification_Assert.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/layers-FastQueue_1-Verification-Assert.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/FastQueue_1_Verification_Assert.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assume/layers-AxiReorder-Verification-Assume.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/cover/layers-AxiReorder-Verification-Cover.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/tb_top.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/others.sv' 2>&1"
-294 DVDI_is_vir_unload_enabled is enable
-295 FSDB_VCS_ENABLE_NATIVE_VC is enable
-296 sps_call_fsdbDumpvars_vd_main at 0 : /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/tb_top.sv(364)
-297 argv[0]: (0)
-298 argv[1]: (handle) tb_top
-299 argv[2]: (+all)
-300 *Verdi* : Begin traversing the scope (tb_top), layer (0).
-301 *Verdi* : Enable +all dumping.
-302 *Verdi* : End of traversing.
-303 pliAppHDL_DumpVarComplete traverse var: profile - 
-          CPU/Mem usage: 0.100 sys,  0.200 user,  1402.35M mem
-                   incr: 0.000 sys,  0.000 user,  7.26M mem
-                   accu: 0.000 sys,  0.000 user,  7.26M mem
-              accu incr: 0.000 sys,  0.000 user,  7.26M mem
+275 profile - 100
+          CPU/Mem usage: 0.110 sys,  0.210 user,  1305.92M mem
+276 Elapsed time:    0:00:00    Tue Jul 28 15:17:38 2026
+277 User CPU time used: 0 seconds
+278 System CPU time used: 0 seconds
+279 pliAppInit
+280 [SC]Init: MemoryConsumed=0.00MB ElapsedTime=0hour 0min. 0sec.
+281 FSDB_GATE is set.
+282 FSDB_RTL is set.
+283 FSDB_ALIAS_ARRAY_ELEM is set to 4294967295.
+284 Enable Parallel Dumping.
+285 pliAppMiscSet: New Sim Round
+286 pliEntryInit
+287 LIBSSCORE=found /nfs/tools/synopsys/verdi/U-2023.03/share/PLI/lib/LINUXAMD64/libsscore_vcs202303.so through $NOVAS_HOME setting.
+288 FSDB Dumper for VCS, Release Verdi_U-2023.03, Linux x86_64/64bit, 02/16/2023
+289 (C) 1996 - 2023 by Synopsys, Inc.
+290 sps_call_fsdbDumpfile_main at 0 : /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/tb_top.sv(341)
+291 argv[0]: (009.vcd.fsdb)
+292 *Verdi* FSDB WARNING: The FSDB file already exists. Overwriting the FSDB file may crash the programs that are using this file.
+293 *Verdi* : Create FSDB file '009.vcd.fsdb'
+294 [spi_vcs_vd_ppi_create_root]: no upf option
+295 compile option from '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/sim_build/simv.daidir/vcs_rebuild'.
+296   "vcs '-xprop' '+define+ASSERT_VERBOSE_CO0_test_for_smokeND_=1' '+define+STOP_COND_=1' '+incdir+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification' '+incdir+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert' '+incdir+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assume' '+incdir+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/cover' '-sverilog' '-full64' '-debug_access+all' '-top' 'tb_top' '-Mdir=/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/sim_build' '+v2k' '-lca' '-kdb' '-j256' '-timescale=1ns/1ps' '+define+SIM_VCS' '+define+VCS' '-q' '-CFLAGS' '-Ofast -march=native -loop-unroll' '-LDFLAGS' '-flto -Wl,--no-as-needed' '-LDFLAGS' '-Wl,-rpath,/nfs/home/yanglucheng/tools/verilua/v3.4.0/shared' '-LDFLAGS' '-Wl,-rpath,/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/lib' '-LDFLAGS' '-L/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/lib -lluajit-5.1 -lverilua_vcs -lz' '-load' '/nfs/home/yanglucheng/tools/verilua/v3.4.0/shared/libverilua_vcs.so' '-o' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/sim_build/simv' '-cc' '/usr/bin/gcc' '-cpp' '/usr/bin/g++' '-ld' '/usr/bin/g++' '-CFLAGS' '-I/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/include' '-CFLAGS' '-I/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/include/luajit-2.1' '-CFLAGS' '-I/nfs/home/yanglucheng/tools/verilua/v3.4.0/src/include' '-CFLAGS' '-I/nfs/home/yanglucheng/tools/verilua/v3.4.0/conan_installed/include' '-LDFLAGS' '-L/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/lib' '-LDFLAGS' '-L/nfs/home/yanglucheng/tools/verilua/v3.4.0/shared' '-LDFLAGS' '-L/nfs/home/yanglucheng/tools/verilua/v3.4.0/conan_installed/lib' '-LDFLAGS' '-Wl,-rpath,/nfs/home/yanglucheng/tools/verilua/v3.4.0/luajit-pro/luajit2.1/lib' '-LDFLAGS' '-Wl,-rpath,/nfs/home/yanglucheng/tools/verilua/v3.4.0/shared' '-LDFLAGS' '-Wl,-rpath,/nfs/home/yanglucheng/tools/verilua/v3.4.0/conan_installed/lib' '-LDFLAGS' '-lverilua_vcs' '-LDFLAGS' '-lstdc++' '-LDFLAGS' '-lluajit-5.1' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiAWEtrBundle.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_UInt6.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiWEtrBundle.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/FastQueue_1.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/FastQueue.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_UInt6_1.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiWEtrBundle_1.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/AxiReorder.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-FastQueue_1-Verification.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-FastQueue-Verification.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-AxiReorder-Verification.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/layers-FastQueue-Verification-Assert.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/layers-AxiReorder-Verification-Assert.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/AxiReorder_Verification_Assert.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/FastQueue_Verification_Assert.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/layers-FastQueue_1-Verification-Assert.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/FastQueue_1_Verification_Assert.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assume/layers-AxiReorder-Verification-Assume.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/cover/layers-AxiReorder-Verification-Cover.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/tb_top.sv' '/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/others.sv' 2>&1"
+297 DVDI_is_vir_unload_enabled is enable
+298 FSDB_VCS_ENABLE_NATIVE_VC is enable
+299 sps_call_fsdbDumpvars_vd_main at 0 : /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/tb_top.sv(364)
+300 argv[0]: (0)
+301 argv[1]: (handle) tb_top
+302 argv[2]: (+all)
+303 *Verdi* : Begin traversing the scope (tb_top), layer (0).
+304 *Verdi* : Enable +all dumping.
+305 *Verdi* : End of traversing.
+306 pliAppHDL_DumpVarComplete traverse var: profile - 
+          CPU/Mem usage: 0.120 sys,  0.230 user,  1405.73M mem
+                   incr: 0.010 sys,  0.020 user,  7.52M mem
+                   accu: 0.010 sys,  0.020 user,  7.52M mem
+              accu incr: 0.010 sys,  0.020 user,  7.52M mem
 
-          Count usage: 496 var,  393 idcode,  183 callback
-                 incr: 496 var,  393 idcode,  183 callback
-                 accu: 496 var,  393 idcode,  183 callback
-            accu incr: 496 var,  393 idcode,  183 callback
-304 Elapsed time:    0:00:01    Wed Jul 22 17:05:08 2026
-305 User CPU time used: 0 seconds
-306 System CPU time used: 0 seconds
-307 pliAppHDL_DumpVarComplete: profile - 
-          CPU/Mem usage: 0.100 sys,  0.200 user,  1403.40M mem
-                   incr: 0.000 sys,  0.000 user,  1.05M mem
-                   accu: 0.000 sys,  0.000 user,  8.31M mem
-              accu incr: 0.000 sys,  0.000 user,  1.05M mem
+          Count usage: 3025 var,  2908 idcode,  1773 callback
+                 incr: 3025 var,  2908 idcode,  1773 callback
+                 accu: 3025 var,  2908 idcode,  1773 callback
+            accu incr: 3025 var,  2908 idcode,  1773 callback
+307 Elapsed time:    0:00:01    Tue Jul 28 15:17:39 2026
+308 User CPU time used: 0 seconds
+309 System CPU time used: 0 seconds
+310 pliAppHDL_DumpVarComplete: profile - 
+          CPU/Mem usage: 0.120 sys,  0.230 user,  1406.93M mem
+                   incr: 0.000 sys,  0.000 user,  1.19M mem
+                   accu: 0.010 sys,  0.020 user,  8.71M mem
+              accu incr: 0.000 sys,  0.000 user,  1.19M mem
 
-          Count usage: 496 var,  393 idcode,  183 callback
+          Count usage: 3025 var,  2908 idcode,  1773 callback
                  incr: 0 var,  0 idcode,  0 callback
-                 accu: 496 var,  393 idcode,  183 callback
+                 accu: 3025 var,  2908 idcode,  1773 callback
             accu incr: 0 var,  0 idcode,  0 callback
-308 Elapsed time:    0:00:01    Wed Jul 22 17:05:08 2026
-309 User CPU time used: 0 seconds
-310 System CPU time used: 0 seconds
-311 sps_call_fsdbDumpon_vd_main at 0 : /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/tb_top.sv(419)
-312 *Verdi* : fsdbDumpon - All FSDB files at 0 ps.
-313 End of simulation at 20683230000
-314 Memory usage: 1548.644 M
-315 Maximum resident set size: 263 MB
-316 Hard page faults: 0
-317 Soft page faults: 245626
-318 Elapsed time:    0:01:47    Wed Jul 22 17:06:54 2026
-319 User CPU time used: 108 seconds
-320 System CPU time used: 0 seconds
-321 Begin FSDB profile info:
-322 FSDB Writer : bc1(4443685) bcn(2483211) mtf/stf(0/2)
-FSDB Writer elapsed time : flush(1.861550) io wait(0.000000) theadpool wait(0.000000)
-FSDB Writer cpu time : MT Compression : 0
-323 End FSDB profile info
-324 FSDB closed. Name: 003.vcd.fsdb Size: 27311342
-325 Parallel profile     - ProducerThread:1 ConsumerThread:1 Buffer:64MB
-326                      - BlockUsed:85 Acquire:0 BufferUsed:175952184
-327                      - Flush:4 Expand:0 ProducerWait:0 ConsumerWait:83
-328                      - MainProducerTime:107.218331773 TotalConsumerTime:2.054359719
-329                      - ElapsedTime:107.093744000
-330 Producer   0 profile - BlockUsed:85 Acquire:0 BufferUsed:175952184
-331 Consumer   0 profile - Affinity:-1 CPUTime:2.054359719 LifeTime:105.048141729 (0.02%)
-332                      - BlockUsed:85 Acquire:0 BufferUsed:175952184
-333 SimExit
-334 Elapsed time:    0:01:48    Wed Jul 22 17:06:55 2026
-335 User CPU time used: 108 seconds
-336 System CPU time used: 0 seconds
-337 Sim process exit
+311 Elapsed time:    0:00:01    Tue Jul 28 15:17:39 2026
+312 User CPU time used: 0 seconds
+313 System CPU time used: 0 seconds
+314 sps_call_fsdbDumpon_vd_main at 0 : /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/tb_top.sv(419)
+315 *Verdi* : fsdbDumpon - All FSDB files at 0 ps.

@@ -23,6 +23,31 @@ function M.subscribe(callback)
     subscribers[#subscribers + 1] = callback
 end
 
+local function check_internal(sample)
+    if sample.reset == 1 then return end
+
+    local ar = sample.internal.ar
+    local aw = sample.internal.aw
+
+    -- AR有效时，仲裁器选择的表项必须确实满足发送条件
+    if sample.io.slv_ar.valid == 1 then
+        local selected = ar.selected_entry
+        assert(ar.entries[selected].can_send)
+        assert(sample.io.slv_ar.bits.id == selected)
+    end
+
+    -- AW队首存在时，nid为0才允许产生下游AWVALID
+    if aw.head_valid == 1 then
+        local head = aw.entries[aw.head_entry]
+        local expected_valid = head.nid == 0 and 1 or 0
+        assert(sample.io.slv_aw.valid == expected_valid)
+
+        if sample.io.slv_aw.valid == 1 then
+            assert(sample.io.slv_aw.bits.id == aw.head_entry)
+        end
+    end
+end
+
 local function publish(sample)
     -- sample在本拍已完整采集。按注册顺序同步通知消费者，使scoreboard
     -- 能在同一拍同时看到输入端和输出端的valid/ready握手。
@@ -174,7 +199,54 @@ function M.sample(cycles)
                 },
             },
         },
+
+        internal = {
+            ar = {
+                selected_entry = signals.dbg_ar.selected_entry:get(),
+                entries = {},
+            },
+            aw = {
+                head_valid = signals.dbg_aw.head_valid:get(),
+                head_ready = signals.dbg_aw.head_ready:get(),
+                head_entry = signals.dbg_aw.head_entry:get(),
+                entries = {},
+            },
+        },
+        
+        
     }
+
+    for i = 0, 63 do
+        local ar = signals.dbg_ar.entries[i]
+        local aw = signals.dbg_aw.entries[i]
+
+        local ar_valid = ar.valid:get()
+        local ar_nid = ar.nid:get()
+        local ar_sent = ar.have_sent:get()
+
+        sample.internal.ar.entries[i] = {
+            valid = ar_valid,
+            id = ar.id:get(),
+            addr = ar.addr:get(),
+            nid = ar_nid,
+            have_sent = ar_sent,
+            alloc_hit = ar.alloc_hit:get(),
+            -- 等价于RTL中的arShouldSend条件，对4个表项都适用
+            can_send = ar_valid == 1 and ar_nid == 0 and ar_sent == 0,
+        }
+
+        sample.internal.aw.entries[i] = {
+            valid = aw.valid:get(),
+            id = aw.id:get(),
+            nid = aw.nid:get(),
+            have_sent = aw.have_sent:get(),
+            alloc_hit = aw.alloc_hit:get(),
+        }
+
+        
+    end
+    check_internal(sample)
+
 
     if cfg.verbose_monitor then
         -- TODO: print useful transaction-level information

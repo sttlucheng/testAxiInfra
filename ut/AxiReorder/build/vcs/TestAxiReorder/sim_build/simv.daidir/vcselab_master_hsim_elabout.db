@@ -76,7 +76,7 @@ fHsimCongruencySVADbg              	0
 fHsimCongruencyLatchEdgeFix        	0
 fHsimCongruencyFlopEdgeFix         	0
 fHsimCongruencyXprop               	0
-fHsimCongruencyXpropFix            	0
+fHsimCongruencyXpropFix            	1
 fHsimCongruencyXpropDbsEdge        	0
 fHsimCongruencyResetRecoveryDbs    	0
 fHsimCongruencyClockControlDiag    	0
@@ -254,7 +254,7 @@ fVpdDeltaCycleInDesign             	0
 fHsimAllowVecGateInVpd             	1
 fHsimAllowAllVecGateInVpd          	0
 fHsimAllowUdpInVpd                 	1
-fHsimAllowAlwaysCombInVpd          	1
+fHsimAllowAlwaysCombInVpd          	0
 fHsimAllowAlwaysCombCmpDvcSimv     	0
 fHsimAllowAlwaysCombDbg            	0
 fHsimMakeAllP2SPrimary             	0
@@ -310,7 +310,7 @@ fHsimUdpDynElab                    	0
 fHsimCompressData                  	4
 fHsimIgnoreZForDfuse               	1
 fHsimIgnoreDifferentCaps           	0
-fHandleGlitchQC                    	1
+fHandleGlitchQC                    	0
 fGlitchDetectForAllRtlLoads        	0
 fHsimFuseConstDriversOpt           	1
 fHsimMdSchedTr                     	0
@@ -582,7 +582,7 @@ fHsCgOptDce                        	1
 fHsCgOpt4StateInfra                	1
 fHsCgOptMultiDriverSupport         	0
 fHsCgOptUdpChkDataForWakeup        	1
-fHsCgOptXprop                      	0
+fHsCgOptXprop                      	3
 fHsimMdbcgDiag                     	0
 fHsCgMaxInputs                     	6
 fHsCgOptFwdPass                    	1

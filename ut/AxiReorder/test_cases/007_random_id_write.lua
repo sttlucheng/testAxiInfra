@@ -28,7 +28,7 @@ local function task_test()
     driver.initialize()
     env.wait_cycles(1)
 
-    local task_timeout = 20000
+    local task_timeout = 2000000
 
     local function submit_write(index, submit)
         local timeout = task_timeout

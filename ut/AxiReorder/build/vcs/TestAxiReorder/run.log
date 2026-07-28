@@ -1,9 +1,0 @@
-Info: [VCS_SAVE_RESTORE_INFO] ASLR (Address Space Layout Randomization) is detected on the machine. To enable $save functionality, ASLR will be switched off and simv re-executed.
-Please use '-no_save' simv switch to avoid this.
-Notice: timing checks disabled with +notimingcheck at run-time
-Chronologic VCS simulator copyright 1991-2023
-Contains Synopsys proprietary information.
-Compiler version U-2023.03_Full64; Runtime version U-2023.03_Full64;  Jul 22 11:18 2026
-
- Failed to obtain license VCS-ELITE-RUNTIME/VCSMXRuntime_Net/VT_VCS_XPropRuntime required by XProp...
-Note: Use +vcs+lic+wait ( or -licwait <minute> or -licqueue  in Unified Use Model ) to queue for license

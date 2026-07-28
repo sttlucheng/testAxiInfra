@@ -1,2 +1,2 @@
--node tb_top.u_AxiReorder.io_slv_aw_bits_id[11:2] // 0 always
--node tb_top.u_AxiReorder.io_slv_ar_bits_id[11:2] // 0 always
+-node tb_top.u_AxiReorder.io_slv_aw_bits_id[11:6] // 0 always
+-node tb_top.u_AxiReorder.io_slv_ar_bits_id[11:6] // 0 always

@@ -2,5 +2,3 @@
 export VERILUA_CFG=/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorderVcsCov/verilua_cfg.lua
 export SIM=vcs
 export TC_NAME=000_smoke
-export TC=000
-export SEED=1

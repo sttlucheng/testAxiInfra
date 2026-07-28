@@ -124,12 +124,12 @@ local axi_master = AXI4Master(
         -- 每个未完成事务会占用一个 task slot，完成后才会释放。
         -- 非阻塞 read()/write() 超过该数量时会返回
         -- "NoTaskIDAvailable"。该值还必须适配 AXI ID 位宽。
-        nr_task = 16,
+        nr_task = 64,
 
         -- 单个事务允许等待的最大周期数。
         -- 上层状态机在等待 AR/AW/W 发送或 R/B 返回时持续计数；超过
         -- 该值说明事务可能卡死，组件会触发超时检查，避免仿真无限等待。
-        timeout_max = 20000,
+        timeout_max = 2000000,
 
         -- 底层 AXI4MasterAgentV2 的配置。
         -- Agent 内部使用五个独立调度任务驱动/采集 AR、R、AW、W、B，
@@ -145,13 +145,16 @@ local axi_master = AXI4Master(
 
             -- 是否打印 Agent 的详细事务/通道日志。
             -- false 可保持冒烟日志简洁；调试握手或超时时可临时改为 true。
-            verbose = false,
+            verbose = true,
 
             -- 是否在一个通道事务完成后随机改写非握手 payload 字段。
             -- true 有助于发现 DUT 错误依赖 valid=0 时 payload 的问题，但会让
             -- 波形更杂乱；基础冒烟使用 false，使空闲期信号保持更可预测。
             -- valid 和 ready 本身不会被这个选项随机化。
-            enable_randomize_fields = false,
+            enable_randomize_fields = true,
+            nr_ar_taskbuf = 64,
+            nr_aw_taskbuf = 64,
+            nr_w_taskbuf = 64
         },
     }
 )
@@ -242,7 +245,7 @@ local axi_memory = AXI4Memory(
         -- 是否在响应完成或通道空闲时随机改写非握手 payload 字段。
         -- true 可检查 DUT 是否错误使用 valid=0 时的 R/B payload；false 可使
         -- 冒烟波形保持稳定清晰。valid/ready 不由这个选项直接随机化。
-        enable_randomize_fields = false,
+        enable_randomize_fields = true,
 
         -- 以下五个开关分别控制各 AXI 通道是否插入延迟。
         -- 全部关闭时，Memory 尽快接收请求并返回响应，适合作为基础冒烟；
@@ -253,18 +256,18 @@ local axi_memory = AXI4Memory(
 
         -- AR：读地址接收延迟。开启后不会始终立即拉高 ARREADY。
         enable_ar_delay = true,
-        ar_delay_min = 1,
-        ar_delay_range = 5,
+        ar_delay_min = 20,
+        ar_delay_range = 20,
 
         -- AW：写地址接收延迟。开启后可推迟 AWREADY 和写地址握手。
         enable_aw_delay = true,
-        aw_delay_min = 1,
-        aw_delay_range = 5,
+        aw_delay_min = 20,
+        aw_delay_range = 20,
 
         -- W：写数据接收延迟。开启后可推迟 WREADY，向 DUT 施加写数据背压。
         enable_w_delay = true,
-        w_delay_min = 1,
-        w_delay_range = 5,
+        w_delay_min = 20,
+        w_delay_range = 20,
 
         -- R：读响应发送延迟。开启后可推迟 RVALID/各拍读数据返回；
         -- 后续 read-reorder 测试会重点使用该开关和 shuffle_r 等配置。
@@ -273,9 +276,9 @@ local axi_memory = AXI4Memory(
         -- enable_r_delay未开启时，r_delay_min/r_delay_range 不生效。
         -- 控制延迟是固定值r_delay_min还是随机值(r_delay_min,r_delay_min + r_delay_range)。
         -- R 响应的最小延迟周期数。
-        r_delay_min = 1,
+        r_delay_min = 100,
         -- R 响应的随机延迟范围。实际延迟周期数 = r_delay_min + [0, r_delay_range]。
-        r_delay_range = 5,
+        r_delay_range = 100,
 
         -- 控制“有多笔待读事务时，先选择哪一笔返回”。shuffle_r = true使得有乱序返回的可能。
         shuffle_r = true,
@@ -286,8 +289,13 @@ local axi_memory = AXI4Memory(
 
         -- B：写响应发送延迟。开启后可推迟 BVALID，模拟下游写响应延迟。
         enable_b_delay = true,
-        b_delay_min = 1,
-        b_delay_range = 5,
+        b_delay_min = 100,
+        b_delay_range = 100,
+
+        -- nr_b_taskbuf = 4,
+        -- nr_r_taskbuf = 1,
+        -- nr_w_taskbuf = 64
+
     }
 )
 

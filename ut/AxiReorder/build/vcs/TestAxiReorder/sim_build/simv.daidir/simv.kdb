@@ -12,6 +12,7 @@ COSIM=FALSE
 TOP=tb_top 
 OPTION=-ssv -ssy 
 ELAB_OPTION=-ssv -ssy 
+OTHER_OPTION=-xprop 
 ELAB=TRUE
 SIMV_WRAPPER=FALSE
 [vcs]

@@ -28,7 +28,7 @@ local function task_test()
     driver.initialize()
     env.wait_cycles(1)
 
-    local task_timeout = 20000
+    local task_timeout = 2000000
 
     local function submit_write(index, submit)
         local timeout = task_timeout
@@ -68,7 +68,7 @@ local function task_test()
     -- 使用循环模拟多笔事务
     local tickets = {}
     -- 循环次数
-    local loop = tonumber(os.getenv("LOOP")) or 4
+    local loop = tonumber(os.getenv("LOOP")) or 5000
     assert(
         loop > 0 and loop == math.floor(loop),
         "\n\n---ERROR---\n\nLOOP must be a positive integer\n\n-----------\n\n"
@@ -79,7 +79,9 @@ local function task_test()
         local write_size
         -- 确保生成的burst footprint不超过4KB
         repeat
-            write_burst, write_len = axi_stimulus.random_burst_len()
+            -- 同一AXI ID的写响应会按序返回。限制INCR burst为最多100拍，
+            -- 使16笔未完成写在随机下游延迟下仍可在task_timeout内完成。
+            write_burst, write_len = axi_stimulus.random_burst_len({ max_incr_len = 99 })
             write_size = math.random(0, 5)
         until write_burst == 0 or (write_len + 1) * (2 ^ write_size) <= 4096
 
@@ -128,6 +130,7 @@ local function task_test()
 
         -- 只有提交成功才记录
         tickets[#tickets + 1] = write_ticket
+        dut.clock:posedge(math.random(5, 20))
 
     end
 

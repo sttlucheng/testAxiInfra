@@ -5,6 +5,36 @@ work = ./work
 3D_Active_Annotation = FALSE
 [ColumnCfg]
 covtblAssertList_Gen_Info = false
+covtblInstancesList_V1.1_FSM_pos = 16
+covtblInstancesList_V1.1_FSM_width = 100
+covtblInstancesList_V1.1_FSM = true
+covtblInstancesList_V1.1_FSM_U+C_pos = 17
+covtblInstancesList_V1.1_FSM_U+C_width = 0
+covtblInstancesList_V1.1_FSM_U+C = false
+covtblInstancesList_V1.1_FSM_U_pos = 18
+covtblInstancesList_V1.1_FSM_U_width = 0
+covtblInstancesList_V1.1_FSM_U = false
+covtblInstancesList_V1.1_FSM_C_pos = 19
+covtblInstancesList_V1.1_FSM_C_width = 0
+covtblInstancesList_V1.1_FSM_C = false
+covtblInstancesList_V1.1_FSM_X_pos = 20
+covtblInstancesList_V1.1_FSM_X_width = 0
+covtblInstancesList_V1.1_FSM_X = false
+covtblModulesList_V1.1_FSM_pos = 16
+covtblModulesList_V1.1_FSM_width = 100
+covtblModulesList_V1.1_FSM = true
+covtblModulesList_V1.1_FSM_U+C_pos = 17
+covtblModulesList_V1.1_FSM_U+C_width = 0
+covtblModulesList_V1.1_FSM_U+C = false
+covtblModulesList_V1.1_FSM_U_pos = 18
+covtblModulesList_V1.1_FSM_U_width = 0
+covtblModulesList_V1.1_FSM_U = false
+covtblModulesList_V1.1_FSM_C_pos = 19
+covtblModulesList_V1.1_FSM_C_width = 0
+covtblModulesList_V1.1_FSM_C = false
+covtblModulesList_V1.1_FSM_X_pos = 20
+covtblModulesList_V1.1_FSM_X_width = 0
+covtblModulesList_V1.1_FSM_X = false
 covtblAssertList_Assert = true
 m_hvpDetailPlanEditAttributeListView_V1.1_Name_pos = 0
 m_hvpDetailPlanEditAttributeListView_V1.1_Name_width = 100
@@ -189,49 +219,34 @@ covtblInstancesList_V1.1_Toggle_C = false
 covtblInstancesList_V1.1_Toggle_X_pos = 15
 covtblInstancesList_V1.1_Toggle_X_width = 0
 covtblInstancesList_V1.1_Toggle_X = false
-covtblInstancesList_V1.1_FSM_pos = 16
-covtblInstancesList_V1.1_FSM_width = 100
-covtblInstancesList_V1.1_FSM = true
-covtblInstancesList_V1.1_FSM_U+C_pos = 17
-covtblInstancesList_V1.1_FSM_U+C_width = 0
-covtblInstancesList_V1.1_FSM_U+C = false
-covtblInstancesList_V1.1_FSM_U_pos = 18
-covtblInstancesList_V1.1_FSM_U_width = 0
-covtblInstancesList_V1.1_FSM_U = false
-covtblInstancesList_V1.1_FSM_C_pos = 19
-covtblInstancesList_V1.1_FSM_C_width = 0
-covtblInstancesList_V1.1_FSM_C = false
-covtblInstancesList_V1.1_FSM_X_pos = 20
-covtblInstancesList_V1.1_FSM_X_width = 0
-covtblInstancesList_V1.1_FSM_X = false
-covtblInstancesList_V1.1_Condition_pos = 21
+covtblInstancesList_V1.1_Condition_pos = 16
 covtblInstancesList_V1.1_Condition_width = 100
 covtblInstancesList_V1.1_Condition = true
-covtblInstancesList_V1.1_Condition_U+C_pos = 22
+covtblInstancesList_V1.1_Condition_U+C_pos = 17
 covtblInstancesList_V1.1_Condition_U+C_width = 0
 covtblInstancesList_V1.1_Condition_U+C = false
-covtblInstancesList_V1.1_Condition_U_pos = 23
+covtblInstancesList_V1.1_Condition_U_pos = 18
 covtblInstancesList_V1.1_Condition_U_width = 0
 covtblInstancesList_V1.1_Condition_U = false
-covtblInstancesList_V1.1_Condition_C_pos = 24
+covtblInstancesList_V1.1_Condition_C_pos = 19
 covtblInstancesList_V1.1_Condition_C_width = 0
 covtblInstancesList_V1.1_Condition_C = false
-covtblInstancesList_V1.1_Condition_X_pos = 25
+covtblInstancesList_V1.1_Condition_X_pos = 20
 covtblInstancesList_V1.1_Condition_X_width = 0
 covtblInstancesList_V1.1_Condition_X = false
-covtblInstancesList_V1.1_Branch_pos = 26
+covtblInstancesList_V1.1_Branch_pos = 23
 covtblInstancesList_V1.1_Branch_width = 100
 covtblInstancesList_V1.1_Branch = true
-covtblInstancesList_V1.1_Branch_U+C_pos = 27
+covtblInstancesList_V1.1_Branch_U+C_pos = 21
 covtblInstancesList_V1.1_Branch_U+C_width = 0
 covtblInstancesList_V1.1_Branch_U+C = false
-covtblInstancesList_V1.1_Branch_U_pos = 28
+covtblInstancesList_V1.1_Branch_U_pos = 24
 covtblInstancesList_V1.1_Branch_U_width = 0
 covtblInstancesList_V1.1_Branch_U = false
-covtblInstancesList_V1.1_Branch_C_pos = 29
+covtblInstancesList_V1.1_Branch_C_pos = 25
 covtblInstancesList_V1.1_Branch_C_width = 0
 covtblInstancesList_V1.1_Branch_C = false
-covtblInstancesList_V1.1_Branch_X_pos = 30
+covtblInstancesList_V1.1_Branch_X_pos = 22
 covtblInstancesList_V1.1_Branch_X_width = 0
 covtblInstancesList_V1.1_Branch_X = false
 covtblModulesList_V1.1_Name_pos = 4
@@ -270,49 +285,34 @@ covtblModulesList_V1.1_Toggle_C = false
 covtblModulesList_V1.1_Toggle_X_pos = 15
 covtblModulesList_V1.1_Toggle_X_width = 0
 covtblModulesList_V1.1_Toggle_X = false
-covtblModulesList_V1.1_FSM_pos = 16
-covtblModulesList_V1.1_FSM_width = 100
-covtblModulesList_V1.1_FSM = true
-covtblModulesList_V1.1_FSM_U+C_pos = 17
-covtblModulesList_V1.1_FSM_U+C_width = 0
-covtblModulesList_V1.1_FSM_U+C = false
-covtblModulesList_V1.1_FSM_U_pos = 18
-covtblModulesList_V1.1_FSM_U_width = 0
-covtblModulesList_V1.1_FSM_U = false
-covtblModulesList_V1.1_FSM_C_pos = 19
-covtblModulesList_V1.1_FSM_C_width = 0
-covtblModulesList_V1.1_FSM_C = false
-covtblModulesList_V1.1_FSM_X_pos = 20
-covtblModulesList_V1.1_FSM_X_width = 0
-covtblModulesList_V1.1_FSM_X = false
-covtblModulesList_V1.1_Condition_pos = 21
+covtblModulesList_V1.1_Condition_pos = 16
 covtblModulesList_V1.1_Condition_width = 100
 covtblModulesList_V1.1_Condition = true
-covtblModulesList_V1.1_Condition_U+C_pos = 22
+covtblModulesList_V1.1_Condition_U+C_pos = 17
 covtblModulesList_V1.1_Condition_U+C_width = 0
 covtblModulesList_V1.1_Condition_U+C = false
-covtblModulesList_V1.1_Condition_U_pos = 23
+covtblModulesList_V1.1_Condition_U_pos = 18
 covtblModulesList_V1.1_Condition_U_width = 0
 covtblModulesList_V1.1_Condition_U = false
-covtblModulesList_V1.1_Condition_C_pos = 24
+covtblModulesList_V1.1_Condition_C_pos = 19
 covtblModulesList_V1.1_Condition_C_width = 0
 covtblModulesList_V1.1_Condition_C = false
-covtblModulesList_V1.1_Condition_X_pos = 25
+covtblModulesList_V1.1_Condition_X_pos = 20
 covtblModulesList_V1.1_Condition_X_width = 0
 covtblModulesList_V1.1_Condition_X = false
-covtblModulesList_V1.1_Branch_pos = 26
+covtblModulesList_V1.1_Branch_pos = 23
 covtblModulesList_V1.1_Branch_width = 100
 covtblModulesList_V1.1_Branch = true
-covtblModulesList_V1.1_Branch_U+C_pos = 27
+covtblModulesList_V1.1_Branch_U+C_pos = 21
 covtblModulesList_V1.1_Branch_U+C_width = 0
 covtblModulesList_V1.1_Branch_U+C = false
-covtblModulesList_V1.1_Branch_U_pos = 28
+covtblModulesList_V1.1_Branch_U_pos = 24
 covtblModulesList_V1.1_Branch_U_width = 0
 covtblModulesList_V1.1_Branch_U = false
-covtblModulesList_V1.1_Branch_C_pos = 29
+covtblModulesList_V1.1_Branch_C_pos = 25
 covtblModulesList_V1.1_Branch_C_width = 0
 covtblModulesList_V1.1_Branch_C = false
-covtblModulesList_V1.1_Branch_X_pos = 30
+covtblModulesList_V1.1_Branch_X_pos = 22
 covtblModulesList_V1.1_Branch_X_width = 0
 covtblModulesList_V1.1_Branch_X = false
 covtblCcexList_V1.1_Randomize#_pos = 0
@@ -645,8 +645,8 @@ TclAutoSource =
 cmd_enter_form = FALSE
 SyncBrowserDir = TRUE
 ToolbarIconSize = 
-version = Verdi_U-2023.03
 SignalCaseInSensitive = FALSE
+version = Verdi_U-2023.03
 [GlobalProp]
 ErrWindow_Font = Helvetica_M_R_12
 [Globals]
@@ -795,10 +795,15 @@ savePropDtl = TRUE
 [QtDialog]
 tipViewerDlg = 1490,838,398,259
 covOpenDlg = 1403,562,730,732
-ApplPreferences = 1393,636,750,510
-QwWarnMsgDlg = 1062,758,600,250
 importDesignForm = 922,420,715,574
-QwUserAskDlg = 275,235,324,134
+QwInfoMsgDlg = 895,555,750,250
+EventWindow = 865,506,829,402
+usrMarkerDialog = 880,557,800,300
+qPrefDlg = 922,495,716,424
+ApplPreferences = 1393,636,750,510
+QwUserAskDlg = 1108,572,324,134
+qWaveSignalDialog = 699,360,1161,694
+QwWarnMsgDlg = 1062,758,600,250
 [Relationship]
 hideRecursiceNode = FALSE
 [Safety]
@@ -882,8 +887,8 @@ bSVTBMode = TRUE
 SimMode = TRUE
 interactiveDebugging = TRUE
 KeepBreakPoints = FALSE
-vcs_svPath = /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/sim/sim_build/simv
-vcs_svOption = +notimingcheck -cm line+cond+tgl+fsm+branch+assert -cm_dir /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/sim/cov/coverage.vdb -cm_name 004 +vcs+initreg+0
+vcs_svPath = /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/sim_build/simv
+vcs_svOption = +notimingcheck +vcs+lic+wait
 [SimulationPlus2]
 eventDumpUnfinish = FALSE
 [Source]
@@ -1000,7 +1005,7 @@ pdmlMacro = ID_BLACK
 font = COURIER12
 annotFont = Helvetica_M_R_10
 [Text.1]
-viewport = 8 31 879 679 45
+viewport = 0 23 2560 1369 45
 [TextPrinter]
 Orientation = Landscape
 Indicator = FALSE
@@ -1084,41 +1089,41 @@ Button1 = "Dump All Signals" "$fsdbDumpvars;\n"
 [VIA]
 viaLogViewerDefaultRuleOneSearchForm = "share/VIA/Apps/PredefinedRules/Misc/Onesearch_rule.rc"
 [VIA.oneSearch.preference]
+isOneSearchVisible = TRUE
 DefaultDisplayTimeUnit = "1.000000ns"
 DefaultLogTimeUnit = "1.000000ns"
-isOneSearchVisible = TRUE
 [VIA.oneSearch.preference.vgifColumnSettingRC]
 [VIA.oneSearch.preference.vgifColumnSettingRC.setting0]
 parRuleSets = ""
 [VIA.oneSearch.preference.vgifColumnSettingRC.setting0.column0]
-name = Severity
-width = 60
-visualIndex = 1
-isHidden = TRUE
-isUserChangeColumnVisible = FALSE
-[VIA.oneSearch.preference.vgifColumnSettingRC.setting0.column1]
-name = Time
-width = 60
-visualIndex = 0
-isHidden = TRUE
-isUserChangeColumnVisible = FALSE
-[VIA.oneSearch.preference.vgifColumnSettingRC.setting0.column2]
 name = Code
 width = 60
 visualIndex = 2
 isHidden = TRUE
 isUserChangeColumnVisible = FALSE
-[VIA.oneSearch.preference.vgifColumnSettingRC.setting0.column3]
+[VIA.oneSearch.preference.vgifColumnSettingRC.setting0.column1]
 name = Type
 width = 60
 visualIndex = 3
 isHidden = TRUE
 isUserChangeColumnVisible = FALSE
-[VIA.oneSearch.preference.vgifColumnSettingRC.setting0.column4]
+[VIA.oneSearch.preference.vgifColumnSettingRC.setting0.column2]
 name = Message
 width = 2000
 visualIndex = 4
 isHidden = FALSE
+isUserChangeColumnVisible = FALSE
+[VIA.oneSearch.preference.vgifColumnSettingRC.setting0.column3]
+name = Time
+width = 60
+visualIndex = 0
+isHidden = TRUE
+isUserChangeColumnVisible = FALSE
+[VIA.oneSearch.preference.vgifColumnSettingRC.setting0.column4]
+name = Severity
+width = 60
+visualIndex = 1
+isHidden = TRUE
 isUserChangeColumnVisible = FALSE
 [Vi]
 ViFont = "Clean 14"
@@ -1201,8 +1206,8 @@ AutoApplySeverityColor = TRUE
 scope_to_save_with_macro
 open_file_dir
 open_rc_file_dir
-getSignalForm = 0 0 800 479 100 30 100 30
-viewPort = 0 25 879 245 218 63
+getSignalForm = 589 31 1161 694 363 596 748 88
+viewPort = 0 25 2560 590 218 63
 legendBackground = -c ID_BLACK
 valueBackground = -c ID_BLACK
 curveBackground = -c ID_BLACK
@@ -1368,9 +1373,11 @@ printBasic = 1 0 0 FALSE FALSE
 printDest = -printer {}
 printSignature = {%f %h %t} {}
 curveWindow_Drag&Drop_Mode = TRUE
-RecentFile1 = "\"/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/sim/004.vcd.fsdb\""
-RecentFile2 = "\"/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/sim/sim.vcd.fsdb\""
-RecentFile3 = "\"/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/sim/002_1.vcd.fsdb\""
+RecentFile1 = "\"/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/009.vcd.fsdb\""
+RecentFile2 = "\"/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorder/003.vcd.fsdb\""
+RecentFile3 = "\"/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/sim/004.vcd.fsdb\""
+RecentFile4 = "\"/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/sim/sim.vcd.fsdb\""
+RecentFile5 = "\"/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/sim/002_1.vcd.fsdb\""
 open_file_time_range = FALSE
 legend_window_font = -f COURIER12 -c ID_CYAN5
 value_window_font = -f COURIER12 -c ID_CYAN5
@@ -1379,18 +1386,18 @@ group_name_font = -f COURIER12 -c ID_GREEN5
 ruler_value_font = -f COURIER12 -c ID_CYAN5
 analog_ruler_value_font = -f COURIER12 -c ID_CYAN5
 comment_string_font = -f COURIER12 -c ID_RED5
-getsignal_form_font = -f COURIER12 
+getsignal_form_font = -f COURIER12
 SigsCheckNum = on 1000
 filter_synthesized_net = off n
 filterOutNet = on
 exclude_signal_with_prefix = off n
 synthesizeNetOnly = on
-filter_synthesized_instance = off 
+filter_synthesized_instance = off
 filterOutInstance = on
 showGroupTree = TRUE
 hierGroupDelim = /
 MsgSeverityColor = {y \"Severity\"==\"1\" ID_RED5} {y \"Severity\"==\"2\" ID_RED6} {y \"Severity\"==\"3\" ID_RED7} {y \"Severity\"==\"4\" ID_RED8} {y \"Severity\"==\"5\" ID_ORANGE5} {y \"Severity\"==\"6\" ID_ORANGE6} {y \"Severity\"==\"7\" ID_ORANGE7} {y \"Severity\"==\"8\" \
-ID_GREEN7} {y \"Severity\"==\"9\" ID_GREEN6} {y \"Severity\"==\"10\" ID_GREEN5} 
+ID_GREEN7} {y \"Severity\"==\"9\" ID_GREEN6} {y \"Severity\"==\"10\" ID_GREEN5}
 waveDblClkActiveTrace = on
 SEQShowComparisonIcon = TRUE
 SEQAddDriverLoadInSameGroup = TRUE
@@ -1480,7 +1487,7 @@ OutputPinStatus = 2
 RevisedComponentColor = ID_BLUE5
 SpareCellColor = ID_RED5
 UserName = yanglucheng
-CommentFormat = Novas ECO updated by ${UserName} ${Date} ${Time} 
+CommentFormat = Novas ECO updated by ${UserName} ${Date} ${Time}
 PrefixN = eco_n
 PrefixP = eco_p
 PrefixI = eco_i
@@ -1752,7 +1759,7 @@ AddImportArgument = FALSE
 LineBreakWithScope = TRUE
 StopAfterCompileOption = -s
 [wave.0]
-viewPort = 0 25 879 245 218 63
+viewPort = 0 25 2560 590 218 63
 [wave.1]
 viewPort = 127 219 960 332 100 65
 [wave.2]

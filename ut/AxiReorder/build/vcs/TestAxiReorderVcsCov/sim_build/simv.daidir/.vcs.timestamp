@@ -11,7 +11,7 @@
 0 layers-FastQueue_1-Verification-Assert.sv
 0 /nfs/tools/synopsys/vcs/U-2023.03/etc/systemverilog/layers-FastQueue_1-Verification-Assert.sv
 0 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-FastQueue_1-Verification-Assert.sv
-79
+80
 +define+ASSERT_VERBOSE_CO0_test_for_smokeND_=1
 +define+SIM_VCS
 +define+STOP_COND_=1
@@ -63,6 +63,7 @@
 -sverilog
 -timescale=1ns/1ps
 -top
+-xprop
 /nfs/tools/synopsys/vcs/U-2023.03/linux64/bin/vcs1
 line+cond+tgl+branch
 portsonly
@@ -71,13 +72,13 @@ tb_top
 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorderVcsCov/sim_build/simv
 /nfs/tools/synopsys/verdi/U-2023.03/share/PLI/VCS/LINUX64/verdi.tab
 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiAWEtrBundle.sv
-/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_UInt2.sv
+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_UInt6.sv
 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiWEtrBundle.sv
 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/FastQueue_1.sv
 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/FastQueue.sv
+/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_UInt6_1.sv
 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiWEtrBundle_1.sv
 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/AxiReorder.sv
-/nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_UInt2_1.sv
 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-FastQueue_1-Verification.sv
 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-FastQueue-Verification.sv
 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-AxiReorder-Verification.sv
@@ -91,24 +92,21 @@ tb_top
 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/cover/layers-AxiReorder-Verification-Cover.sv
 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorderVcsCov/tb_top.sv
 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorderVcsCov/others.sv
-85
+73
 https_proxy=http://172.58.2.9:7890
 http_proxy=http://172.58.2.9:7890
 XMAKE_GLOBALDIR=/nfs/home/yanglucheng/tools/verilua/v3.4.0/scripts
 XDG_SESSION_TYPE=tty
-XDG_SESSION_ID=14567
+XDG_SESSION_ID=20681
 XDG_SESSION_CLASS=user
 XDG_RUNTIME_DIR=/run/user/1467000158
 XDG_DATA_DIRS=/usr/share/gnome:/nfs/home/yanglucheng/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share:/usr/share:/nfs/home/yanglucheng/.nix-profile/share:/nix/var/nix/profiles/default/share:/var/lib/snapd/desktop:/nfs/home/yanglucheng/.nix-profile/share:/nix/var/nix/profiles/default/share
-VSCODE_RECONNECTION_GRACE_TIME=10800000
-VSCODE_NLS_CONFIG={"userLocale":"zh-cn","osLocale":"zh-cn","resolvedLanguage":"zh-cn","defaultMessagesFile":"/nfs/home/yanglucheng/.vscode-server/cli/servers/Stable-8a7abeba6e03ea3af87bfbce9a1b7e48fed567b8/server/out/nls.messages.json","languagePack":{"translationsConfigFile":"/nfs/home/yanglucheng/.vscode-server/data/clp/a02a194e6eec6fab3a926af48a2db03f.zh-cn/tcf.json","messagesFile":"/nfs/home/yanglucheng/.vscode-server/data/clp/a02a194e6eec6fab3a926af48a2db03f.zh-cn/8a7abeba6e03ea3af87bfbce9a1b7e48fed567b8/nls.messages.json","corruptMarkerFile":"/nfs/home/yanglucheng/.vscode-server/data/clp/a02a194e6eec6fab3a926af48a2db03f.zh-cn/corrupted.info"},"locale":"zh-cn","availableLanguages":{"*":"zh-cn"},"_languagePackId":"a02a194e6eec6fab3a926af48a2db03f.zh-cn","_languagePackSupport":true,"_translationsConfigFile":"/nfs/home/yanglucheng/.vscode-server/data/clp/a02a194e6eec6fab3a926af48a2db03f.zh-cn/tcf.json","_cacheRoot":"/nfs/home/yanglucheng/.vscode-server/data/clp/a02a194e6eec6fab3a926af48a2db03f.zh-cn","_resolvedLanguagePackCoreLocation":"/nfs/home/yanglucheng/.vscode-server/data/clp/a02a194e6eec6fab3a926af48a2db03f.zh-cn/8a7abeba6e03ea3af87bfbce9a1b7e48fed567b8","_corruptedFile":"/nfs/home/yanglucheng/.vscode-server/data/clp/a02a194e6eec6fab3a926af48a2db03f.zh-cn/corrupted.info"}
-VSCODE_IPC_HOOK_CLI=/run/user/1467000158/vscode-ipc-7ca499e6-a22f-465d-acc8-e7d611836ef8.sock
-VSCODE_HANDLES_UNCAUGHT_ERRORS=true
-VSCODE_HANDLES_SIGPIPE=true
-VSCODE_ESM_ENTRYPOINT=vs/workbench/api/node/extensionHostProcess
-VSCODE_CWD=/nfs/home/yanglucheng
-VSCODE_CLI_REQUIRE_TOKEN=1bff90cc-e3f4-4e11-9e50-84757862d369
-VSCODE_AGENT_FOLDER=/nfs/home/yanglucheng/.vscode-server
+VSCODE_PYTHON_AUTOACTIVATE_GUARD=1
+VSCODE_IPC_HOOK_CLI=/run/user/1467000158/vscode-ipc-5492df74-0acc-4e8e-be2d-226bae0ef4b6.sock
+VSCODE_GIT_IPC_HANDLE=/run/user/1467000158/vscode-git-a70d10e67b.sock
+VSCODE_GIT_ASKPASS_NODE=/nfs/home/yanglucheng/.vscode-server/cli/servers/Stable-1b6a188127eeaf9194f945eb6eb89a657e93c54c/server/node
+VSCODE_GIT_ASKPASS_MAIN=/nfs/home/yanglucheng/.vscode-server/cli/servers/Stable-1b6a188127eeaf9194f945eb6eb89a657e93c54c/server/extensions/git/dist/askpass-main.js
+VSCODE_GIT_ASKPASS_EXTRA_ARGS=
 VMR_MODE_FLAG=64
 VERILUA_HOME=/nfs/home/yanglucheng/tools/verilua/v3.4.0
 VERDI_TOOL=/nfs/tools/synopsys/verdi/U-2023.03/bin/verdi
@@ -125,21 +123,19 @@ VCS_ARG_ADDED_FOR_TMP=1
 VCS_ARCH=linux64
 UNAME=/bin/uname
 TOOL_HOME=/nfs/tools/synopsys/vcs/U-2023.03/linux64
+TERM_PROGRAM_VERSION=1.130.0
+TERM_PROGRAM=vscode
 TC=000
-SSH_CONNECTION=172.58.2.9 49670 172.60.20.1 22
-SSH_CLIENT=172.58.2.9 49670 22
+SSH_CONNECTION=172.58.2.9 56507 172.60.20.1 22
+SSH_CLIENT=172.58.2.9 56507 22
 SNPS_VERDI_INTERNAL_LP_XML_NEW_FLOW=1
 SNPS_VCS_CLANG_PATH=/nfs/tools/synopsys/vcs/U-2023.03/linux64/clang
 SNPS_INTERNAL_VCS_LINUX_OS=ubuntu
-SIM=vcs
-SEED=1
 SCRNAME=vcs
 SCRIPT_NAME=vcs
-RUST_LOG=warn
 RISCV=/nfs/share/opt/riscv
 OVA_UUM=0
 NVM_DIR=/nfs/home/yanglucheng/.nvm
-NO_COLOR=1
 NOVAS_PLI=/nfs/tools/synopsys/verdi/U-2023.03/share/PLI/VCS/linux64
 NOVAS_HOME=/nfs/tools/synopsys/verdi/U-2023.03
 NIX_SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
@@ -158,49 +154,42 @@ LC_NAME=zh_CN.UTF-8
 LC_MONETARY=zh_CN.UTF-8
 LC_MEASUREMENT=zh_CN.UTF-8
 LC_IDENTIFICATION=zh_CN.UTF-8
-LC_CTYPE=C.UTF-8
-LC_ALL=C.UTF-8
+LC_ALL=C
 LC_ADDRESS=zh_CN.UTF-8
 JAVA_HOME=/nfs/share/opt/graalvm-ce-java11-22.3.2
 HTTP_PROXY=http://172.58.2.9:7890
 HTTPS_PROXY=http://172.58.2.9:7890
-GIT_PAGER=cat
-GH_PAGER=cat
-ELECTRON_RUN_AS_NODE=1
-DEBUG=release
+GIT_ASKPASS=/nfs/home/yanglucheng/.vscode-server/cli/servers/Stable-1b6a188127eeaf9194f945eb6eb89a657e93c54c/server/extensions/git/dist/askpass.sh
 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1467000158/bus
+COPILOT_DEBUG_NONCE=575e8cbf03eb87a8239f27d8788b2153
 CONFIG_TCCDIR=/nfs/home/yanglucheng/tools/verilua/v3.4.0/extern/luajit_tcc/tinycc/install
-COLORTERM=
-CODEX_THREAD_ID=019f8881-6f79-7fb1-aeb1-386cff001a57
-CODEX_SANDBOX_NETWORK_DISABLED=1
-CODEX_INTERNAL_ORIGINATOR_OVERRIDE=codex_vscode
-CODEX_HOME=/nfs/home/yanglucheng/.codex
-CODEX_CI=1
+COLORTERM=truecolor
+CLAUDE_CODE_SSE_PORT=18666
 BREKER_LICENSE=1819@172.59.60.1
 0
 0
 24
-1784702297 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorderVcsCov/others.sv
-1784702297 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorderVcsCov/tb_top.sv
-1784692829 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/cover/layers-AxiReorder-Verification-Cover.sv
-1784692829 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assume/layers-AxiReorder-Verification-Assume.sv
-1784692829 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/FastQueue_1_Verification_Assert.sv
-1784692829 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/layers-FastQueue_1-Verification-Assert.sv
-1784692829 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/FastQueue_Verification_Assert.sv
-1784692829 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/AxiReorder_Verification_Assert.sv
-1784692829 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/layers-AxiReorder-Verification-Assert.sv
-1784692829 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/layers-FastQueue-Verification-Assert.sv
-1784692829 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-AxiReorder-Verification.sv
-1784692829 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-FastQueue-Verification.sv
-1784692829 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-FastQueue_1-Verification.sv
-1784692829 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_UInt2_1.sv
-1784692829 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/AxiReorder.sv
-1784692829 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiWEtrBundle_1.sv
-1784692829 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/FastQueue.sv
-1784692829 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/FastQueue_1.sv
-1784692829 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiWEtrBundle.sv
-1784692829 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_UInt2.sv
-1784692829 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiAWEtrBundle.sv
+1785141485 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorderVcsCov/others.sv
+1785141485 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorderVcsCov/tb_top.sv
+1785140358 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/cover/layers-AxiReorder-Verification-Cover.sv
+1785140358 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assume/layers-AxiReorder-Verification-Assume.sv
+1785140358 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/FastQueue_1_Verification_Assert.sv
+1785140358 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/layers-FastQueue_1-Verification-Assert.sv
+1785140358 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/FastQueue_Verification_Assert.sv
+1785140358 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/AxiReorder_Verification_Assert.sv
+1785140358 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/layers-AxiReorder-Verification-Assert.sv
+1785140358 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/assert/layers-FastQueue-Verification-Assert.sv
+1785140358 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-AxiReorder-Verification.sv
+1785140358 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-FastQueue-Verification.sv
+1785140358 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/verification/layers-FastQueue_1-Verification.sv
+1785140358 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/AxiReorder.sv
+1785140358 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiWEtrBundle_1.sv
+1785140358 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_UInt6_1.sv
+1785140358 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/FastQueue.sv
+1785140358 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/FastQueue_1.sv
+1785140358 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiWEtrBundle.sv
+1785140358 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_UInt6.sv
+1785140358 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/rtl/Queue1_AxiAWEtrBundle.sv
 1677384585 /nfs/tools/synopsys/vcs/U-2023.03/include/cm_vcsd.tab
 1676546067 /nfs/tools/synopsys/verdi/U-2023.03/share/PLI/VCS/LINUX64/verdi.tab
 1677384340 /nfs/tools/synopsys/vcs/U-2023.03/linux64/lib/vcsdp_lite.tab
@@ -209,5 +198,5 @@ BREKER_LICENSE=1819@172.59.60.1
 1677385060 /nfs/tools/synopsys/vcs/U-2023.03/linux64/lib/liberrorinf.so
 1677385018 /nfs/tools/synopsys/vcs/U-2023.03/linux64/lib/libsnpsmalloc.so
 1677385055 /nfs/tools/synopsys/vcs/U-2023.03/linux64/lib/libvfs.so
-1784702874 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorderVcsCov/sim_build/simv.daidir
+1785141496 /nfs/home/yanglucheng/workspace/test/AxiInfra/ut/AxiReorder/build/vcs/TestAxiReorderVcsCov/sim_build/simv.daidir
 -1 partitionlib

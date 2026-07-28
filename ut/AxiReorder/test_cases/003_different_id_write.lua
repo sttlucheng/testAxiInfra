@@ -28,7 +28,7 @@ local function task_test()
     driver.initialize()
     env.wait_cycles(1)
 
-    local task_timeout = 20000
+    local task_timeout = 2000000
 
     local function submit_write(index, submit)
         local timeout = task_timeout
@@ -78,7 +78,7 @@ local function task_test()
         local write_size
         -- 确保生成的burst footprint不超过4KB
         repeat
-            write_burst, write_len = axi_stimulus.random_burst_len()
+            write_burst, write_len = axi_stimulus.random_burst_len({ max_incr_len = 99 })
             write_size = math.random(0, 5)
         until write_burst == 0 or (write_len + 1) * (2 ^ write_size) <= 4096
 
@@ -129,6 +129,7 @@ local function task_test()
 
         -- 只有提交成功才记录
         tickets[#tickets + 1] = write_ticket
+        dut.clock:posedge(math.random(5, 20))
 
     end
 

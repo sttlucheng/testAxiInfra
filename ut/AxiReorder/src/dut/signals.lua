@@ -92,4 +92,43 @@ M.io_slv_r_bits_data = dut.io_slv_r_bits_data:chdl()
 M.io_slv_r_bits_resp = dut.io_slv_r_bits_resp:chdl()
 M.io_slv_r_bits_last = dut.io_slv_r_bits_last:chdl()
 
+
+-- 模块内部信号
+local core = dut.u_AxiReorder
+
+M.dbg_ar = {
+    selected_entry = core.selSendAR:chdl(), -- AR仲裁器本拍选择的表项号
+    entries = {},
+}
+
+M.dbg_aw = {
+    head_valid = core["_awq_io_deq_valid"]:chdl(),       -- AW队列是否存在队首
+    head_ready = core.awq_io_deq_ready:chdl(),           -- AW队首本拍是否允许出队
+    head_entry = core["_awq_io_deq_bits_entry"]:chdl(),  -- AW队首对应的重排表项号
+    entries = {},
+}
+
+for i = 0, 63 do
+    M.dbg_ar.entries[i] = {
+        valid = core["rvld_" .. i]:chdl(), -- AR重排表项有效位
+        id = core["arinfo_" .. i .. "_bits_id"]:chdl(), -- 保存的上游ARID
+        addr = core["arinfo_" .. i .. "_bits_addr"]:chdl(), -- 保存的AR地址
+        nid = core["arinfo_" .. i .. "_nid"]:chdl(), -- 此事务之前同ID未完成数量
+        have_sent = core["arinfo_" .. i .. "_haveSendAR"]:chdl(), -- AR是否已发往下游
+        alloc_hit = core["ar_mst_fire_hit_" .. i]:chdl(), -- 本拍新AR是否分配给该表项
+    }
+
+    M.dbg_aw.entries[i] = {
+        valid = core["wvld_" .. i]:chdl(), -- AW重排表项有效位
+        id = core["awinfo_" .. i .. "_id"]:chdl(), -- 保存的上游AWID
+        nid = core["awinfo_" .. i .. "_nid"]:chdl(), -- 此事务之前同ID未完成数量
+        have_sent = core["awinfo_" .. i .. "_haveSendAW"]:chdl(), -- AW是否已发往下游
+        alloc_hit = core["aw_mst_fire_hit_" .. i]:chdl(), -- 本拍新AW是否分配给该表项
+    }
+end
+
+
+
+
+
 return M

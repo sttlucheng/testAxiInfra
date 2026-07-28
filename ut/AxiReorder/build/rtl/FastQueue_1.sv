@@ -51,20 +51,20 @@ module FastQueue_1(	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/
   input  [255:0] io_enq_bits_winfo_data,	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:9:14
   input  [31:0]  io_enq_bits_winfo_strb,	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:9:14
   input          io_enq_bits_winfo_last,	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:9:14
-  input  [1:0]   io_enq_bits_entry,	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:9:14
+  input  [5:0]   io_enq_bits_entry,	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:9:14
   input          io_deq_ready,	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:9:14
   output         io_deq_valid,	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:9:14
   output [255:0] io_deq_bits_winfo_data,	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:9:14
   output [31:0]  io_deq_bits_winfo_strb,	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:9:14
   output         io_deq_bits_winfo_last,	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:9:14
-  output [1:0]   io_deq_bits_entry	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:9:14
+  output [5:0]   io_deq_bits_entry	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:9:14
 );
 
   wire         _holder_io_deq_valid;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:41:24
   wire [255:0] _holder_io_deq_bits_winfo_data;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:41:24
   wire [31:0]  _holder_io_deq_bits_winfo_strb;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:41:24
   wire         _holder_io_deq_bits_winfo_last;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:41:24
-  wire [1:0]   _holder_io_deq_bits_entry;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:41:24
+  wire [5:0]   _holder_io_deq_bits_entry;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:41:24
   wire         _driver_io_enq_ready;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:16:33
   wire         _driver_io_deq_valid;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:16:33
   reg  [2:0]   waterline;	// /nfs/home/yanglucheng/workspace/CodeReading/AxiInfra/dep/xs-utils/src/main/scala/xs/utils/queue/FastQueue.scala:17:34

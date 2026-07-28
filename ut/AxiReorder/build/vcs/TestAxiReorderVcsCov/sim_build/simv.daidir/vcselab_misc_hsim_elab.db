@@ -42,8 +42,8 @@ fHsimMdbVhVlCcnOpt                 	0
 fHsimVlVhOpt                       	0
 fHsimVlVhVlOpt                     	0
 fHsimVlVhBfuseOpt                  	0
-xpropMergeMode                     	0
-xpropUnifiedInferenceMode          	0
+xpropMergeMode                     	1
+xpropUnifiedInferenceMode          	1
 xpropOverride                      	0
 xpropVlogLogFileNameLen            	0
 xpropVhdlLogFileNameLen            	0
@@ -125,7 +125,7 @@ fHsimCongruencySVADbg              	0
 fHsimCongruencyLatchEdgeFix        	0
 fHsimCongruencyFlopEdgeFix         	0
 fHsimCongruencyXprop               	0
-fHsimCongruencyXpropFix            	0
+fHsimCongruencyXpropFix            	1
 fHsimCongruencyXpropDbsEdge        	0
 fHsimCongruencyResetRecoveryDbs    	0
 fHsimCongruencyClockControlDiag    	0
@@ -352,7 +352,7 @@ fVpdDeltaCycleInDesign             	0
 fHsimAllowVecGateInVpd             	1
 fHsimAllowAllVecGateInVpd          	0
 fHsimAllowUdpInVpd                 	1
-fHsimAllowAlwaysCombInVpd          	1
+fHsimAllowAlwaysCombInVpd          	0
 fHsimAllowAlwaysCombCmpDvcSimv     	0
 fHsimAllowAlwaysCombDbg            	0
 fHsimMakeAllP2SPrimary             	0
@@ -472,7 +472,7 @@ fHsimUdpOutputOpt                  	0
 fHsimSeqUdpEblkOpt                 	0
 fHsimCustomLibGenRma               	0
 fHsimCustomLibGenRmaDebug          	0
-fHsimXpropEnabled                  	0
+fHsimXpropEnabled                  	1
 fHsimEblkOpt                       	1
 fHsimSeqUdpEblkOptDiag             	0
 fHsimGateInputAndDbsOffsetsOpt     	1
@@ -489,7 +489,7 @@ fHsimMdbGgIgnoreCaps               	0
 fHsimIgnoreZForDfuse               	1
 fHsimIgnoreDifferentCaps           	0
 fHsimIgnoreDifferentNStates        	0
-fHandleGlitchQC                    	1
+fHandleGlitchQC                    	0
 fGlitchDetectForAllRtlLoads        	0
 fHsimAllowFuseOnRegWithMultDrivers 	0
 fHsimFuseConstDriversOpt           	1
@@ -1058,7 +1058,7 @@ fHsCgOpt4StateInfra                	1
 fHsCgOptMultiDriverSupport         	0
 fHsCgOptUdpChkDataForWakeup        	1
 fHsNBACgOpt                        	1
-fHsCgOptXprop                      	0
+fHsCgOptXprop                      	3
 fHsimMdbcgDiag                     	0
 fHsCgMaxInputs                     	6
 fHsCgOptFwdPass                    	1

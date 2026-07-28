@@ -1,0 +1,3 @@
+Command Line: /nfs/tools/synopsys/verdi/U-2023.03/platform/LINUXAMD64/bin/vdCov -covdir build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb
+uname(Linux open01.boscszcluster.com 6.8.0-124-generic #124~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue May 26 21:05:19 UTC  x86_64)
+Signal SIGHUP is received. Shutting down...
