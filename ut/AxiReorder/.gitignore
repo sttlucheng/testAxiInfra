@@ -5,8 +5,8 @@ vdCovLog/
 verdiLog/
 
 /.fsm.sch.verilog.xml
-/[VERILUA]
-/[verilua.LuaUtils]
+/\[VERILUA\]
+/\[verilua.LuaUtils\]
 /novas.conf
 /novas.rc
 /ucli.key
