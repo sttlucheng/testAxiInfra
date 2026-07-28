@@ -1,0 +1,13 @@
+.metals/
+.vscode/
+build/
+vdCovLog/
+verdiLog/
+
+/.fsm.sch.verilog.xml
+/[VERILUA]
+/[verilua.LuaUtils]
+/novas.conf
+/novas.rc
+/ucli.key
+/xprop.log
