@@ -8,332 +8,132 @@ local driver = require "dut.driver"
 
 一、覆盖目标
 
-本用例用于命中 AxiReorder 读路径中 entry 0 到 entry 3 的减 2 RTL：
+本文件覆盖 AxiReorder 读表 entry 0..63 的 nid 减 2 分支：
 
-    else if (_layer_probe_5)
-        arinfo_1_nid <= arinfo_1_nid - 2'h2;
+    else if (target_layer_probe)
+        arinfo_N_nid <= arinfo_N_nid - 6'h2;
 
-    else if (_layer_probe_1)
-        arinfo_0_nid <= arinfo_0_nid - 2'h2;
+entry=N 对应的门控信号为：
 
-    else if (_layer_probe_9)
-        arinfo_2_nid <= arinfo_2_nid - 2'h2;
+    current GEN = _GEN_(2*N+2)
+    delayed GEN = _GEN_(2*N+3)
+    layer probe = _layer_probe_(4*N+1)
 
-    else if (_layer_probe_13)
-        arinfo_3_nid <= arinfo_3_nid - 2'h2;
+目标 RTL 行从 entry 0 的 4247 行连续映射到 entry 63 的 5497 行。entry 0..10
+每项间隔 19 行；entry 11..63 每项间隔 20 行。
 
-其中：
+二、参数化激励
 
-    _layer_probe_5 = _GEN_4 & _GEN_5
+全部 64 个目标由 cover_parameterized_read_nid_minus_two(entry, line) 实现，
+并通过 LINE_COVERAGE_CASES 参数化生成。公共 AXI helper 负责握手、payload
+检查、超时和错误打印，目标函数只保留表项布局和两拍关键时序。
 
-    _GEN_4 =
-        (|arinfo_1_nid) &
-        rFire &
-        (response_original_id == arinfo_1_bits_id) &
-        rvld_1 &
-        RLAST
+每个目标都构造三笔相同原始 ID 的读事务：
 
-    _GEN_5 = rWkVldReg & rWkEtrReg[1]
+    P1 : 第一笔前序事务，已经发送下游 AR
+    P2 : 第二笔前序事务，nid=1，等待 P1
+    P3 : 目标事务，分配时看到 P1/P2，装载 nid=2
 
-要执行减 2 分支，不能只返回一笔同 ID 响应；必须同时出现两份需要从 entry 1
-nid 中扣除的“前序事务完成”信息：
+关键周期 1 同时分配 P3 并返回 P1 的末拍 R，建立指向目标 entry 的延迟修正；
+关键周期 2 让 P2 的下游 AR/R 同周期握手，使 current GEN 和 delayed GEN
+同时为 1，拉高目标 layer probe。沿后检查 arinfo_N_nid 从 2 直接变为 0。
 
-1. 当前周期有一笔同 ID 前序事务完成，对应 _GEN_4=1；
-2. 上一周期还发生过“新 AR 分配与同 ID 末拍 R 响应同时握手”，这份修正信息
-   被 rWkVldReg/rWkEtrReg 延迟一拍保存，并且新请求必须分配到 entry 1，
-   对应当前周期 _GEN_5=1。
+三、表项布局
 
-二、端口激励构造
+entry 0/1 需要处理最低空闲项选择，准备阶段分别使用以下布局：
 
-测试先构造以下表项状态：
+    target entry 0 : temporary=0, P1=1, P2=2，释放 temporary 后分配 P3
+    target entry 1 : P1=0, temporary=1, P2=2，释放 temporary 后分配 P3
 
-    entry 0 : B1，ID_B，第一个同 ID 前序事务，已经向下游发送 AR
-    entry 1 : A，ID_A，与目标 ID 不同，是临时占位事务
-    entry 2 : B2，ID_B，第二个同 ID 前序事务，nid=1，尚未发送 AR
+这两个目标完成后立即返回 P3 的 R，各自恢复为空表。
 
-之后完成 A，释放 entry 1，同时保持 entry 0 中的 B1 有效。此时在同一个
-上升沿完成两件事：
+从 entry 2 开始使用连续布局：已覆盖的目标 entry 2..N-1 保持有效，但都已发送
+下游 AR；P1/P2 每轮复用 entry 0/1，因此 P3 自然分配到 entry N。每个 N 使用
+独立原始 ID，先前目标只负责占表，不会增加当前 rawRNid。entry 63 覆盖完成后
+统一返回 entry 2..63 的 pending R，清空整张读表和 scoreboard。
 
-    * 上游提交 B3(ID_B)，最低空闲表项选择逻辑将它分配到 entry 1；
-    * 下游返回 entry 0 中 B1 的末拍 R 响应。
+所有激励只写 AxiReorder 顶层 io_mst_* / io_slv_* 端口。DUT 内部句柄仅用于
+确认目标分支条件和寄存器更新结果，不 force、deposit 或修改内部状态。
 
-该上升沿之前 B1、B2 都仍有效，所以 B3 装载 rawRNid=2。同时，因为 B3 的
-ARID 与 B1 响应恢复出的原始 ID 相同，RTL 将 rWkVldReg 置 1，并在
-rWkEtrReg[1] 中记录“这份延迟修正属于新分配的 entry 1”。B1 完成还会使 B2
-的 nid 从 1 降到 0，因此 B2 的 AR 在下一周期变为可发送。
+四、AW entry 0..63 的 nid 减 2 分支
 
-紧接着的下一周期，让 B2 的下游 AR 与它的单拍 R 响应在同一个上升沿握手。
-AXI 允许从设备组合观察 ARVALID/AR payload，并以零周期延迟给出 RVALID；在
-该上升沿之前，B2 已经是有效且 nid=0 的可发送事务，因此响应是有对应请求的。
-此时：
+生成 RTL 在 5513..6701 行为写表 entry 0..63 展开了相同的减 2 模板：
 
-    _GEN_4 = 1：当前完成 B2，它与 entry 1 中 B3 的原始 ID 相同；
-    _GEN_5 = 1：上一周期保存的 B1/B3 同周期修正命中 entry 1；
+    current GEN = _GEN_(2*N+143)
+    delayed GEN = _GEN_(2*N+144)
 
-于是 _layer_probe_5=1，第一处目标行把 arinfo_1_nid 从 2 一次减到 0。
+    if (current GEN & delayed GEN)
+        awinfo_N_nid <= awinfo_N_nid - 6'h2;
 
-三、entry 0 减 2 场景
+AW_NID_MINUS_TWO_CASES 参数化登记全部 64 个 entry、RTL 行号和 GEN 编号。
+这些目标在当前 buffer=64、awq entries=1 的结构下全部不可达，不是只针对某个
+entry 的偶然现象。要执行减 2，目标 AW 分配前必须已有两笔同 ID 前序写 P1/P2，
+使目标的 rawWNid=2；同时还必须在 P1 返回 B 的周期完成目标 AW 握手，以建立
+wWkVldReg/wWkEtrReg。可是 P2 的 nid=1，会占据唯一的 awq 表项，而 awq 队首
+只有在对应 awinfo.nid=0 时才能出队。因此：
 
-entry 0 的组合条件与 entry 1 完全对称：
+1. P1 返回 B 的周期，P2 的 nid 在时钟沿之后才从 1 变成 0；
+2. 该周期沿前 awq 仍满且不能出队，awq.io.enq.ready=0；
+3. io.mst.aw.ready 包含 awq.io.enq.ready，所以目标 P3 AW 无法握手；
+4. 没有 P3 AW fire，就不能产生 wWkVld，也不能把目标 entry 写入 wWkEtrReg；
+5. 下一周期即使合法返回另一笔同 ID B，delayed GEN 仍必然为 0。
 
-    _layer_probe_1 = _GEN_2 & _GEN_3
-    _GEN_3 = rWkVldReg & rWkEtrReg[0]
+cover_parameterized_write_nid_minus_two_unreachable() 不只做静态登记，而是对
+每个 entry 都构造合法端口见证：先用不同 ID 事务占住所有更低表项，使当前目标
+entry 确为最低空闲项；再构造 P1/P2 两笔同 ID 写，令 P1 已完成下游 AW/W、P2
+以 nid=1 堵在 awq。P1 B 与 P3 AW 同拍驱动时，测试逐项检查：
 
-但 entry 0 是最低优先分配的空闲表项，不能直接照搬前一个表项布局。本用例在
-entry 1 场景全部收尾后重新构造：
+    * AW 空闲项选择结果确实指向当前目标 entry；
+    * P1 B 合法握手并恢复原始 ID；
+    * P2 仍是 awq 队首且 nid=1、不能出队；
+    * P3 AWREADY=0，目标表项没有分配，wWkVldReg 也不会建立。
 
-    entry 0 : D，不同 ID 的临时占位事务
-    entry 1 : C1，ID_C，第一个同 ID 前序事务，已经向下游发送 AR
-    entry 2 : C2，ID_C，第二个同 ID 前序事务，nid=1，尚未发送 AR
+随后保持 P3 AWVALID，等 P2 在下一拍合法出队时完成 P3 握手。此时 P1 已经释放，
+所以 P3 的 nid 只能等于 1；返回 P2 的 B 后只能执行减 1，不能执行目标减 2。
+最后补齐所有 AW/W/B 并清空 scoreboard。
 
-先完成 D 释放 entry 0；随后在同一个上升沿把 C3(ID_C) 分配到 entry 0，并
-返回 entry 1 中 C1 的末拍响应。C3 在分配前能看到 C1/C2 两个同 ID 有效项，
-所以 entry 0 装载 nid=2；同周期分配和响应还会使 rWkVldReg=1，并把
-rWkEtrReg[0] 置 1。C1 完成后 C2 的 nid 变成 0，下一周期让 C2 的下游 AR
-和单拍 R 同周期握手，此时当前 C2 响应产生 _GEN_2=1，上一周期保存的修正
-产生 _GEN_3=1，最终使 _layer_probe_1=1，目标行将 arinfo_0_nid 从 2 减到 0。
+若重复发送已经完成事务的 B，会触发“B fire but vec is not valid”断言；若在
+AW/W 尚未下游完成时提前返回 B，则违反 AXI 协议和 scoreboard 对应关系，并会
+触发 RTL 断言。本用例不会用非法响应伪造行覆盖。5513..6701 的 64 条 AW 减 2
+代码应在覆盖工具中按结构性不可达代码 waiver/exclude；本用例提供逐 entry 的
+动态证据和详细中文原因。
 
-四、entry 2 减 2 场景
+五、6712 行 wWkEtrReg 更新
 
-entry 2 的目标条件为：
+6712 行与上述减 2 分支不同，它只要求一笔合法 B 与一笔同原始 ID 的新 AW 在
+同一周期成功握手：
 
-    _layer_probe_9 = _GEN_6 & _GEN_7
-    _GEN_7 = rWkVldReg & rWkEtrReg[2]
+    wWkVld = B fire && AW fire && new AWID == restored BID
 
-测试先让 E1、E2 两笔同 ID 事务分别占用 entry 0 和 entry 1。E1 的 nid=0，
-已经向下游发送 AR；E2 的 nid=1，仍在等待 E1 完成。随后在同一个上升沿：
-
-    * 上游提交第三笔同 ID 事务 E3，E3 自然分配到 entry 2；
-    * 下游返回 entry 0 中 E1 的单拍末拍响应。
-
-E3 分配前能同时看到 E1/E2，因此 entry 2 装载 nid=2；分配和同 ID 响应同周期
-发生，使 rWkVldReg=1、rWkEtrReg[2]=1。E1 完成后 E2 的 nid 变为 0，下一
-周期让 E2 的下游 AR 和单拍 R 同周期握手：E2 当前响应产生 _GEN_6=1，上一
-周期保存的 entry 2 修正产生 _GEN_7=1，最终执行第 452 行，将 arinfo_2_nid
-从 2 一次减到 0。
-
-五、entry 3 减 2 场景
-
-entry 3 的目标条件为：
-
-    _layer_probe_13 = _GEN_8 & _GEN_9
-    _GEN_9 = rWkVldReg & rWkEtrReg[3]
-
-为了让目标事务分配到最高编号的 entry 3，分配时 entry 0、entry 1 和 entry 2
-必须同时有效；但目标 nid 又必须精确等于 2，所以这三个已有事务中只能有两笔
-与目标 ID 相同。测试构造如下：
-
-    entry 0 : F1，ID_F，第一个同 ID 前序事务，已经发送 AR
-    entry 1 : F2，ID_F，第二个同 ID 前序事务，nid=1，等待 F1
-    entry 2 : G，ID_G，不同 ID 的占位事务，已经发送 AR
-
-随后在同一个上升沿将 F3(ID_F) 分配到 entry 3，并返回 F1 的末拍响应。F3
-只统计 F1/F2，因而装载 nid=2；同时 rWkVldReg=1、rWkEtrReg[3]=1。
-下一周期让已经解除依赖的 F2 在下游 AR/R 同周期握手，当前响应产生 _GEN_8，
-上一周期保存的修正产生 _GEN_9，最终执行第 471 行，将 arinfo_3_nid 从 2
-一次减到 0。
-
-六、AxiReorder.sv 第 487 行不可达说明
-
-第 487 行是写路径 entry 0 的减 2 分支：
-
-    _GEN_23 =
-        (|awinfo_0_nid) &
-        bFire &
-        (response_original_id == awinfo_0_id) &
-        wvld_0
-
-    _GEN_24 = wWkVldReg & wWkEtrReg[0]
-
-    if (_GEN_23 & _GEN_24)
-        awinfo_0_nid <= awinfo_0_nid - 2'h2;  // 第 487 行
-
-其中 _GEN_24 在当前周期为 1，要求上一周期同时发生一笔下游 B 握手和一笔
-同 ID 上游 AW 握手，并且新 AW 恰好分配到 entry 0。_GEN_23 又要求当前周期
-再完成一笔与 entry 0 目标事务同 ID 的 B。换言之，若要合法地从 nid=2 减到
-0，必须有两笔同 ID 前序写响应在相邻两个周期完成，同时在第一笔 B 完成的周期
-把目标 AW 分配到 entry 0。
-
-但是当前 RTL 的写地址发送路径使用 entries=1 的 awq，并且队首只有在对应表项
-nid=0 时才能出队：
-
-    awq.io.deq.ready :=
-        awinfo(awq.io.deq.bits.entry).nid === 0.U && io.slv.aw.ready
-
-    io.mst.aw.ready :=
-        awsel.valid && wq.io.enq.ready && awq.io.enq.ready
-
-若已经存在两笔同 ID 前序写事务，第二笔的 nid=1，它会占住唯一的 awq 表项且
-不能向下游发送 AW。因为 awq 已满，目标 AW 的 ready 必然为 0；即使本周期 B
-正在完成第一笔事务，nid 也只会在时钟沿后更新，不能组合地释放 awq。因此“不
-同表项 B 握手 + 目标 AW 分配到 entry 0”无法在该周期同时发生，_GEN_24 无法
-为 nid=2 的目标事务建立。
-
-若只保留一笔同 ID 前序事务，确实可以在它返回 B 时把目标 AW 分配到 entry 0，
-但此时目标 rawWNid 只能等于 1。下一周期要同时拉高 _GEN_23，只剩下三种选择：
-
-1. 对已经完成的旧 entry 再发送一次 B：旧 entry 的 wvld 已清零，会触发 RTL
-   中“B fire but vec(i) is not valid”的断言；
-2. 提前给目标 entry 0 返回 B：目标 nid 仍为 1，尚未发送下游 AW/W，会触发
-   “awinfo(i).nid === 0”断言；
-3. 返回另一笔同 ID 事务的 B：该事务并不存在；若另行提交，它又会因 nid>0
-   堵住单深度 awq，回到前述矛盾。
-
-强行采用前两种方式不仅违反 AXI 规定的 AW/W 完成后才能返回 B 的时序，也会
-使 DUT assertion 和公共 scoreboard 报错，不能作为一个有效的回归测试点。
-因此，第 487 行是由统一生成的每表项减法模板保留下来的结构性不可达分支；在
-“只驱动顶层端口、不修改内部状态、事务必须合法且测试必须通过”的约束下，不
-存在能够覆盖该行的 testcase。本文件不会伪造重复或提前 B 响应。该行应在覆盖
-率工具中按不可达代码进行 waiver/exclude，而不是通过非法端口序列强行命中。
-
-七、AxiReorder.sv 第 505 行不可达说明
-
-第 505 行是同一段写路径模板在 entry 1 上的展开：
-
-    _GEN_25 =
-        (|awinfo_1_nid) &
-        bFire &
-        (response_original_id == awinfo_1_id) &
-        wvld_1
-
-    _GEN_26 = wWkVldReg & wWkEtrReg[1]
-
-    if (_GEN_25 & _GEN_26)
-        awinfo_1_nid <= awinfo_1_nid - 2'h2;  // 第 505 行
-
-要令 _GEN_26=1，上一周期必须发生“同 ID B 握手 + 新 AW 握手”，并且新 AW
-必须分配到 entry 1。要在下一周期同时令 _GEN_25=1，还必须存在另一笔已经完成
-下游 AW/W、可以合法返回 B 的同 ID 前序写事务。
-
-表项编号从 0 改成 1 并不能解除第 487 行分析中的结构冲突。只要目标事务之前
-存在两笔同 ID 写事务，较后的那笔就会带着 nid>0 占住唯一的 awq 表项；它既
-不能出队，也使 awq.io.enq.ready 和 io.mst.aw.ready 为 0。因此，在第一笔 B
-返回的周期，目标 AW 无法握手，更不可能分配到 entry 1，wWkEtrReg[1] 无法
-记录该目标事务。
-
-若只安排一笔同 ID 前序事务，目标 entry 1 的 rawWNid 最多为 1。下一周期没有
-第二笔合法同 ID B 可以产生 _GEN_25：重复旧 B 会命中无效 wvld 断言，提前给
-目标返回 B 会命中 nid 非零断言，并且两者都会违反 AXI AW/W/B 顺序及公共
-scoreboard 的事务对应关系。
-
-因此第 505 行与第 487 行一样，是统一生成的写表项减法模板中的结构性不可达
-分支。在只使用合法顶层端口事务且测试必须正常通过的约束下，不存在可加入本
-文件的有效激励序列；该行也应在覆盖工具中作为不可达代码 waiver/exclude。
-
-八、AxiReorder.sv 第 523 行不可达说明
-
-第 523 行对应写路径 entry 2 的减 2 分支：
-
-    _GEN_27 =
-        (|awinfo_2_nid) &
-        bFire &
-        (response_original_id == awinfo_2_id) &
-        wvld_2
-
-    _GEN_28 = wWkVldReg & wWkEtrReg[2]
-
-    if (_GEN_27 & _GEN_28)
-        awinfo_2_nid <= awinfo_2_nid - 2'h2;  // 第 523 行
-
-_GEN_28 要求上一周期的新 AW 在同 ID B 握手周期分配到 entry 2；_GEN_27
-要求紧接着的当前周期还有另一笔同 ID B 合法返回。要让 entry 2 的目标事务
-从 nid=2 减到 0，目标分配前必须存在两笔同 ID 前序写事务。
-
-然而第二笔前序事务的 nid 必然大于 0，它会停在唯一的 awq 队首，使
-awq.io.deq.ready=0。单深度 awq 被占满后 awq.io.enq.ready=0，进而使目标
-AW 的 io.mst.aw.ready=0。因此第一笔 B 返回时，目标 AW 不能握手，也不能
-分配到 entry 2，wWkEtrReg[2] 无法记录目标表项，_GEN_28 不可能按要求建立。
-
-若减少为一笔前序事务以腾空 awq，目标 rawWNid 只能得到 1。下一周期既没有
-第二笔已经完成 AW/W 的同 ID 事务可以返回 B，也不能重复旧 B 或提前返回目标
-B：前者会触发 wvld 无效断言，后者会触发 nid 非零断言；两者同时违反 AXI
-写响应顺序和公共 scoreboard 的事务对应检查。
-
-因此第 523 行同样是统一写表项模板产生的结构性不可达代码。在不修改内部信号、
-只使用合法端口事务并要求测试正常结束的前提下，无法编写能够命中该行的有效
-testcase；该行应作为不可达项在覆盖工具中进行 waiver/exclude。
-
-九、AxiReorder.sv 第 541 行不可达说明
-
-第 541 行对应写路径 entry 3 的减 2 分支：
-
-    _GEN_29 =
-        (|awinfo_3_nid) &
-        bFire &
-        (response_original_id == awinfo_3_id) &
-        wvld_3
-
-    _GEN_30 = wWkVldReg & wWkEtrReg[3]
-
-    if (_GEN_29 & _GEN_30)
-        awinfo_3_nid <= awinfo_3_nid - 2'h2;  // 第 541 行
-
-要令 _GEN_30=1，上一周期必须在同 ID B 握手时把新 AW 分配到 entry 3；当前
-周期还要有第二笔同 ID B 返回以产生 _GEN_29。目标事务分配到 entry 3 又要求
-entry 0、entry 1、entry 2 均有效，其中至少两笔必须与目标同 ID 才能使目标
-nid 达到 2。
-
-但是 AxiReorder 对同 ID 写地址按 nid 串行发送。第一笔之后的同 ID 前序事务
-nid>0，会占住唯一的 awq 表项且不能出队。此时 awq.io.enq.ready=0，新的目标
-AW 无论空闲表项选择结果是否指向 entry 3，都无法获得 io.mst.aw.ready，因而
-不能与第一笔 B 在同一周期握手，wWkEtrReg[3] 也不可能记录该目标表项。
-
-使用不同 ID 事务填充低编号表项只能帮助选择 entry 3，不能提供 _GEN_29 所需
-的第二笔同 ID B；只保留一笔同 ID 前序又会使目标 rawWNid 最多为 1。重复旧
-B 或提前返回目标 B 仍会分别触发 wvld 无效、nid 非零断言，并违反 AXI 写响应
-顺序及 scoreboard 检查。
-
-因此第 541 行是 entry 3 上同样的结构性不可达模板分支。在仅驱动顶层端口、
-不修改内部状态、保持 AXI 事务合法且 testcase 必须通过的约束下，没有能够
-覆盖该行的有效激励；该行应在覆盖工具中进行 waiver/exclude。
-
-十、AxiReorder.sv 第 552 行覆盖场景
-
-第 552 行是 wWkEtrReg 的条件更新语句：
-
-    wWkVldReg <= wWkVld;
     if (wWkVld)
-        wWkEtrReg <= selected_free_write_entry;  // 第 552 行
+        wWkEtrReg <= selected_free_write_entry;  // 第 6712 行
 
-其中 wWkVld 要求下游 B 和上游新 AW 在同一个周期握手，并且两者恢复出的原始
-AXI ID 相同。该条件合法可达，不需要构造前述不可达的连续两拍同 ID B：
+WWK_ENTRY_UPDATE_CASES 使用独立参数表驱动该场景。H1 先完整完成下游 AW/W，
+使 entry0 合法等待 B，同时保证 awq/wq/wbitsq 已排空；随后 H1 的 B 与同 ID
+H2 的 AW 同拍握手。此时 H2 选择最低空闲 entry1，时钟沿后检查
+wWkVldReg=1、wWkEtrReg=0x2，直接证明 6712 行已经执行。下一拍延迟修正会把
+H2 的 nid 从 1 减到 0，之后再补齐 H2 的 W、下游 AW/W 和 B。
 
-1. 先完整发送单拍写事务 H1 的上游 AW/W 和下游 AW/W，使 H1 合法等待 B；
-2. 保持写地址队列为空，在 H1 返回 B 的同一周期提交相同 ID 的 H2 AW；
-3. H1 尚未在该时钟沿清除，所以最低空闲写表项是 entry 1，H2 分配到 entry 1；
-4. 同 ID B/AW 同周期握手使 wWkVld=1，第 552 行把 entry 1 的 one-hot 值
-   4'b0010 写入 wWkEtrReg；
-5. 随后继续完成 H2 的 W、下游 AW/W 和 B，保证全部写事务合法收尾。
-
-时钟沿后同时检查 wWkVldReg=1 和 wWkEtrReg=2，可以直接证明第 552 行已经
-执行，并且写入的是实际 AW 空闲表项选择结果，而不是寄存器旧值。
-
-十一、测试约束
-
-本用例只通过顶层 io_mst_* / io_slv_* 端口产生激励，不修改、force 或 deposit
-DUT 内部信号。内部句柄仅用于读取关键状态并进行自检。所有实际产生的 AR/R
-和 AW/W/B 事务均会完整收尾，使公共 monitor 和自动 scoreboard 在 testcase
-结束时没有残留项；对于上述四个不可达写分支，只保留分析说明，不产生非法
-AW/W/B 激励。
+所有响应都只在对应 AW/W 已被下游接收后产生；每笔 B 只发送一次，整个场景
+符合 AXI 五通道独立握手、同 ID 写响应顺序和公共 scoreboard 的事务对应关系。
 ================================================================================
 ]====]
 
 local clock = dut.clock:chdl()
 local core = dut.u_AxiReorder
 
--- 以下内部信号全部只读，用来证明目标分支确实在预期上升沿成立。
-local gen_4 = core["_GEN_4"]:chdl()
-local gen_5 = core["_GEN_5"]:chdl()
-local layer_probe_5 = core["_layer_probe_5"]:chdl()
-local gen_2 = core["_GEN_2"]:chdl()
-local gen_3 = core["_GEN_3"]:chdl()
-local layer_probe_1 = core["_layer_probe_1"]:chdl()
-local gen_6 = core["_GEN_6"]:chdl()
-local gen_7 = core["_GEN_7"]:chdl()
-local layer_probe_9 = core["_layer_probe_9"]:chdl()
-local gen_8 = core["_GEN_8"]:chdl()
-local gen_9 = core["_GEN_9"]:chdl()
-local layer_probe_13 = core["_layer_probe_13"]:chdl()
+-- 目标信号名称可由 entry 编号直接推导。内部句柄仅用于覆盖点自检，并按需
+-- 缓存，避免为相同结构的 64 个表项手工声明 GEN、layer probe 和状态信号。
+local core_signal_cache = {}
+
+local function core_signal(name)
+    local signal = core_signal_cache[name]
+    if signal == nil then
+        signal = core[name]:chdl()
+        core_signal_cache[name] = signal
+    end
+    return signal
+end
 
 local TIMEOUT = 100
 
@@ -353,16 +153,14 @@ local function wait_negedge()
     clock:negedge()
 end
 
--- set_imm() 更新端口后，通过只读同步阶段等待连续组合逻辑传播完成。
--- 这里不能使用 await_time_ps(1)：Verilator NORMAL_MODE 可能把时间回调安排到
--- 下一个时步，导致 VALID 意外跨过额外的上升沿并形成重复握手。
+-- set_imm() 更新端口后，等待连续组合逻辑传播完成。await_rd() 不推进仿真
+-- 时间，避免 VALID 意外跨过额外的上升沿形成重复握手。
 local function settle_combination()
     await_rd()
 end
 
--- 上升沿触发后，等待到同一仿真时刻的 read/write 同步阶段。此时 RTL 已经
--- 采样本拍握手，monitor 的上升沿任务也有机会读取旧 VALID；随后可以安全
--- 撤销端口，而不会把 VALID 保持到下一个上升沿。
+-- 上升沿触发后进入同一仿真时刻的 read/write 同步阶段。此时 RTL 和 monitor
+-- 已经采样本拍握手，可以安全撤销 VALID/READY。
 local function finish_handshake_edge()
     await_rw()
 end
@@ -373,16 +171,27 @@ local function wait_until_observed(predicate, description)
             return
         end
 
-        -- 被等待的 valid 在 ready=0 时必须按照 AXI 协议保持，因此即使当前
-        -- 调度点恰好位于下降沿，也不会因为等待下一个下降沿而漏掉单拍脉冲。
+        -- AXI VALID 在 READY=0 时保持，因此等待下一个下降沿不会漏掉握手请求。
         wait_negedge()
     end
 
     assert(false, error_message("timeout waiting for " .. description))
 end
 
--- 固定生成单拍、32-byte、INCR 读请求。地址均按 32 byte 对齐且互不相同，
--- 便于 scoreboard 根据 payload 将上游 AR 与下游重映射 AR 精确配对。
+local function assert_equal(actual, expected, description)
+    assert(
+        actual == expected,
+        error_message(string.format(
+            "%s: expected=%s, actual=%s",
+            description,
+            tostring(expected),
+            tostring(actual)
+        ))
+    )
+end
+
+-- 本用例使用单拍、32-byte、INCR 读请求。地址按 32 byte 对齐且互不相同，
+-- 便于公共 scoreboard 根据 payload 配对上游和下游 AR。
 local function set_mst_ar(transaction, valid)
     dut.io_mst_ar_valid:set_imm(valid and 1 or 0)
     dut.io_mst_ar_bits_id:set_imm(transaction.id)
@@ -410,7 +219,6 @@ local function set_slv_r(entry, data, resp, valid)
     dut.io_slv_r_bits_id:set_imm(entry)
     dut.io_slv_r_bits_data:set_imm(data)
     dut.io_slv_r_bits_resp:set_imm(resp)
-    -- 本用例全部是单拍读，因此每个有效 R 响应同时也是末拍。
     dut.io_slv_r_bits_last:set_imm(valid and 1 or 0)
 end
 
@@ -425,43 +233,34 @@ end
 -- 只完成上游 AR 握手，使请求进入重排表；不等待它向下游发送。
 local function accept_mst_ar(transaction)
     set_mst_ar(transaction, true)
+    settle_combination()
     wait_until_observed(function()
         return dut.io_mst_ar_ready:get() == 1
     end, transaction.name .. " upstream ARREADY")
 
-    -- 等待下一个上升沿完成握手。posedge 返回后进入同一仿真时刻的
-    -- read/write 同步阶段，再撤销 VALID；该过程不推进仿真时间。撤销后
-    -- 返回下一个下降沿，使后续 helper 始终从可写相位开始驱动端口。
     env.wait_cycles(1)
     finish_handshake_edge()
     clear_mst_ar()
     wait_negedge()
 end
 
--- 完成指定事务的下游 AR 握手，并验证 RTL 产生的重映射 entry ID。下游
--- ARREADY 默认保持为 0，所以 DUT 必须持续保持 ARVALID 和 payload，测试
--- 不会因 Lua 调度顺序错过仅存在一个周期的 ARVALID。
+-- 完成指定事务的下游 AR，并检查 DUT 产生的 6-bit 重映射 entry ID 和地址。
 local function accept_slv_ar(transaction, expected_entry)
     wait_until_observed(function()
         return dut.io_slv_ar_valid:get() == 1
     end, transaction.name .. " downstream ARVALID")
 
-    assert(
-        dut.io_slv_ar_bits_id:get() == expected_entry,
-        error_message(string.format(
-            "%s expected entry=%d, actual entry=%s",
-            transaction.name,
-            expected_entry,
-            tostring(dut.io_slv_ar_bits_id:get())
-        ))
+    assert_equal(
+        dut.io_slv_ar_bits_id:get(),
+        expected_entry,
+        transaction.name .. " downstream AR entry"
     )
-    assert(
-        dut.io_slv_ar_bits_addr:get() == transaction.addr,
-        error_message(transaction.name .. " downstream AR address mismatch")
+    assert_equal(
+        dut.io_slv_ar_bits_addr:get(),
+        transaction.addr,
+        transaction.name .. " downstream AR address"
     )
 
-    -- payload 检查通过后才允许请求握手；READY 保持到下一个上升沿，并在
-    -- monitor 完成采样后立即撤销，从而每笔 AR 只握手一次。
     set_slv_ar_ready(1)
     settle_combination()
     env.wait_cycles(1)
@@ -475,23 +274,20 @@ local function send_read_request(transaction, expected_entry)
     accept_slv_ar(transaction, expected_entry)
 end
 
--- 返回一笔普通单拍 R 响应。expected_upstream_id 用来同时检查 ID 恢复。
+-- 返回一笔普通单拍 R，并同时检查响应有效和原始 AXI ID 恢复。
 local function send_r_response(entry, data, resp, expected_upstream_id, description)
     dut.io_mst_r_ready:set_imm(1)
     set_slv_r(entry, data, resp, true)
     settle_combination()
 
     assert(
-        dut.io_slv_r_ready:get() == 1,
-        error_message(description .. " downstream RREADY is low")
+        dut.io_slv_r_ready:get() == 1 and dut.io_mst_r_valid:get() == 1,
+        error_message(description .. " R channel is not ready/valid")
     )
-    assert(
-        dut.io_mst_r_valid:get() == 1,
-        error_message(description .. " upstream RVALID is low")
-    )
-    assert(
-        dut.io_mst_r_bits_id:get() == expected_upstream_id,
-        error_message(description .. " restored upstream RID mismatch")
+    assert_equal(
+        dut.io_mst_r_bits_id:get(),
+        expected_upstream_id,
+        description .. " restored upstream RID"
     )
 
     env.wait_cycles(1)
@@ -500,9 +296,11 @@ local function send_r_response(entry, data, resp, expected_upstream_id, descript
     wait_negedge()
 end
 
--- 以下 helper 用于第 552 行的单拍写事务。与读事务 helper 一样，所有输入
--- 只在下降沿后的可写阶段更新，并在握手上升沿的 read/write 阶段后撤销，
--- 防止 VALID 或 READY 意外跨越额外的时钟沿。
+-- ============================================================================
+-- 写通道公共 helper
+-- ============================================================================
+-- AW 不可达性见证使用单拍、32-byte、INCR 写事务。与读 helper 相同，所有
+-- VALID/READY 都只跨越一个实际握手上升沿，避免重复事务。
 local function set_mst_aw(transaction, valid)
     dut.io_mst_aw_valid:set_imm(valid and 1 or 0)
     dut.io_mst_aw_bits_id:set_imm(transaction.id)
@@ -547,10 +345,9 @@ local function clear_slv_b()
     dut.io_slv_b_bits_resp:set_imm(0)
 end
 
--- 接收一笔上游 AW，使写事务分配到 DUT 的写重排表。W 通道必须在 AW
--- 之后单独握手，因为 RTL 使用 wq 将每组 W 数据与已分配表项关联。
 local function accept_mst_aw(transaction)
     set_mst_aw(transaction, true)
+    settle_combination()
     wait_until_observed(function()
         return dut.io_mst_aw_ready:get() == 1
     end, transaction.name .. " upstream AWREADY")
@@ -563,6 +360,7 @@ end
 
 local function accept_mst_w(transaction)
     set_mst_w(transaction, true)
+    settle_combination()
     wait_until_observed(function()
         return dut.io_mst_w_ready:get() == 1
     end, transaction.name .. " upstream WREADY")
@@ -573,25 +371,22 @@ local function accept_mst_w(transaction)
     wait_negedge()
 end
 
--- 下游 AW 由 awq 严格按上游接收顺序发送。只有队首表项 nid=0 时 AWVALID
--- 才会拉高；这里同时检查重映射 entry ID 和地址，证明响应使用正确映射。
+-- awq 严格保持上游 AW 顺序，只有队首 entry 的 nid=0 时才产生下游 AWVALID。
+-- helper 同时检查重映射后的 6-bit entry ID 和原始地址。
 local function accept_slv_aw(transaction, expected_entry)
     wait_until_observed(function()
         return dut.io_slv_aw_valid:get() == 1
     end, transaction.name .. " downstream AWVALID")
 
-    assert(
-        dut.io_slv_aw_bits_id:get() == expected_entry,
-        error_message(string.format(
-            "%s expected write entry=%d, actual entry=%s",
-            transaction.name,
-            expected_entry,
-            tostring(dut.io_slv_aw_bits_id:get())
-        ))
+    assert_equal(
+        dut.io_slv_aw_bits_id:get(),
+        expected_entry,
+        transaction.name .. " downstream AW entry"
     )
-    assert(
-        dut.io_slv_aw_bits_addr:get() == transaction.addr,
-        error_message(transaction.name .. " downstream AW address mismatch")
+    assert_equal(
+        dut.io_slv_aw_bits_addr:get(),
+        transaction.addr,
+        transaction.name .. " downstream AW address"
     )
 
     dut.io_slv_aw_ready:set_imm(1)
@@ -602,8 +397,8 @@ local function accept_slv_aw(transaction, expected_entry)
     wait_negedge()
 end
 
--- wbitsq 只有在对应 AW 已经向下游握手后才允许 W 出队，因此这个 helper
--- 自然验证 AW 先于 W。数据采用小整数，比较时去掉 256-bit 十六进制前导零。
+-- wbitsq 会等对应 AW 已发送下游后才允许 W 出队。这里检查单拍 W 的 data 和
+-- last；strb 固定为全部字节有效，scoreboard 会同时完成 payload 比对。
 local function accept_slv_w(transaction)
     wait_until_observed(function()
         return dut.io_slv_w_valid:get() == 1
@@ -611,13 +406,11 @@ local function accept_slv_w(transaction)
 
     local actual_data = dut.io_slv_w_bits_data:get_hex_str():lower():gsub("^0+", "")
     local expected_data = string.format("%x", transaction.data)
-    assert(
-        actual_data == expected_data,
-        error_message(transaction.name .. " downstream W data mismatch")
-    )
-    assert(
-        dut.io_slv_w_bits_last:get() == 1,
-        error_message(transaction.name .. " downstream WLAST is low")
+    assert_equal(actual_data, expected_data, transaction.name .. " downstream W data")
+    assert_equal(
+        dut.io_slv_w_bits_last:get(),
+        1,
+        transaction.name .. " downstream WLAST"
     )
 
     dut.io_slv_w_ready:set_imm(1)
@@ -628,6 +421,8 @@ local function accept_slv_w(transaction)
     wait_negedge()
 end
 
+-- 完整发送一笔单拍写事务，但暂不返回 B。调用结束后，该 entry 的 AW/W 已经
+-- 被下游接收，wvld 仍保持为 1，可以作为后续目标 entry 的合法占位事务。
 local function send_write_request(transaction, expected_entry)
     accept_mst_aw(transaction)
     accept_mst_w(transaction)
@@ -644,9 +439,10 @@ local function send_b_response(entry, resp, expected_upstream_id, description)
         dut.io_slv_b_ready:get() == 1 and dut.io_mst_b_valid:get() == 1,
         error_message(description .. " B channel is not ready/valid")
     )
-    assert(
-        dut.io_mst_b_bits_id:get() == expected_upstream_id,
-        error_message(description .. " restored upstream BID mismatch")
+    assert_equal(
+        dut.io_mst_b_bits_id:get(),
+        expected_upstream_id,
+        description .. " restored upstream BID"
     )
 
     env.wait_cycles(1)
@@ -655,208 +451,291 @@ local function send_b_response(entry, resp, expected_upstream_id, description)
     wait_negedge()
 end
 
-local function task_line_coverage()
-    -- 不启动随机 AXI agent，由 testcase 精确控制读写端口。下游地址和写数据
-    -- READY 默认拉低，只在对应 helper 中显式拉高一拍；上游始终接收 R/B。
-    driver.drive {
-        io_slv_ar_ready = 0,
-        io_mst_r_ready = 1,
-        io_slv_aw_ready = 0,
-        io_slv_w_ready = 0,
-        io_mst_b_ready = 1,
-    }
+-- 64 个目标 entry 共用一个连续参数化场景。entry 0/1 因最低空闲项选择
+-- 需要临时占位事务；entry 2..63 则保留已经发送下游 AR、尚未返回 R 的目标
+-- 事务来递增占表。三种准备布局之后的关键两拍和检查完全相同。
+local parameterized_read_state = {
+    next_entry = 0,
+    pending = {},
+}
 
-    local ID_A = 0x111
-    local ID_B = 0x222
-    local ID_C = 0x333
-    local ID_D = 0x444
-    local ID_E = 0x555
-    local ID_F = 0x666
-    local ID_G = 0x777
-    local ID_H = 0x888
+local function read_nid_minus_two_line(entry)
+    if entry <= 10 then
+        return 4247 + 19 * entry
+    end
+    return 4237 + 20 * entry
+end
 
-    local transaction_b1 = {
-        name = "B1(entry0 first predecessor)",
-        id = ID_B,
-        addr = 0x1000,
+local function make_read_transaction(name, id, serial)
+    return {
+        name = name,
+        id = id,
+        addr = 0x20000 + serial * 0x20,
     }
-    local transaction_a = {
-        name = "A(entry1 temporary occupant)",
-        id = ID_A,
-        addr = 0x2000,
-    }
-    local transaction_b2 = {
-        name = "B2(entry2 second predecessor)",
-        id = ID_B,
-        addr = 0x3000,
-    }
-    local transaction_b3 = {
-        name = "B3(entry1 target transaction)",
-        id = ID_B,
-        addr = 0x4000,
-    }
-    local transaction_d = {
-        name = "D(entry0 temporary occupant)",
-        id = ID_D,
-        addr = 0x5000,
-    }
-    local transaction_c1 = {
-        name = "C1(entry1 first predecessor)",
-        id = ID_C,
-        addr = 0x6000,
-    }
-    local transaction_c2 = {
-        name = "C2(entry2 second predecessor)",
-        id = ID_C,
-        addr = 0x7000,
-    }
-    local transaction_c3 = {
-        name = "C3(entry0 target transaction)",
-        id = ID_C,
-        addr = 0x8000,
-    }
-    local transaction_e1 = {
-        name = "E1(entry0 first predecessor)",
-        id = ID_E,
-        addr = 0x9000,
-    }
-    local transaction_e2 = {
-        name = "E2(entry1 second predecessor)",
-        id = ID_E,
-        addr = 0xA000,
-    }
-    local transaction_e3 = {
-        name = "E3(entry2 target transaction)",
-        id = ID_E,
-        addr = 0xB000,
-    }
-    local transaction_f1 = {
-        name = "F1(entry0 first predecessor)",
-        id = ID_F,
-        addr = 0xC000,
-    }
-    local transaction_f2 = {
-        name = "F2(entry1 second predecessor)",
-        id = ID_F,
-        addr = 0xD000,
-    }
-    local transaction_g = {
-        name = "G(entry2 different-ID occupant)",
-        id = ID_G,
-        addr = 0xE000,
-    }
-    local transaction_f3 = {
-        name = "F3(entry3 target transaction)",
-        id = ID_F,
-        addr = 0xF000,
-    }
-    local transaction_h1 = {
-        name = "H1(write predecessor in entry0)",
-        id = ID_H,
-        addr = 0x10000,
-        data = 0x1234,
-    }
-    local transaction_h2 = {
-        name = "H2(simultaneously allocated write in entry1)",
-        id = ID_H,
-        addr = 0x11000,
-        data = 0x5678,
-    }
+end
 
-    wait_negedge()
+local function assert_read_occupancy(first_entry, last_entry, description)
+    for entry = 0, 63 do
+        local expected = 0
+        if
+            first_entry ~= nil and
+            entry >= first_entry and
+            entry <= last_entry
+        then
+            expected = 1
+        end
 
-    -- B1 先占用 entry 0，A 再占用 entry 1；两者 nid 均为 0，因此正常
-    -- 发送 AR。这个顺序很关键：稍后释放 A 时，最低空闲项必须是 entry 1。
-    send_read_request(transaction_b1, 0)
-    send_read_request(transaction_a, 1)
+        assert_equal(
+            core_signal("rvld_" .. entry):get(),
+            expected,
+            string.format("%s entry%d rvld", description, entry)
+        )
+    end
+end
 
-    -- B2 分配到 entry 2。由于 entry 0 中存在未完成的同 ID B1，B2 的
-    -- nid=1，必须等待 B1 完成，所以此处只接收上游 AR，不接收下游 AR。
-    accept_mst_ar(transaction_b2)
+-- 返回 P1/P2 实际占用的 entry。entry 0/1 先借助不同 ID 的临时事务腾出目标
+-- 表项；entry>=2 时，P1/P2 直接使用每轮都空闲的 entry 0/1。
+local function prepare_parameterized_predecessors(
+    entry,
+    line,
+    predecessor_1,
+    predecessor_2
+)
+    local predecessor_1_entry
+    local predecessor_2_entry
+    local temporary
+    local temporary_entry
+
+    if entry == 0 then
+        temporary = make_read_transaction(
+            "entry0 temporary occupant",
+            0x800,
+            entry * 4 + 3
+        )
+        temporary_entry = 0
+        send_read_request(temporary, temporary_entry)
+        send_read_request(predecessor_1, 1)
+        accept_mst_ar(predecessor_2)
+        predecessor_1_entry = 1
+        predecessor_2_entry = 2
+    elseif entry == 1 then
+        temporary = make_read_transaction(
+            "entry1 temporary occupant",
+            0x801,
+            entry * 4 + 3
+        )
+        temporary_entry = 1
+        send_read_request(predecessor_1, 0)
+        send_read_request(temporary, temporary_entry)
+        accept_mst_ar(predecessor_2)
+        predecessor_1_entry = 0
+        predecessor_2_entry = 2
+    else
+        send_read_request(predecessor_1, 0)
+        accept_mst_ar(predecessor_2)
+        predecessor_1_entry = 0
+        predecessor_2_entry = 1
+    end
+
     assert(
-        core.rvld_2:get() == 1 and core.arinfo_2_nid:get() == 1,
-        error_message("B2 did not naturally establish entry2 nid=1")
+        core_signal("rvld_" .. predecessor_2_entry):get() == 1 and
+        core_signal("arinfo_" .. predecessor_2_entry .. "_nid"):get() == 1,
+        error_message(string.format(
+            "AxiReorder.sv:%d P2 did not establish entry%d nid=1",
+            line,
+            predecessor_2_entry
+        ))
     )
-    assert(
-        dut.io_slv_ar_valid:get() == 0,
-        error_message("B2 AR was sent before B1 completed")
+    assert_equal(
+        dut.io_slv_ar_valid:get(),
+        0,
+        string.format("AxiReorder.sv:%d P2 ARVALID before P1 completion", line)
     )
 
-    -- 完成不同 ID 的 A，合法释放 entry 1。entry 0 中的同 ID 前序 B1 必须
-    -- 继续保持有效，这样 B3 分配时才能同时看到 B1、B2 两个前序事务。
-    send_r_response(1, 0xA0, 0, ID_A, "complete A")
-    assert(
-        core.rvld_0:get() == 1 and core.rvld_1:get() == 0,
-        error_message("A did not release entry1 while B1 remained in entry0")
+    if temporary ~= nil then
+        send_r_response(
+            temporary_entry,
+            0x100 + entry,
+            0,
+            temporary.id,
+            string.format("release entry%d temporary occupant", entry)
+        )
+    end
+
+    return predecessor_1_entry, predecessor_2_entry
+end
+
+local function finish_parameterized_read_entries()
+    -- entry 2..63 的目标均已完成下游 AR；逐笔返回 R，保证公共 monitor 和
+    -- scoreboard 完整收尾。它们使用不同原始 ID，响应顺序不影响合法性。
+    for entry = 2, 63 do
+        local transaction = parameterized_read_state.pending[entry]
+        assert(
+            transaction ~= nil,
+            error_message(string.format("missing pending transaction for entry%d", entry))
+        )
+        send_r_response(
+            entry,
+            0x500 + entry,
+            entry % 4,
+            transaction.id,
+            string.format("complete persistent target entry%d", entry)
+        )
+    end
+
+    assert_read_occupancy(
+        nil,
+        nil,
+        "after parameterized scenario cleanup"
+    )
+end
+
+local function cover_parameterized_read_nid_minus_two(entry, line)
+    assert_equal(
+        entry,
+        parameterized_read_state.next_entry,
+        "parameterized line coverage entry order"
+    )
+    assert_equal(
+        line,
+        read_nid_minus_two_line(entry),
+        string.format("AxiReorder entry%d target line", entry)
     )
 
-    -- ====================================================================
-    -- 关键周期 1：B3 分配到 entry 1，同时 entry 0 中 B1 返回末拍响应。
-    -- ====================================================================
-    set_mst_ar(transaction_b3, true)
+    local occupied_first = nil
+    local occupied_last = nil
+    if entry >= 3 then
+        occupied_first = 2
+        occupied_last = entry - 1
+    end
+    assert_read_occupancy(
+        occupied_first,
+        occupied_last,
+        string.format("before AxiReorder.sv:%d setup", line)
+    )
+
+    local target_id = 0x100 + entry
+    local predecessor_1 = make_read_transaction(
+        string.format("entry%d P1(first predecessor)", entry),
+        target_id,
+        entry * 4
+    )
+    local predecessor_2 = make_read_transaction(
+        string.format("entry%d P2(second predecessor)", entry),
+        target_id,
+        entry * 4 + 1
+    )
+    local target = make_read_transaction(
+        string.format("entry%d P3(target transaction)", entry),
+        target_id,
+        entry * 4 + 2
+    )
+
+    print_message(string.format(
+        "Start AxiReorder.sv:%d line coverage: arinfo_%d_nid changes 2 -> 0",
+        line,
+        entry
+    ))
+
+    local predecessor_1_entry, predecessor_2_entry =
+        prepare_parameterized_predecessors(
+            entry,
+            line,
+            predecessor_1,
+            predecessor_2
+        )
+
+    -- 关键周期 1：P3 分配到目标 entry，同时返回 P1 的末拍 R。P3 在沿前统计
+    -- 到同 ID 的 P1/P2，装载 nid=2；分配和响应并发还会保存目标 entry 的
+    -- 延迟修正。
+    set_mst_ar(target, true)
     dut.io_mst_r_ready:set_imm(1)
-    set_slv_r(0, 0xB1, 1, true)
+    set_slv_r(predecessor_1_entry, 0x200 + entry, 1, true)
     settle_combination()
 
-    assert(
-        dut.io_mst_ar_ready:get() == 1,
-        error_message("B3 was not ready for simultaneous allocation")
+    assert_equal(
+        dut.io_mst_ar_ready:get(),
+        1,
+        string.format("AxiReorder.sv:%d target ARREADY", line)
     )
-    assert(
-        dut.io_slv_r_ready:get() == 1,
-        error_message("B1 response was not ready in simultaneous cycle")
+    assert_equal(
+        dut.io_slv_r_ready:get(),
+        1,
+        string.format("AxiReorder.sv:%d P1 RREADY", line)
     )
-    assert(
-        dut.io_mst_r_bits_id:get() == ID_B,
-        error_message("B1 response did not restore ID_B")
+    assert_equal(
+        dut.io_mst_r_bits_id:get(),
+        target_id,
+        string.format("AxiReorder.sv:%d P1 restored upstream RID", line)
     )
 
-    -- 下一个上升沿同时产生 mst AR fire 和 slv R fire，建立延迟修正状态。
     env.wait_cycles(1)
     finish_handshake_edge()
     clear_mst_ar()
     clear_slv_r()
     wait_negedge()
 
-    -- B3 分配时看到了 B1、B2 两个未完成同 ID 项，因此 rawRNid 必须为 2；
-    -- 同周期完成 B1 后，rWkEtrReg 必须以 bit 1 记录目标 entry 1。
     assert(
-        core.rvld_1:get() == 1 and core.arinfo_1_nid:get() == 2,
-        error_message("B3 did not enter entry1 with nid=2")
+        core_signal("rvld_" .. entry):get() == 1 and
+        core_signal("arinfo_" .. entry .. "_nid"):get() == 2,
+        error_message(string.format(
+            "AxiReorder.sv:%d target did not enter entry%d with nid=2",
+            line,
+            entry
+        ))
     )
-    assert(
-        core.rWkVldReg:get() == 1 and core.rWkEtrReg:get() == 2,
-        error_message("simultaneous B3 allocation/B1 response did not set rWk entry1")
+    assert_equal(
+        core.rWkVldReg:get(),
+        1,
+        string.format("AxiReorder.sv:%d delayed correction valid", line)
     )
-
-    -- B1 已完成，B2 的 nid 已降到 0，此时 B2 应在下游 AR 端口有效并选择
-    -- entry 2。当前 ARREADY 仍为 0，所以 B2 的 AR 会稳定停在端口上；随后
-    -- 同时拉高 ARREADY 和 RVALID，构造合法的零周期响应。
+    assert_equal(
+        core_signal("_GEN_" .. (2 * entry + 3)):get(),
+        1,
+        string.format("AxiReorder.sv:%d delayed correction entry bit", line)
+    )
     assert(
         dut.io_slv_ar_valid:get() == 1 and
-        dut.io_slv_ar_bits_id:get() == 2 and
-        dut.io_slv_ar_bits_addr:get() == transaction_b2.addr,
-        error_message("B2 was not selected for downstream AR after B1 completion")
+        dut.io_slv_ar_bits_id:get() == predecessor_2_entry and
+        dut.io_slv_ar_bits_addr:get() == predecessor_2.addr,
+        error_message(string.format(
+            "AxiReorder.sv:%d P2 was not selected after P1 completion",
+            line
+        ))
     )
 
-    -- ====================================================================
-    -- 关键周期 2：B2 的 AR 与 R 同周期握手，命中目标减 2 分支。
-    -- ====================================================================
+    -- 关键周期 2：刚解除依赖的 P2 在下游 AR/R 同周期握手。当前响应 GEN 和
+    -- 上一周期保存的修正 GEN 共同拉高目标 layer probe。
     set_slv_ar_ready(1)
-    set_slv_r(2, 0xB2, 2, true)
+    set_slv_r(predecessor_2_entry, 0x300 + entry, 2, true)
     settle_combination()
 
-    -- 当前 B2 响应贡献 _GEN_4；上一周期保存的 entry1 修正贡献 _GEN_5。
-    -- 三个断言均成立时，下一个上升沿必然执行目标 RTL 行。
-    assert(gen_4:get() == 1, error_message("_GEN_4 is not asserted"))
-    assert(gen_5:get() == 1, error_message("_GEN_5 is not asserted"))
-    assert(
-        layer_probe_5:get() == 1,
-        error_message("_layer_probe_5 is not asserted before target edge")
+    assert_equal(
+        core_signal("_GEN_" .. (2 * entry + 2)):get(),
+        1,
+        string.format("AxiReorder.sv:%d current response GEN", line)
+    )
+    assert_equal(
+        core_signal("_GEN_" .. (2 * entry + 3)):get(),
+        1,
+        string.format("AxiReorder.sv:%d delayed correction GEN", line)
+    )
+    assert_equal(
+        core_signal("_layer_probe_" .. (4 * entry + 1)):get(),
+        1,
+        string.format("AxiReorder.sv:%d target layer probe", line)
+    )
+    assert_equal(
+        dut.io_mst_ar_valid:get(),
+        0,
+        string.format("upstream ARVALID on AxiReorder.sv:%d target edge", line)
     )
     assert(
         dut.io_slv_ar_ready:get() == 1 and dut.io_slv_r_ready:get() == 1,
-        error_message("B2 zero-latency AR/R channels are not both ready")
+        error_message(string.format(
+            "AxiReorder.sv:%d P2 zero-latency AR/R channels are not both ready",
+            line
+        ))
     )
 
     env.wait_cycles(1)
@@ -865,401 +744,690 @@ local function task_line_coverage()
     set_slv_ar_ready(0)
     wait_negedge()
 
-    -- 目标行应把 entry 1 中 B3 的 nid 从 2 一次减到 0，而不是只减到 1。
-    assert(
-        core.arinfo_1_nid:get() == 0,
-        error_message(string.format(
-            "target nid-2 update failed: entry1 nid=%s",
-            tostring(core.arinfo_1_nid:get())
-        ))
+    assert_equal(
+        core_signal("arinfo_" .. entry .. "_nid"):get(),
+        0,
+        string.format("AxiReorder.sv:%d arinfo_%d_nid after target edge", line, entry)
     )
-    print_message(
-        "Covered AxiReorder.sv:433; arinfo_1_nid changed 2 -> 0"
+    print_message(string.format(
+        "Covered AxiReorder.sv:%d; arinfo_%d_nid changed 2 -> 0",
+        line,
+        entry
+    ))
+
+    accept_slv_ar(target, entry)
+
+    if entry < 2 then
+        -- entry 0/1 的特殊布局各自独立收尾，使下一场景重新从空表开始。
+        send_r_response(
+            entry,
+            0x400 + entry,
+            3,
+            target.id,
+            string.format("complete target entry%d", entry)
+        )
+        assert_read_occupancy(
+            nil,
+            nil,
+            string.format("after AxiReorder.sv:%d target", line)
+        )
+    else
+        -- entry 2..63 的目标保留到最后统一返回，用作下一目标的低编号占位。
+        parameterized_read_state.pending[entry] = target
+        assert_read_occupancy(
+            2,
+            entry,
+            string.format("after AxiReorder.sv:%d target", line)
+        )
+    end
+
+    parameterized_read_state.next_entry = entry + 1
+    if entry == 63 then
+        finish_parameterized_read_entries()
+    end
+end
+
+-- ============================================================================
+-- AW entry 0..63 不可达分支的参数化见证
+-- ============================================================================
+
+local parameterized_write_state = {
+    next_entry = 0,
+    pending = {},
+}
+
+-- AW 生成代码在 entry 0..9 和 entry 10..63 的格式略有不同，因此行号不能
+-- 简单使用一个固定步长。这里把用户要求的 5513..6701 行映射集中管理，避免
+-- 64 个 testcase 各自硬编码行号后发生漂移。
+local function write_nid_minus_two_line(entry)
+    if entry <= 9 then
+        return 5513 + 18 * entry
+    end
+    return 5504 + 19 * entry
+end
+
+local function make_write_transaction(name, id, serial)
+    return {
+        name = name,
+        id = id,
+        addr = 0x60000 + serial * 0x20,
+        data = 0xA00000 + serial,
+    }
+end
+
+-- 检查参数化场景中已经保留的不同 ID 占位写。每一个占位事务都已完成
+-- 下游 AW/W，只有 B 尚未返回，因此不会阻塞 awq，却会占住指定表项。
+local function assert_write_occupancy(first_entry, last_entry, description)
+    for entry = 0, 63 do
+        local expected = 0
+        if
+            first_entry ~= nil and
+            entry >= first_entry and
+            entry <= last_entry
+        then
+            expected = 1
+        end
+
+        assert_equal(
+            core_signal("wvld_" .. entry):get(),
+            expected,
+            string.format("%s entry%d wvld", description, entry)
+        )
+        if expected == 1 then
+            assert_equal(
+                core_signal("awinfo_" .. entry .. "_nid"):get(),
+                0,
+                string.format("%s entry%d nid", description, entry)
+            )
+            assert_equal(
+                core_signal("awinfo_" .. entry .. "_haveSendAW"):get(),
+                1,
+                string.format("%s entry%d haveSendAW", description, entry)
+            )
+        end
+    end
+end
+
+-- awsel 使用最低编号空闲项。检查所有低编号表项都有效、目标表项无效，可以
+-- 直接证明当前最低空闲项就是 entry。不能直接比较 _awsel_res_bits_T_1：它只是
+-- PickOne 中“有效向量加一”的传播中间量，真正 one-hot 还要与 ~wvld 按位与。
+local function assert_aw_selected_entry(entry, line, description)
+    for lower_entry = 0, entry - 1 do
+        assert_equal(
+            core_signal("wvld_" .. lower_entry):get(),
+            1,
+            string.format(
+                "AxiReorder.sv:%d %s lower entry%d must be occupied",
+                line,
+                description,
+                lower_entry
+            )
+        )
+    end
+    assert_equal(
+        core_signal("wvld_" .. entry):get(),
+        0,
+        string.format(
+            "AxiReorder.sv:%d %s target entry%d must be free",
+            line,
+            description,
+            entry
+        )
+    )
+end
+
+-- entry 0/1 需要临时占位才能把 P1/P2 放到更高位置；entry>=2 则使用已保留
+-- 的低编号不同 ID 占位。P2 只接收上游 AW/W，故 nid=1 的 P2 会留在唯一 awq
+-- 中，形成后续不可达性的合法前置状态。
+local function prepare_parameterized_aw_predecessors(
+    entry,
+    line,
+    predecessor_1,
+    predecessor_2
+)
+    local predecessor_1_entry
+    local predecessor_2_entry
+    local temporary
+    local temporary_entry
+
+    if entry == 0 then
+        temporary = make_write_transaction(
+            "entry0 temporary AW occupant",
+            0x700,
+            entry * 8 + 3
+        )
+        temporary_entry = 0
+        send_write_request(temporary, temporary_entry)
+        send_write_request(predecessor_1, 1)
+        accept_mst_aw(predecessor_2)
+        accept_mst_w(predecessor_2)
+        predecessor_1_entry = 1
+        predecessor_2_entry = 2
+    elseif entry == 1 then
+        temporary = make_write_transaction(
+            "entry1 temporary AW occupant",
+            0x701,
+            entry * 8 + 3
+        )
+        temporary_entry = 1
+        send_write_request(predecessor_1, 0)
+        send_write_request(temporary, temporary_entry)
+        accept_mst_aw(predecessor_2)
+        accept_mst_w(predecessor_2)
+        predecessor_1_entry = 0
+        predecessor_2_entry = 2
+    else
+        send_write_request(predecessor_1, 0)
+        accept_mst_aw(predecessor_2)
+        accept_mst_w(predecessor_2)
+        predecessor_1_entry = 0
+        predecessor_2_entry = 1
+    end
+
+    assert_equal(
+        core_signal("wvld_" .. predecessor_1_entry):get(),
+        1,
+        string.format("AxiReorder.sv:%d P1 wvld", line)
+    )
+    assert_equal(
+        core_signal("awinfo_" .. predecessor_1_entry .. "_nid"):get(),
+        0,
+        string.format("AxiReorder.sv:%d P1 nid", line)
+    )
+    assert_equal(
+        core_signal("awinfo_" .. predecessor_1_entry .. "_haveSendAW"):get(),
+        1,
+        string.format("AxiReorder.sv:%d P1 haveSendAW", line)
+    )
+    assert_equal(
+        core_signal("wvld_" .. predecessor_2_entry):get(),
+        1,
+        string.format("AxiReorder.sv:%d P2 wvld", line)
+    )
+    assert_equal(
+        core_signal("awinfo_" .. predecessor_2_entry .. "_nid"):get(),
+        1,
+        string.format("AxiReorder.sv:%d P2 nid=1", line)
+    )
+    assert_equal(
+        core_signal("awinfo_" .. predecessor_2_entry .. "_haveSendAW"):get(),
+        0,
+        string.format("AxiReorder.sv:%d P2 is still waiting for AW", line)
+    )
+    assert_equal(
+        dut.io_slv_aw_valid:get(),
+        0,
+        string.format("AxiReorder.sv:%d P2 AWVALID before P1 B", line)
     )
 
-    -- B3 已无同 ID 前序依赖，现在合法发送 entry 1 的下游 AR。
-    accept_slv_ar(transaction_b3, 1)
+    if temporary ~= nil then
+        -- 临时事务已经完整下游发送，此处返回它的 B，释放目标 entry。这个
+        -- B 与 P1 的原始 ID 不同，不会产生目标分支需要的延迟修正。
+        send_b_response(
+            temporary_entry,
+            0,
+            temporary.id,
+            string.format("release entry%d temporary AW occupant", entry)
+        )
+    end
 
-    -- 完成 B3，清空最后一个事务，确保公共 scoreboard 收尾检查通过。
-    send_r_response(1, 0xB3, 3, ID_B, "complete B3")
+    assert_aw_selected_entry(entry, line, "after predecessor preparation")
+    return predecessor_1_entry, predecessor_2_entry
+end
 
-    -- ====================================================================
-    -- entry 0 场景：重新构造表项布局
-    -- ====================================================================
+-- P2 的 nid 在 P1 B 的上升沿之后才更新为 0。此 helper 在保持 P3 AWVALID 的
+-- 同时接收 P2 的下游 AW，并检查 Queue(pipe=true) 的“出队同时入队”行为：
+-- 该沿会接收 P3，但它只能看到一个仍有效的同 ID P2，因此 rawWNid=1。
+local function replace_awq_head_with_target(
+    predecessor_2,
+    predecessor_2_entry,
+    target,
+    line
+)
+    wait_until_observed(function()
+        return dut.io_slv_aw_valid:get() == 1
+    end, predecessor_2.name .. " downstream AWVALID after P1 B")
 
-    -- D 先占用 entry 0，C1 再占用 entry 1，并分别正常发送下游 AR。
-    -- C2 随后占用 entry 2；因为 C1 是未完成的同 ID 前序事务，C2 自然
-    -- 得到 nid=1，只进入重排表而暂时不能向下游发送。
-    send_read_request(transaction_d, 0)
-    send_read_request(transaction_c1, 1)
-    accept_mst_ar(transaction_c2)
-    assert(
-        core.rvld_2:get() == 1 and core.arinfo_2_nid:get() == 1,
-        error_message("C2 did not naturally establish entry2 nid=1")
+    assert_equal(
+        dut.io_slv_aw_bits_id:get(),
+        predecessor_2_entry,
+        string.format("AxiReorder.sv:%d P2 downstream AW entry", line)
     )
-    assert(
-        dut.io_slv_ar_valid:get() == 0,
-        error_message("C2 AR was sent before C1 completed")
+    assert_equal(
+        dut.io_slv_aw_bits_addr:get(),
+        predecessor_2.addr,
+        string.format("AxiReorder.sv:%d P2 downstream AW address", line)
     )
 
-    -- D 与 ID_C 不同，完成 D 只释放 entry 0，不会改变 C1/C2 的同 ID
-    -- 依赖关系。释放后 entry 0 是最低空闲项，下一笔 C3 必然分配到这里。
-    send_r_response(0, 0xD0, 0, ID_D, "complete D")
-    assert(
-        core.rvld_0:get() == 0 and core.rvld_1:get() == 1,
-        error_message("D did not release entry0 while C1 remained in entry1")
-    )
-
-    -- ====================================================================
-    -- entry 0 关键周期 1：C3 分配到 entry 0，同时 C1 返回末拍响应。
-    -- ====================================================================
-    set_mst_ar(transaction_c3, true)
-    dut.io_mst_r_ready:set_imm(1)
-    set_slv_r(1, 0xC1, 1, true)
+    dut.io_slv_aw_ready:set_imm(1)
     settle_combination()
-
-    assert(
-        dut.io_mst_ar_ready:get() == 1,
-        error_message("C3 was not ready for simultaneous allocation")
+    assert_equal(
+        dut.io_mst_aw_ready:get(),
+        1,
+        string.format("AxiReorder.sv:%d target AWREADY after P2 becomes nid=0", line)
     )
-    assert(
-        dut.io_slv_r_ready:get() == 1,
-        error_message("C1 response was not ready in simultaneous cycle")
+    assert_equal(
+        dut.io_mst_aw_bits_id:get(),
+        target.id,
+        string.format("AxiReorder.sv:%d target AW payload held while stalled", line)
     )
-    assert(
-        dut.io_mst_r_valid:get() == 1 and dut.io_mst_r_bits_id:get() == ID_C,
-        error_message("C1 response did not restore ID_C")
-    )
-
-    -- 该上升沿同时产生 mst AR fire 和 slv R fire：C3 读取旧状态中的
-    -- C1/C2，装载 rawRNid=2；同时 RTL 为新分配的 entry 0 保存延迟修正。
-    env.wait_cycles(1)
-    finish_handshake_edge()
-    clear_mst_ar()
-    clear_slv_r()
-    wait_negedge()
-
-    assert(
-        core.rvld_0:get() == 1 and core.arinfo_0_nid:get() == 2,
-        error_message("C3 did not enter entry0 with nid=2")
-    )
-    assert(
-        core.rWkVldReg:get() == 1 and core.rWkEtrReg:get() == 1,
-        error_message("simultaneous C3 allocation/C1 response did not set rWk entry0")
-    )
-
-    -- C1 完成已经把 C2 的 nid 从 1 降为 0，因此 C2 此时必须以 entry 2
-    -- 出现在下游 AR 端口。READY 仍为 0，ARVALID 和 payload 会稳定保持。
-    assert(
-        dut.io_slv_ar_valid:get() == 1 and
-        dut.io_slv_ar_bits_id:get() == 2 and
-        dut.io_slv_ar_bits_addr:get() == transaction_c2.addr,
-        error_message("C2 was not selected for downstream AR after C1 completion")
-    )
-
-    -- ====================================================================
-    -- entry 0 关键周期 2：C2 的 AR 与 R 同周期握手，命中目标减 2 分支。
-    -- ====================================================================
-    set_slv_ar_ready(1)
-    set_slv_r(2, 0xC2, 2, true)
-    settle_combination()
-
-    -- _GEN_2 来自当前 C2 的末拍响应；_GEN_3 来自上一周期记录在
-    -- rWkEtrReg[0] 中的修正。三个条件在时钟沿前均为 1，证明目标行可达。
-    assert(gen_2:get() == 1, error_message("_GEN_2 is not asserted"))
-    assert(gen_3:get() == 1, error_message("_GEN_3 is not asserted"))
-    assert(
-        layer_probe_1:get() == 1,
-        error_message("_layer_probe_1 is not asserted before target edge")
-    )
-    assert(
-        dut.io_slv_ar_ready:get() == 1 and dut.io_slv_r_ready:get() == 1,
-        error_message("C2 zero-latency AR/R channels are not both ready")
-    )
-
-    env.wait_cycles(1)
-    finish_handshake_edge()
-    clear_slv_r()
-    set_slv_ar_ready(0)
-    wait_negedge()
-
-    -- 若 RTL 执行的是普通减 1 分支，此处 nid 会等于 1；检查等于 0 可以
-    -- 直接区分并证明 arinfo_0_nid <= arinfo_0_nid - 2'h2 已经执行。
-    assert(
-        core.arinfo_0_nid:get() == 0,
-        error_message(string.format(
-            "entry0 target nid-2 update failed: nid=%s",
-            tostring(core.arinfo_0_nid:get())
-        ))
-    )
-    print_message(
-        "Covered AxiReorder.sv:414; arinfo_0_nid changed 2 -> 0"
-    )
-
-    -- C3 的依赖已经全部解除，最后发送并完成 C3，清空 entry 0。
-    accept_slv_ar(transaction_c3, 0)
-    send_r_response(0, 0xC3, 3, ID_C, "complete C3")
-
-    -- ====================================================================
-    -- entry 2 场景：两笔同 ID 前序事务占用 entry 0/1
-    -- ====================================================================
-
-    -- E1 作为第一笔同 ID 事务占用 entry 0，nid=0，可以正常发送下游 AR。
-    -- E2 随后占用 entry 1；它能看到未完成的 E1，因此 nid=1，只接收上游
-    -- AR，不允许提前向下游发送。此时 entry 2 保持空闲，留给目标事务 E3。
-    send_read_request(transaction_e1, 0)
-    accept_mst_ar(transaction_e2)
-    assert(
-        core.rvld_1:get() == 1 and core.arinfo_1_nid:get() == 1,
-        error_message("E2 did not naturally establish entry1 nid=1")
-    )
-    assert(
-        core.rvld_2:get() == 0 and dut.io_slv_ar_valid:get() == 0,
-        error_message("entry2 was not free or E2 AR was sent before E1 completed")
-    )
-
-    -- ====================================================================
-    -- entry 2 关键周期 1：E3 分配到 entry 2，同时 E1 返回末拍响应。
-    -- ====================================================================
-    set_mst_ar(transaction_e3, true)
-    dut.io_mst_r_ready:set_imm(1)
-    set_slv_r(0, 0xE1, 1, true)
-    settle_combination()
-
-    assert(
-        dut.io_mst_ar_ready:get() == 1,
-        error_message("E3 was not ready for simultaneous allocation")
-    )
-    assert(
-        dut.io_slv_r_ready:get() == 1,
-        error_message("E1 response was not ready in simultaneous cycle")
-    )
-    assert(
-        dut.io_mst_r_valid:get() == 1 and dut.io_mst_r_bits_id:get() == ID_E,
-        error_message("E1 response did not restore ID_E")
-    )
-
-    -- 该沿之前 E1/E2 都有效且 ID 与 E3 相同，因此 E3 的 rawRNid=2；
-    -- 同周期的 E1 响应则把“少算一次完成”的修正记录到 entry 2 对应位。
-    env.wait_cycles(1)
-    finish_handshake_edge()
-    clear_mst_ar()
-    clear_slv_r()
-    wait_negedge()
-
-    assert(
-        core.rvld_2:get() == 1 and core.arinfo_2_nid:get() == 2,
-        error_message("E3 did not enter entry2 with nid=2")
-    )
-    assert(
-        core.rWkVldReg:get() == 1 and core.rWkEtrReg:get() == 4,
-        error_message("simultaneous E3 allocation/E1 response did not set rWk entry2")
-    )
-
-    -- E1 完成后，E2 的 nid 已从 1 降到 0，应当稳定出现在下游 AR 端口。
-    assert(
-        dut.io_slv_ar_valid:get() == 1 and
-        dut.io_slv_ar_bits_id:get() == 1 and
-        dut.io_slv_ar_bits_addr:get() == transaction_e2.addr,
-        error_message("E2 was not selected for downstream AR after E1 completion")
-    )
-
-    -- ====================================================================
-    -- entry 2 关键周期 2：E2 的 AR 与 R 同周期握手，命中 RTL 第 452 行。
-    -- ====================================================================
-    set_slv_ar_ready(1)
-    set_slv_r(1, 0xE2, 2, true)
-    settle_combination()
-
-    -- _GEN_6 表示当前完成的是 entry 2 目标事务的同 ID 前序响应；_GEN_7
-    -- 表示上一周期的延迟修正属于 entry 2。两者同时为 1 才会走减 2 分支。
-    assert(gen_6:get() == 1, error_message("_GEN_6 is not asserted"))
-    assert(gen_7:get() == 1, error_message("_GEN_7 is not asserted"))
-    assert(
-        layer_probe_9:get() == 1,
-        error_message("_layer_probe_9 is not asserted before target edge")
-    )
-    assert(
-        dut.io_slv_ar_ready:get() == 1 and dut.io_slv_r_ready:get() == 1,
-        error_message("E2 zero-latency AR/R channels are not both ready")
-    )
-
-    env.wait_cycles(1)
-    finish_handshake_edge()
-    clear_slv_r()
-    set_slv_ar_ready(0)
-    wait_negedge()
-
-    -- 第 452 行执行后 nid 必须从 2 直接变为 0；若只走普通减 1 分支，
-    -- 此处将得到 1，因此该检查能明确区分实际执行的是哪一条 RTL。
-    assert(
-        core.arinfo_2_nid:get() == 0,
-        error_message(string.format(
-            "entry2 target nid-2 update failed: nid=%s",
-            tostring(core.arinfo_2_nid:get())
-        ))
-    )
-    print_message(
-        "Covered AxiReorder.sv:452; arinfo_2_nid changed 2 -> 0"
-    )
-
-    -- E3 依赖解除后正常发送 entry 2 的下游 AR，并返回响应清空最后表项。
-    accept_slv_ar(transaction_e3, 2)
-    send_r_response(2, 0xE3, 3, ID_E, "complete E3")
-
-    -- ====================================================================
-    -- entry 3 场景：entry 0/1 放同 ID 前序，entry 2 放不同 ID 占位
-    -- ====================================================================
-
-    -- F1 占用 entry 0 并正常发送 AR。F2 随后占用 entry 1，因为存在未完成
-    -- 的同 ID F1，所以 F2 的 nid=1，只进入重排表而不发送下游 AR。
-    send_read_request(transaction_f1, 0)
-    accept_mst_ar(transaction_f2)
-    assert(
-        core.rvld_1:get() == 1 and core.arinfo_1_nid:get() == 1,
-        error_message("F2 did not naturally establish entry1 nid=1")
-    )
-    assert(
-        dut.io_slv_ar_valid:get() == 0,
-        error_message("F2 AR was sent before F1 completed")
-    )
-
-    -- G 使用不同的 ID，占用 entry 2 但不增加 F3 的 rawRNid。G 的 nid=0，
-    -- 先把它的下游 AR 正常发送，避免它在后续关键周期与 F2 争用 AR 通道。
-    send_read_request(transaction_g, 2)
-    assert(
-        core.rvld_0:get() == 1 and
-        core.rvld_1:get() == 1 and
-        core.rvld_2:get() == 1 and
-        core.rvld_3:get() == 0,
-        error_message("entry0/1/2 occupancy for entry3 scenario is incorrect")
-    )
-
-    -- ====================================================================
-    -- entry 3 关键周期 1：F3 分配到 entry 3，同时 F1 返回末拍响应。
-    -- ====================================================================
-    set_mst_ar(transaction_f3, true)
-    dut.io_mst_r_ready:set_imm(1)
-    set_slv_r(0, 0xF1, 1, true)
-    settle_combination()
-
-    assert(
-        dut.io_mst_ar_ready:get() == 1,
-        error_message("F3 was not ready for simultaneous allocation")
-    )
-    assert(
-        dut.io_slv_r_ready:get() == 1,
-        error_message("F1 response was not ready in simultaneous cycle")
-    )
-    assert(
-        dut.io_mst_r_valid:get() == 1 and dut.io_mst_r_bits_id:get() == ID_F,
-        error_message("F1 response did not restore ID_F")
-    )
-
-    -- 分配沿之前四个表项中只有 F1/F2 与 F3 同 ID，所以 F3 精确装载
-    -- rawRNid=2；同沿 F1 响应则把延迟修正记录到新分配的 entry 3。
-    env.wait_cycles(1)
-    finish_handshake_edge()
-    clear_mst_ar()
-    clear_slv_r()
-    wait_negedge()
-
-    assert(
-        core.rvld_3:get() == 1 and core.arinfo_3_nid:get() == 2,
-        error_message("F3 did not enter entry3 with nid=2")
-    )
-    assert(
-        core.rWkVldReg:get() == 1 and core.rWkEtrReg:get() == 8,
-        error_message("simultaneous F3 allocation/F1 response did not set rWk entry3")
-    )
-
-    -- F1 完成后 F2 的 nid 已经变为 0；G 的 AR 之前已经发送，因此当前
-    -- 下游 AR 选择必须是 entry 1 中的 F2。
-    assert(
-        dut.io_slv_ar_valid:get() == 1 and
-        dut.io_slv_ar_bits_id:get() == 1 and
-        dut.io_slv_ar_bits_addr:get() == transaction_f2.addr,
-        error_message("F2 was not selected for downstream AR after F1 completion")
-    )
-
-    -- ====================================================================
-    -- entry 3 关键周期 2：F2 的 AR 与 R 同周期握手，命中 RTL 第 471 行。
-    -- ====================================================================
-    set_slv_ar_ready(1)
-    set_slv_r(1, 0xF2, 2, true)
-    settle_combination()
-
-    -- _GEN_8 来自当前 F2 的同 ID 末拍响应；_GEN_9 来自上一周期保存在
-    -- rWkEtrReg[3] 的修正。两者同时为 1 时，entry 3 必须执行减 2 分支。
-    assert(gen_8:get() == 1, error_message("_GEN_8 is not asserted"))
-    assert(gen_9:get() == 1, error_message("_GEN_9 is not asserted"))
-    assert(
-        layer_probe_13:get() == 1,
-        error_message("_layer_probe_13 is not asserted before target edge")
-    )
-    assert(
-        dut.io_slv_ar_ready:get() == 1 and dut.io_slv_r_ready:get() == 1,
-        error_message("F2 zero-latency AR/R channels are not both ready")
+    assert_equal(
+        core_signal("aw_mst_fire_hit_0"):get(),
+        1,
+        string.format("AxiReorder.sv:%d P3 actual allocation selects entry0", line)
     )
 
     env.wait_cycles(1)
     finish_handshake_edge()
-    clear_slv_r()
-    set_slv_ar_ready(0)
+    dut.io_slv_aw_ready:set_imm(0)
+    clear_mst_aw()
     wait_negedge()
+end
 
-    -- 第 471 行执行后 entry 3 的 nid 应从 2 直接降到 0；如果只执行普通
-    -- 减 1 分支，该值会是 1，因此此断言可以明确证明目标行已经执行。
-    assert(
-        core.arinfo_3_nid:get() == 0,
-        error_message(string.format(
-            "entry3 target nid-2 update failed: nid=%s",
-            tostring(core.arinfo_3_nid:get())
-        ))
+local function install_persistent_aw_filler(entry, line)
+    -- P3 在不可达见证中实际会落入 entry0（P1 B 已释放最低项），所以不能
+    -- 直接把它当作 entry=N 的占位。先临时占住 0/1，再分配并发送一个不同
+    -- ID 的 filler 到 entry=N，最后释放临时项，保持下一轮的连续布局。
+    local temporary_0 = make_write_transaction(
+        string.format("entry%d filler temporary0", entry),
+        0x800 + entry * 2,
+        entry * 8 + 4
     )
-    print_message(
-        "Covered AxiReorder.sv:471; arinfo_3_nid changed 2 -> 0"
+    local temporary_1 = make_write_transaction(
+        string.format("entry%d filler temporary1", entry),
+        0x800 + entry * 2 + 1,
+        entry * 8 + 5
     )
-
-    -- F3 已解除全部同 ID 依赖，先发送它的下游 AR。最后分别完成不同 ID
-    -- 占位事务 G 和目标事务 F3，确保 testcase 结束时没有残留读事务。
-    accept_slv_ar(transaction_f3, 3)
-    send_r_response(2, 0xA2, 0, ID_G, "complete G")
-    send_r_response(3, 0xF3, 3, ID_F, "complete F3")
-
-    -- ====================================================================
-    -- 写路径第 552 行：同 ID 的 B 与新 AW 在同一周期握手
-    -- ====================================================================
-
-    -- H1 完整通过上游 AW/W 和下游 AW/W，此时 entry 0 保持有效、nid=0，
-    -- 下游已经具备返回合法 B 响应的全部条件，且 awq/wq/wbitsq 均已排空。
-    send_write_request(transaction_h1, 0)
-    assert(
-        core.wvld_0:get() == 1 and
-        core.awinfo_0_nid:get() == 0 and
-        core.awinfo_0_haveSendAW:get() == 1,
-        error_message("H1 did not become a completed downstream write in entry0")
+    local filler = make_write_transaction(
+        string.format("entry%d persistent AW filler", entry),
+        0xA00 + entry,
+        entry * 8 + 6
     )
 
-    -- H1 仍占用 entry 0，所以同周期提交的 H2 会选择最低空闲 entry 1。
-    -- H1 的 B 与 H2 的 AW ID 相同，组合条件 wWkVld 必须成立；第 552 行
-    -- 因而在该上升沿把 entry 1 的 one-hot 选择值 2 写入 wWkEtrReg。
-    set_mst_aw(transaction_h2, true)
+    send_write_request(temporary_0, 0)
+    send_write_request(temporary_1, 1)
+    send_write_request(filler, entry)
+    send_b_response(0, 0, temporary_0.id, temporary_0.name)
+    send_b_response(1, 0, temporary_1.id, temporary_1.name)
+
+    assert_equal(
+        core_signal("wvld_" .. entry):get(),
+        1,
+        string.format("AxiReorder.sv:%d persistent filler entry%d wvld", line, entry)
+    )
+    assert_equal(
+        core_signal("awinfo_" .. entry .. "_nid"):get(),
+        0,
+        string.format("AxiReorder.sv:%d persistent filler entry%d nid", line, entry)
+    )
+    return filler
+end
+
+local function finish_parameterized_aw_entries()
+    -- 所有 entry 2..63 的 filler 都已经完成 AW/W，只需按 entry 返回合法 B。
+    -- 每个 filler 使用不同原始 ID，因此不依赖不同 ID 响应的顺序。
+    for entry = 2, 63 do
+        local transaction = parameterized_write_state.pending[entry]
+        assert(
+            transaction ~= nil,
+            error_message(string.format("missing pending AW filler entry%d", entry))
+        )
+        send_b_response(
+            entry,
+            0,
+            transaction.id,
+            string.format("complete persistent AW filler entry%d", entry)
+        )
+    end
+
+    assert_write_occupancy(nil, nil, "after AW unreachable witness cleanup")
+end
+
+local function cover_parameterized_write_nid_minus_two_unreachable(
+    entry,
+    line,
+    current_gen,
+    delayed_gen
+)
+    assert_equal(
+        entry,
+        parameterized_write_state.next_entry,
+        "parameterized AW line coverage entry order"
+    )
+    assert_equal(
+        line,
+        write_nid_minus_two_line(entry),
+        string.format("AxiReorder AW entry%d target line", entry)
+    )
+    assert_equal(
+        current_gen,
+        143 + 2 * entry,
+        string.format("AxiReorder AW entry%d current GEN", entry)
+    )
+    assert_equal(
+        delayed_gen,
+        144 + 2 * entry,
+        string.format("AxiReorder AW entry%d delayed GEN", entry)
+    )
+
+    if entry >= 2 then
+        assert_write_occupancy(
+            2,
+            entry - 1,
+            string.format("before AW AxiReorder.sv:%d setup", line)
+        )
+    else
+        assert_write_occupancy(
+            nil,
+            nil,
+            string.format("before AW AxiReorder.sv:%d setup", line)
+        )
+    end
+
+    local target_id = 0x400 + entry
+    local predecessor_1 = make_write_transaction(
+        string.format("entry%d P1(first AW predecessor)", entry),
+        target_id,
+        entry * 8
+    )
+    local predecessor_2 = make_write_transaction(
+        string.format("entry%d P2(second AW predecessor)", entry),
+        target_id,
+        entry * 8 + 1
+    )
+    local target = make_write_transaction(
+        string.format("entry%d P3(target AW transaction)", entry),
+        target_id,
+        entry * 8 + 2
+    )
+
+    print_message(string.format(
+        "Start AxiReorder.sv:%d AW entry%d unreachable witness (current GEN=%d, delayed GEN=%d)",
+        line,
+        entry,
+        current_gen,
+        delayed_gen
+    ))
+
+    local predecessor_1_entry, predecessor_2_entry =
+        prepare_parameterized_aw_predecessors(
+            entry,
+            line,
+            predecessor_1,
+            predecessor_2
+        )
+
+    -- P1/P2 同 ID 且 P1 已下游完成，P2 nid=1 堵在 awq。此刻所有更低表项已
+    -- 有效、目标 entry 为空，因此按最低空闲项规则，选择结果必然是当前 entry。
+    assert_aw_selected_entry(entry, line, "before blocked P3 AW")
+    assert_equal(
+        core_signal("wvld_" .. entry):get(),
+        0,
+        string.format("AxiReorder.sv:%d target entry is still free", line)
+    )
+
+    -- 不可达的关键周期：P1 的合法 B 与 P3 AWVALID 同时驱动。因为 awq 队首
+    -- P2 的 nid=1，awq_io_deq_ready=0，单深度 Queue 的 enq_ready 也为 0；
+    -- 所以 P1 B 可以握手，P3 AWVALID 必须保持，io_mst_aw_ready 必须为 0。
+    set_mst_aw(target, true)
     dut.io_mst_b_ready:set_imm(1)
-    set_slv_b(0, 1, true)
+    set_slv_b(predecessor_1_entry, 0, true)
     settle_combination()
 
-    assert(
-        dut.io_mst_aw_ready:get() == 1,
-        error_message("H2 AW was not ready in simultaneous AW/B cycle")
+    assert_aw_selected_entry(entry, line, "blocked P3 AW cycle")
+    assert_equal(
+        dut.io_mst_aw_ready:get(),
+        0,
+        string.format("AxiReorder.sv:%d P3 AWREADY blocked by awq depth=1", line)
     )
-    assert(
-        dut.io_slv_b_ready:get() == 1 and dut.io_mst_b_valid:get() == 1,
-        error_message("H1 B was not ready/valid in simultaneous AW/B cycle")
+    assert_equal(
+        dut.io_slv_b_ready:get(),
+        1,
+        string.format("AxiReorder.sv:%d P1 BREADY", line)
     )
-    assert(
-        dut.io_mst_b_bits_id:get() == ID_H,
-        error_message("H1 B did not restore ID_H")
+    assert_equal(
+        dut.io_mst_b_valid:get(),
+        1,
+        string.format("AxiReorder.sv:%d P1 BVALID", line)
+    )
+    assert_equal(
+        dut.io_mst_b_bits_id:get(),
+        target_id,
+        string.format("AxiReorder.sv:%d P1 restored BID", line)
+    )
+    assert_equal(
+        core.awq_io_deq_ready:get(),
+        0,
+        string.format("AxiReorder.sv:%d awq cannot dequeue P2 before B edge", line)
+    )
+    assert_equal(
+        core["_awq_io_deq_bits_entry"]:get(),
+        predecessor_2_entry,
+        string.format("AxiReorder.sv:%d awq head is P2", line)
+    )
+
+    env.wait_cycles(1)
+    finish_handshake_edge()
+    clear_slv_b()
+    wait_negedge()
+
+    -- 时钟沿后 P1 已释放、P2 的 nid 才更新为 0；上一拍没有 AW fire，所以
+    -- wWkVldReg 不会建立，目标表项仍未分配，目标减 2 分支没有执行条件。
+    assert_equal(
+        core_signal("wvld_" .. predecessor_1_entry):get(),
+        0,
+        string.format("AxiReorder.sv:%d P1 cleared after B", line)
+    )
+    assert_equal(
+        core_signal("awinfo_" .. predecessor_2_entry .. "_nid"):get(),
+        0,
+        string.format("AxiReorder.sv:%d P2 nid becomes zero only after B edge", line)
+    )
+    assert_equal(
+        core.wWkVldReg:get(),
+        0,
+        string.format("AxiReorder.sv:%d delayed AW correction was not recorded", line)
+    )
+    assert_equal(
+        core_signal("wvld_" .. entry):get(),
+        0,
+        string.format("AxiReorder.sv:%d no P3 allocation occurred", line)
+    )
+
+    -- P3 VALID 按 AXI 规则保持不变。下一拍 P2 才能出队，并允许 Queue 在同一
+    -- 沿接收 P3；此时 P1 已经不存在，P3 只能装载 nid=1，随后只能减 1。
+    replace_awq_head_with_target(predecessor_2, predecessor_2_entry, target, line)
+    assert_equal(
+        core_signal("wvld_0"):get(),
+        1,
+        string.format("AxiReorder.sv:%d P3 uses newly freed lowest entry0", line)
+    )
+    assert_equal(
+        core_signal("awinfo_0_nid"):get(),
+        1,
+        string.format("AxiReorder.sv:%d P3 rawWNid is only one", line)
+    )
+    assert_equal(
+        core.wWkVldReg:get(),
+        0,
+        string.format("AxiReorder.sv:%d P3 did not create delayed correction", line)
+    )
+
+    accept_mst_w(target)
+    accept_slv_w(predecessor_2)
+    send_b_response(
+        predecessor_2_entry,
+        0,
+        target_id,
+        string.format("complete P2 before target AW entry%d", entry)
+    )
+    assert_equal(
+        core_signal("awinfo_0_nid"):get(),
+        0,
+        string.format("AxiReorder.sv:%d P3 decremented by one after P2 B", line)
+    )
+    accept_slv_aw(target, 0)
+    accept_slv_w(target)
+    send_b_response(0, 0, target_id, string.format("complete P3 entry%d", entry))
+
+    if entry >= 2 then
+        -- 建立下一轮所需的连续占位布局；entry0/1 两项已经在本轮完全清空。
+        local filler = install_persistent_aw_filler(entry, line)
+        parameterized_write_state.pending[entry] = filler
+        assert_write_occupancy(
+            2,
+            entry,
+            string.format("after AW AxiReorder.sv:%d witness", line)
+        )
+    else
+        assert_write_occupancy(
+            nil,
+            nil,
+            string.format("after AW AxiReorder.sv:%d witness", line)
+        )
+    end
+
+    parameterized_write_state.next_entry = entry + 1
+    if entry == 63 then
+        finish_parameterized_aw_entries()
+    end
+end
+
+local function make_parameterized_aw_case(entry)
+    local line = write_nid_minus_two_line(entry)
+    return {
+        line = line,
+        current_gen = 143 + 2 * entry,
+        delayed_gen = 144 + 2 * entry,
+        run = function()
+            cover_parameterized_write_nid_minus_two_unreachable(
+                entry,
+                line,
+                143 + 2 * entry,
+                144 + 2 * entry
+            )
+        end,
+    }
+end
+
+local AW_NID_MINUS_TWO_CASES = {}
+for entry = 0, 63 do
+    table.insert(AW_NID_MINUS_TWO_CASES, make_parameterized_aw_case(entry))
+end
+
+-- ============================================================================
+-- 6712 行 wWkEtrReg 条件更新的独立参数化覆盖
+-- ============================================================================
+
+local WWK_ENTRY_UPDATE_CASES = {
+    {
+        line = 6712,
+        predecessor_entry = 0,
+        target_entry = 1,
+        expected_entry_one_hot = 0x2,
+        id = 0xC00,
+        serial = 0x500,
+    },
+}
+
+local function cover_parameterized_wwk_entry_update(coverage_case)
+    assert_equal(
+        coverage_case.line,
+        6712,
+        "wWkEtrReg target RTL line"
+    )
+    assert_equal(
+        coverage_case.predecessor_entry,
+        0,
+        "wWkEtrReg predecessor entry"
+    )
+    assert_equal(
+        coverage_case.target_entry,
+        1,
+        "wWkEtrReg target entry"
+    )
+    assert_write_occupancy(
+        nil,
+        nil,
+        string.format("before AxiReorder.sv:%d independent scenario", coverage_case.line)
+    )
+
+    local predecessor = make_write_transaction(
+        "line6712 H1(completed write waiting for B)",
+        coverage_case.id,
+        coverage_case.serial
+    )
+    local target = make_write_transaction(
+        "line6712 H2(new AW concurrent with H1 B)",
+        coverage_case.id,
+        coverage_case.serial + 1
+    )
+
+    print_message(string.format(
+        "Start AxiReorder.sv:%d coverage: same-ID H1 B and H2 AW fire together",
+        coverage_case.line
+    ))
+
+    -- H1 严格按 AW -> W、下游 AW -> 下游 W 的完整顺序发送。此时 Memory
+    -- 已经具备返回 B 的条件，entry0 仍有效，而三个写请求队列均已排空。
+    send_write_request(predecessor, coverage_case.predecessor_entry)
+    assert_equal(
+        core_signal("wvld_" .. coverage_case.predecessor_entry):get(),
+        1,
+        string.format("AxiReorder.sv:%d H1 wvld", coverage_case.line)
+    )
+    assert_equal(
+        core_signal(
+            "awinfo_" .. coverage_case.predecessor_entry .. "_nid"
+        ):get(),
+        0,
+        string.format("AxiReorder.sv:%d H1 nid", coverage_case.line)
+    )
+    assert_equal(
+        core_signal(
+            "awinfo_" .. coverage_case.predecessor_entry .. "_haveSendAW"
+        ):get(),
+        1,
+        string.format("AxiReorder.sv:%d H1 haveSendAW", coverage_case.line)
+    )
+    assert_equal(
+        core_signal("_awq_io_deq_valid"):get(),
+        0,
+        string.format("AxiReorder.sv:%d awq is empty before concurrent edge", coverage_case.line)
+    )
+
+    -- 关键周期：H1 B 使用 entry0 的下游重映射 ID；DUT 将其恢复为原始 ID。
+    -- 同拍 H2 提交相同 AWID，且 awq/wq 均有空间，因此 AW 和 B 都合法 fire。
+    -- 沿前 H1 尚未清除，所以最低空闲项为 entry1，aw_mst_fire_hit_1 必须为 1。
+    set_mst_aw(target, true)
+    dut.io_mst_b_ready:set_imm(1)
+    set_slv_b(coverage_case.predecessor_entry, 0, true)
+    settle_combination()
+
+    assert_equal(
+        dut.io_mst_aw_ready:get(),
+        1,
+        string.format("AxiReorder.sv:%d H2 AWREADY", coverage_case.line)
+    )
+    assert_equal(
+        dut.io_slv_b_ready:get(),
+        1,
+        string.format("AxiReorder.sv:%d H1 BREADY", coverage_case.line)
+    )
+    assert_equal(
+        dut.io_mst_b_valid:get(),
+        1,
+        string.format("AxiReorder.sv:%d H1 BVALID", coverage_case.line)
+    )
+    assert_equal(
+        dut.io_mst_b_bits_id:get(),
+        coverage_case.id,
+        string.format("AxiReorder.sv:%d H1 restored BID", coverage_case.line)
+    )
+    assert_equal(
+        core_signal("aw_mst_fire_hit_" .. coverage_case.target_entry):get(),
+        1,
+        string.format("AxiReorder.sv:%d H2 allocation hit entry1", coverage_case.line)
     )
 
     env.wait_cycles(1)
@@ -1268,40 +1436,108 @@ local function task_line_coverage()
     clear_slv_b()
     wait_negedge()
 
-    -- wWkVldReg 是 wWkVld 的一拍寄存结果；它等于 1 且 wWkEtrReg 等于
-    -- entry 1 的 one-hot 值 2，直接证明第 552 行在刚才的时钟沿执行。
-    assert(
-        core.wWkVldReg:get() == 1 and core.wWkEtrReg:get() == 2,
-        error_message(string.format(
-            "line 552 update failed: wWkVldReg=%s wWkEtrReg=%s",
-            tostring(core.wWkVldReg:get()),
-            tostring(core.wWkEtrReg:get())
-        ))
+    -- wWkVldReg 是关键周期 wWkVld 的寄存结果；wWkEtrReg 等于 entry1 的
+    -- one-hot 值 0x2，直接证明 6712 行在刚才的上升沿执行并写入新值。
+    assert_equal(
+        core.wWkVldReg:get(),
+        1,
+        string.format("AxiReorder.sv:%d wWkVldReg", coverage_case.line)
     )
-    assert(
-        core.wvld_0:get() == 0 and
-        core.wvld_1:get() == 1 and
-        core.awinfo_1_nid:get() == 1,
-        error_message("simultaneous H1 completion/H2 allocation state is incorrect")
+    assert_equal(
+        core.wWkEtrReg:get(),
+        coverage_case.expected_entry_one_hot,
+        string.format("AxiReorder.sv:%d wWkEtrReg", coverage_case.line)
     )
-    print_message("Covered AxiReorder.sv:552; wWkEtrReg changed to 0x2")
+    assert_equal(
+        core_signal("wvld_" .. coverage_case.predecessor_entry):get(),
+        0,
+        string.format("AxiReorder.sv:%d H1 cleared after B", coverage_case.line)
+    )
+    assert_equal(
+        core_signal("wvld_" .. coverage_case.target_entry):get(),
+        1,
+        string.format("AxiReorder.sv:%d H2 allocated", coverage_case.line)
+    )
+    assert_equal(
+        core_signal("awinfo_" .. coverage_case.target_entry .. "_nid"):get(),
+        1,
+        string.format("AxiReorder.sv:%d H2 initial nid", coverage_case.line)
+    )
 
-    -- 下一上升沿由 wWkVldReg/wWkEtrReg[1] 对 H2 执行一次延迟修正，
-    -- 将分配时多统计的 H1 从 nid 中扣除，使 H2 的 nid 从 1 变为 0。
+    -- 下一拍没有新的 B/AW；上一拍记录的 wWkEtrReg[1] 对 H2 做一次延迟
+    -- 修正，将分配时多统计但已经同拍完成的 H1 从 nid 中扣除，1 -> 0。
     env.wait_cycles(1)
     finish_handshake_edge()
     wait_negedge()
-    assert(
-        core.awinfo_1_nid:get() == 0,
-        error_message("H2 delayed write nid correction did not change 1 -> 0")
+    assert_equal(
+        core_signal("awinfo_" .. coverage_case.target_entry .. "_nid"):get(),
+        0,
+        string.format("AxiReorder.sv:%d H2 delayed nid correction", coverage_case.line)
     )
 
-    -- H2 的 AW 已在关键周期进入 awq，下面补齐它的 W、下游 AW/W 和 B。
-    -- 所有握手均按 AXI 顺序完成，公共 scoreboard 最终不会留下写事务。
-    accept_mst_w(transaction_h2)
-    accept_slv_aw(transaction_h2, 1)
-    accept_slv_w(transaction_h2)
-    send_b_response(1, 2, ID_H, "complete H2")
+    -- H2 的 AW 已在关键周期进入 awq。AXI W 通道独立，允许在之后提交 W；
+    -- 这里再依次完成上游 W、下游 AW/W，最后才返回唯一一次合法 B。
+    accept_mst_w(target)
+    accept_slv_aw(target, coverage_case.target_entry)
+    accept_slv_w(target)
+    send_b_response(
+        coverage_case.target_entry,
+        0,
+        coverage_case.id,
+        "complete line6712 H2"
+    )
+
+    assert_write_occupancy(
+        nil,
+        nil,
+        string.format("after AxiReorder.sv:%d independent scenario", coverage_case.line)
+    )
+    print_message(string.format(
+        "Covered AxiReorder.sv:%d; wWkEtrReg updated to 0x%x",
+        coverage_case.line,
+        coverage_case.expected_entry_one_hot
+    ))
+end
+
+local function make_parameterized_read_case(entry)
+    local line = read_nid_minus_two_line(entry)
+    return {
+        line = line,
+        run = function()
+            cover_parameterized_read_nid_minus_two(entry, line)
+        end,
+    }
+end
+
+local LINE_COVERAGE_CASES = {}
+for entry = 0, 63 do
+    table.insert(LINE_COVERAGE_CASES, make_parameterized_read_case(entry))
+end
+
+local function task_line_coverage()
+    -- 不启动随机 AXI agent，由 testcase 精确控制端口。下游 AR/AW/W READY
+    -- 默认拉低，仅在对应 helper 中允许握手；上游始终接收 R/B。
+    driver.drive {
+        io_slv_ar_ready = 0,
+        io_mst_r_ready = 1,
+        io_slv_aw_ready = 0,
+        io_slv_w_ready = 0,
+        io_mst_b_ready = 1,
+    }
+
+    wait_negedge()
+
+    for _, coverage_case in ipairs(LINE_COVERAGE_CASES) do
+        coverage_case.run()
+    end
+
+    for _, coverage_case in ipairs(AW_NID_MINUS_TWO_CASES) do
+        coverage_case.run()
+    end
+
+    for _, coverage_case in ipairs(WWK_ENTRY_UPDATE_CASES) do
+        cover_parameterized_wwk_entry_update(coverage_case)
+    end
 
     dut.io_mst_r_ready:set_imm(0)
     dut.io_mst_b_ready:set_imm(0)
@@ -1315,7 +1551,12 @@ local function task_line_coverage()
     clear_slv_b()
     env.wait_cycles(1)
 
-    print_message("012 line coverage testcase completed successfully")
+    print_message(string.format(
+        "012 line coverage testcase completed successfully; covered %d read line(s), verified %d unreachable AW line(s), covered %d wWkEtrReg line scenario(s)",
+        #LINE_COVERAGE_CASES,
+        #AW_NID_MINUS_TWO_CASES,
+        #WWK_ENTRY_UPDATE_CASES
+    ))
 end
 
 return {

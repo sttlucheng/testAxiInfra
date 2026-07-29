@@ -87,10 +87,12 @@ local MAX_COMPETITOR_COUNT =
     math.floor((MAX_AXI_ADDR - COMPETITOR_ADDR_BASE) /
         COMPETITOR_ADDR_STRIDE) + 1
 
--- 目标事务从测试开始便占用公共 Master task。当前 driver 的 timeout_max 是
--- 2,000,000 周期，因此009先在 1,800,000 周期给出包含完整表项快照的错误，
--- 避免稍后只看到 Master 组件自身的简短超时断言。
-local TEST_TIMEOUT = 1800000
+-- 目标事务从测试开始便占用公共 Master task。当前公共 AXI Master 的
+-- timeout_max 是 2,000,000 周期；这里将009自身的保护上限设置为
+-- 2,200,000 周期，确保目标AR长期卡在重排表中、始终收不到R响应时，优先
+-- 触发公共Master自身的超时检查。额外保留200,000周期余量，仅在Master超时
+-- 机制没有按预期生效时，才由009的详细错误快照终止仿真。
+local TEST_TIMEOUT = 2200000
 local WAIT_TIMEOUT = 100000
 
 local core = dut.u_AxiReorder
