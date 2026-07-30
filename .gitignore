@@ -5,6 +5,7 @@
 .vscode/
 .luajit_pro/
 build/
+verdiLog/
 ./ut/AxiReorder/.bsp/
 ./ut/AxiReorder/.metals/
 ./ut/AxiReorder/.vscode/
@@ -22,3 +23,6 @@ build/
 
 # 编辑器临时文件
 *.swp
+*.log
+novas.conf
+novas.rc
