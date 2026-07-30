@@ -21,23 +21,31 @@
 local prj_dir = os.projectdir()
 local build_dir = path.join(prj_dir, "build")
 local rtl_dir = path.join(build_dir, "rtl")
-local chisel_dir = path.join(prj_dir, "ChiselTemplate")
+local AxiInfra_dir = path.join(prj_dir, "AxiInfra")
 local src_dir = path.join(prj_dir, "src")
 local tc_dir = path.join(prj_dir, "test_cases")
 
 local sim = os.getenv("SIM") or "vcs"
 
--- Generate SystemVerilog from ChiselTemplate and copy it into build/rtl.
--- If your Chisel project has a different Mill module or main class, regenerate
--- this file with --mill-target/--main or edit the two string arguments below.
--- After changing them, `xmake r rtl` will invoke the new Chisel entry point.
+target("init", function()
+    set_kind("phony")
+    set_default(false)
+    on_run(function()
+        cprint("${green underline}[INFO] Updating submodules in this repo... This may take a few seconds.${clear}")
+        os.exec("git submodule update --init")
+        os.cd("ZhuJiang-NG")
+        cprint("${green underline}[INFO] Updating submodules in submodules... This may take a few seconds.${clear}")
+        os.exec("git submodule update --init")
+    end)
+end)
+
 target("rtl", function()
     set_kind("phony")
     set_default(false)
     on_run(function()
-        local chisel_rtl_dir = path.join(chisel_dir, "build", "rtl")
+        local chisel_rtl_dir = path.join(AxiInfra_dir, "build", "rtl")
         local home_dir = os.getenv("HOME") or "/nfs/home/yanglucheng"
-        os.cd(chisel_dir)
+        os.cd(AxiInfra_dir)
         os.execv("mill", {
             "-i",
             "test.runMain",
