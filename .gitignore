@@ -1,5 +1,8 @@
 ## 编译和工具生成目录
 .xmake/
+.metals/
+.claude/
+.vscode/
 ./ut/AxiReorder/.bsp/
 ./ut/AxiReorder/.metals/
 ./ut/AxiReorder/.vscode/
