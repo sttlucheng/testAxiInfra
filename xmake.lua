@@ -57,7 +57,6 @@ end)
 target("sim", function()
     set_default(true)
     add_rules("verilua")
-
     add_toolchains("@vcs")
 
     add_files(
@@ -85,11 +84,7 @@ target("sim", function()
     set_values("cfg.top", "AxiSubsysTop")
 
     local TC = os.getenv("TC")
-    if TC then
-        TC = TC:sub(1, 3)
-    else
-        TC = "000"
-    end
+    if TC then TC = TC:sub(1, 3) else TC = "000" end
     local test_cases = os.files(path.join(tc_dir, "*.lua"))
     for _, test_case in ipairs(test_cases) do
         local test_case_file = path.filename(test_case)
