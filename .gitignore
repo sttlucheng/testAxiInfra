@@ -3,6 +3,7 @@
 .metals/
 .claude/
 .vscode/
+build/
 ./ut/AxiReorder/.bsp/
 ./ut/AxiReorder/.metals/
 ./ut/AxiReorder/.vscode/

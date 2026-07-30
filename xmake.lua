@@ -27,13 +27,15 @@ local tc_dir = path.join(prj_dir, "test_cases")
 
 local sim = os.getenv("SIM") or "vcs"
 
+if os.exists(path.join(AxiInfra_dir, "xmake.lua")) then includes(AxiInfra_dir) end
+
 target("init", function()
     set_kind("phony")
     set_default(false)
     on_run(function()
         cprint("${green underline}[INFO] Updating submodules in this repo... This may take a few seconds.${clear}")
         os.exec("git submodule update --init")
-        os.cd("ZhuJiang-NG")
+        os.cd(AxiInfra_dir)
         cprint("${green underline}[INFO] Updating submodules in submodules... This may take a few seconds.${clear}")
         os.exec("git submodule update --init")
     end)
@@ -43,35 +45,14 @@ target("rtl", function()
     set_kind("phony")
     set_default(false)
     on_run(function()
-        local chisel_rtl_dir = path.join(AxiInfra_dir, "build", "rtl")
-        local home_dir = os.getenv("HOME") or "/nfs/home/yanglucheng"
+        import("core.base.task")
+        os.tryrm(path.join(AxiInfra_dir, "build", "*"))
+        os.tryrm(path.join(AxiInfra_dir, "out", "*"))
         os.cd(AxiInfra_dir)
-        os.execv("mill", {
-            "-i",
-            "test.runMain",
-            "generator.LmssGenerator",
-            "--target", "systemverilog",
-            "--split-verilog",
-            "-td", chisel_rtl_dir
-        }, {
-            envs = {
-                -- This machine's Java reports user.home as "?". Mill/JLine then
-                -- tries to load ?/.cache/.../libjlinenative.so and fails before
-                -- running the generator. Setting _JAVA_OPTIONS fixes user.home.
-                -- If Java is fixed globally later, this line can be removed.
-                _JAVA_OPTIONS = "-Duser.home=" .. home_dir,
-
-                -- Force the JVM launcher instead of the native Mill launcher.
-                -- This avoids the native launcher's JLine cache path issue on
-                -- this host. It only affects this xmake-launched Mill command.
-                MILL_VERSION = "1.0.6-jvm"
-            }
-        })
-
+        task.run("rtl")
         os.tryrm(rtl_dir)
         os.mkdir(rtl_dir)
-        os.cp(path.join(chisel_rtl_dir, "*"), rtl_dir)
-        cprint("${green underline}[INFO]${clear} RTL copied to build/rtl/")
+        os.cp(path.join(AxiInfra_dir, "build", "rtl", "*"), rtl_dir)
     end)
 end)
 
@@ -85,9 +66,6 @@ target("sim", function()
         add_toolchains("@vcs")
     end
 
-    -- Verilua needs both Lua verification files and RTL files in this target.
-    -- Add extra RTL directories here if a future generator emits more files.
-    -- Changing this list affects what VCS/Verilator compiles for `xmake b sim`.
     add_files(
         path.join(tc_dir, "*.lua"),
         path.join(src_dir, "*.lua"),
