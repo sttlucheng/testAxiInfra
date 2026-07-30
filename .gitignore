@@ -12,6 +12,7 @@ verdiLog/
 *.log
 novas.conf
 novas.rc
+ucli.key
 
 ut/AxiReorder/.bsp/
 ut/AxiReorder/.metals/

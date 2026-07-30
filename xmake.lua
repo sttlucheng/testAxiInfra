@@ -36,7 +36,7 @@ local UTAR_tc_dir = path.join(UTAR_dir, "test_cases")
 local UTAR_src_dir = path.join(UTAR_dir, "src")
 local UTAR_common_dir = path.join(UTAR_src_dir, "common")
 local UTAR_dut_dir = path.join(UTAR_src_dir, "dut")
-local UTAR_axi_component_dir = path.join(UTAR_dir, "components", "AXI", "test_zhujiang_utils")
+local UTAR_axi_component_dir = path.join(UTAR_src_dir, "components", "AXI", "test_zhujiang_utils")
 
 target("init", function()
     set_kind("phony")
@@ -147,7 +147,7 @@ local function TestAxiReorderCommon(name)
     )
     set_values("cfg.build_dir_name", name)
     set_values("cfg.top", "AxiReorder")
-    set_values("cfg.user_cfg", path.join(src_dir, "cfg.lua"))
+    set_values("cfg.user_cfg", path.join(UTAR_src_dir, "cfg.lua"))
     set_values("cfg.vcs_no_initreg", "1")
     add_values("cfg.tb_gen_flags",
         "+incdir+" .. path.join(build_UTAR_dir, "verification"),
