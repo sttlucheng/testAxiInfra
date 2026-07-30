@@ -35,6 +35,7 @@
       "ut/AxiReorder/src",
       "ut/AxiReorder",
       "AxiInfra",
+      "test_cases",
       "src"
     ],
     "reindexDuration": 5000

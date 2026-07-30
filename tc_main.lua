@@ -15,7 +15,7 @@ local tc_name = assert(os.getenv "TC_NAME", "failed to get TC_NAME")
 fork {
     main_task = function()
         if os.getenv "DUMP" then
-            sim.dump_wave((os.getenv "TC" or "sim") .. ".vcd")
+            sim.dump_wave(tc_name .. ".vcd")
         end
 
         local tc = require(tc_name)
