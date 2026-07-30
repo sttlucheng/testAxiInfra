@@ -34,6 +34,7 @@
       "$VERILUA_HOME/src/lua",
       "ut/AxiReorder/src",
       "ut/AxiReorder",
+      "AxiInfra",
       "src"
     ],
     "reindexDuration": 5000
