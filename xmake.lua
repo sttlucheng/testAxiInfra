@@ -19,13 +19,24 @@
 -- ============================================================================
 
 local prj_dir = os.projectdir()
-local build_dir = path.join(prj_dir, "build")
-local rtl_dir = path.join(build_dir, "rtl")
 local AxiInfra_dir = path.join(prj_dir, "AxiInfra")
-local src_dir = path.join(prj_dir, "src")
-local tc_dir = path.join(prj_dir, "test_cases")
-
 if os.exists(path.join(AxiInfra_dir, "xmake.lua")) then includes(AxiInfra_dir) end
+
+local build_dir = path.join(prj_dir, "build")
+local build_BT_dir = path.join(build_dir, "rtl", "BT")
+local build_UTAR_dir = path.join(build_dir, "rtl", "UTAR")
+
+local BT_tc_dir = path.join(prj_dir, "test_cases")
+local BT_src_dir = path.join(prj_dir, "src")
+local BT_common_dir = path.join(BT_src_dir, "common")
+local BT_dut_dir = path.join(BT_src_dir, "dut")
+
+local UTAR_dir = path.join(prj_dir, "ut", "AxiReorder")
+local UTAR_tc_dir = path.join(UTAR_dir, "test_cases")
+local UTAR_src_dir = path.join(UTAR_dir, "src")
+local UTAR_common_dir = path.join(UTAR_src_dir, "common")
+local UTAR_dut_dir = path.join(UTAR_src_dir, "dut")
+local UTAR_axi_component_dir = path.join(UTAR_dir, "components", "AXI", "test_zhujiang_utils")
 
 target("init", function()
     set_kind("phony")
@@ -39,53 +50,75 @@ target("init", function()
     end)
 end)
 
-target("rtl", function()
+target("BTTop", function()
     set_kind("phony")
     set_default(false)
-    on_run(function()
+    on_build(function()
         import("core.base.task")
-        os.tryrm(path.join(AxiInfra_dir, "build", "*"))
-        os.tryrm(path.join(AxiInfra_dir, "out", "*"))
+        os.tryrm(path.join(AxiInfra_dir, "build", "rtl"))
+        os.tryrm(path.join(AxiInfra_dir, "out", "*.dep"))
         os.cd(AxiInfra_dir)
-        task.run("rtl")
-        os.tryrm(rtl_dir)
-        os.mkdir(rtl_dir)
-        os.cp(path.join(AxiInfra_dir, "build", "rtl", "*"), rtl_dir)
+        task.run("rtl", {["main-function"] = "Lmss"})
+        os.tryrm(build_BT_dir)
+        os.mkdir(build_BT_dir)
+        os.cp(path.join(AxiInfra_dir, "build", "rtl", "*"), build_BT_dir)
     end)
 end)
 
-target("sim", function()
+target("AxiReorderTop", function()
+    set_kind("phony")
+    set_default(false)
+    on_build(function()
+        import("core.base.task")
+        os.tryrm(path.join(AxiInfra_dir, "build", "rtl_AxiReorder"))
+        os.tryrm(path.join(AxiInfra_dir, "out", "*.dep"))
+        os.cd(AxiInfra_dir)
+        task.run("rtl", {["main-function"] = "AxiReorder"})
+        os.tryrm(build_UTAR_dir)
+        os.mkdir(build_UTAR_dir)
+        os.cp(path.join(AxiInfra_dir, "build", "rtl_AxiReorder", "*"), build_UTAR_dir)
+    end)
+end)
+
+target("TestBT", function()
     set_default(true)
     add_rules("verilua")
     add_toolchains("@vcs")
 
     add_files(
-        path.join(tc_dir, "*.lua"),
-        path.join(src_dir, "*.lua"),
-        path.join(src_dir, "common", "*.lua"),
-        path.join(src_dir, "dut", "*.lua"),
-        path.join(rtl_dir, "*.sv"),
-        path.join(rtl_dir, "*.v"),
-        path.join(rtl_dir, "verification", "*.sv"),
-        path.join(rtl_dir, "verification", "assert", "*.sv"),
-        path.join(rtl_dir, "verification", "assume", "*.sv"),
-        path.join(rtl_dir, "verification", "cover", "*.sv")
+        path.join(BT_tc_dir, "*.lua"),
+        path.join(BT_src_dir, "*.lua"),
+        path.join(BT_common_dir, "*.lua"),
+        path.join(BT_dut_dir, "*.lua"),
+        path.join(build_BT_dir, "*.sv"),
+        path.join(build_BT_dir, "verification", "*.sv"),
+        path.join(build_BT_dir, "verification", "assert", "*.sv"),
+        path.join(build_BT_dir, "verification", "assume", "*.sv"),
+        path.join(build_BT_dir, "verification", "cover", "*.sv")
     )
-
     set_values("vcs.flags", "-xprop")
     add_values("vcs.flags", "+define+ASSERT_VERBOSE_CO0_test_for_smokeND_=1", "+define+STOP_COND_=1")
     add_values("vcs.flags",
-        "+incdir+" .. path.join(rtl_dir, "verification"),
-        "+incdir+" .. path.join(rtl_dir, "verification", "assert"),
-        "+incdir+" .. path.join(rtl_dir, "verification", "assume"),
-        "+incdir+" .. path.join(rtl_dir, "verification", "cover")
+        "+incdir+" .. path.join(build_BT_dir, "verification"),
+        "+incdir+" .. path.join(build_BT_dir, "verification", "assert"),
+        "+incdir+" .. path.join(build_BT_dir, "verification", "assume"),
+        "+incdir+" .. path.join(build_BT_dir, "verification", "cover")
     )
-    set_values("cfg.build_dir_name", "sim")
+    set_values("vcs.run_flags", "+vcs+lic+wait")
+    set_values("cfg.build_dir_name", "TestBT")
     set_values("cfg.top", "AxiSubsysTop")
+    set_values("cfg.user_cfg", path.join(prj_dir, "src", "cfg.lua"))
+    add_values("cfg.tb_gen_flags",
+        "+incdir+" .. path.join(build_BT_dir, "verification"),
+        "+incdir+" .. path.join(build_BT_dir, "verification", "assert"),
+        "+incdir+" .. path.join(build_BT_dir, "verification", "assume"),
+        "+incdir+" .. path.join(build_BT_dir, "verification", "cover"),
+        "--single-unit"
+    )
 
     local TC = os.getenv("TC")
     if TC then TC = TC:sub(1, 3) else TC = "000" end
-    local test_cases = os.files(path.join(tc_dir, "*.lua"))
+    local test_cases = os.files(path.join(BT_tc_dir, "*.lua"))
     for _, test_case in ipairs(test_cases) do
         local test_case_file = path.filename(test_case)
         if test_case_file:startswith(TC) then
@@ -94,6 +127,183 @@ target("sim", function()
     end
 
     set_values("cfg.lua_main", "tc_main.lua")
+end)
+
+local function TestAxiReorderCommon(name)
+    add_rules("verilua")
+    add_toolchains("@vcs")
+
+    add_files(
+        path.join(UTAR_tc_dir, "*.lua"),
+        path.join(UTAR_src_dir, "*.lua"),
+        path.join(UTAR_common_dir, "*.lua"),
+        path.join(UTAR_dut_dir, "*.lua"),
+        path.join(UTAR_axi_component_dir, "*.lua"),
+        path.join(build_UTAR_dir, "*.sv"),
+        path.join(build_UTAR_dir, "verification", "*.sv"),
+        path.join(build_UTAR_dir, "verification", "assert", "*.sv"),
+        path.join(build_UTAR_dir, "verification", "assume", "*.sv"),
+        path.join(build_UTAR_dir, "verification", "cover", "*.sv")
+    )
+    set_values("cfg.build_dir_name", name)
+    set_values("cfg.top", "AxiReorder")
+    set_values("cfg.user_cfg", path.join(src_dir, "cfg.lua"))
+    set_values("cfg.vcs_no_initreg", "1")
+    add_values("cfg.tb_gen_flags",
+        "+incdir+" .. path.join(build_UTAR_dir, "verification"),
+        "+incdir+" .. path.join(build_UTAR_dir, "verification", "assert"),
+        "+incdir+" .. path.join(build_UTAR_dir, "verification", "assume"),
+        "+incdir+" .. path.join(build_UTAR_dir, "verification", "cover"),
+        "--single-unit"
+    )
+    set_values("vcs.flags", "-xprop")
+    add_values("vcs.flags","+define+ASSERT_VERBOSE_CO0_test_for_smokeND_=1","+define+STOP_COND_=1")
+    add_values("vcs.flags",
+        "+incdir+" .. path.join(build_UTAR_dir, "verification"),
+        "+incdir+" .. path.join(build_UTAR_dir, "verification", "assert"),
+        "+incdir+" .. path.join(build_UTAR_dir, "verification", "assume"),
+        "+incdir+" .. path.join(build_UTAR_dir, "verification", "cover")
+    )
+    set_values("vcs.run_flags", "+vcs+lic+wait")
+
+    local TC = os.getenv("TC")
+    if TC then TC = TC:sub(1, 3) else TC = "001" end
+    
+    local test_cases = os.files(path.join(tc_dir, "*.lua"))
+    for _, test_case in ipairs(test_cases) do
+        local test_case_file = path.filename(test_case)
+        if test_case_file:startswith(TC) then
+            add_runenvs("TC_NAME", path.basename(test_case_file))
+        end
+    end
+    
+    set_values("cfg.lua_main", path.join(UTAR_dir, "tc_main.lua"))
+end
+
+target("TestAxiReorder", function()
+    set_default(true)
+    TestAxiReorderCommon("TestAxiReorder")
+end)
+
+target("TestAxiReorderVcsCov", function()
+    set_default(false)
+    TestAxiReorderCommon("TestAxiReorderVcsCov")
+
+    local cm_build_options = {
+        "-cm line+cond+tgl+branch",
+        "-cm_noconst",
+    }
+    local cm_name = string.format(
+        "TC_%s_SEED_%s_MODE_%s",
+        os.getenv("TC") or "default",
+        os.getenv("SEED") or "default",
+        os.getenv("MODE") or "default"
+    )
+    local cm_runtime_options = {
+        "-cm_name " .. cm_name,
+    }
+    table.join2(cm_runtime_options, cm_build_options)
+
+
+    local covdir = os.getenv("COVDIR")
+    if covdir then
+        table.insert(cm_runtime_options, "-cm_dir " .. covdir)
+    end
+
+    add_values("vcs.flags", "+define+SYNTHESIS")
+    add_values("vcs.flags", table.concat(cm_build_options, " "))
+    add_values("vcs.flags", "-cm_tgl portsonly")
+    add_values("vcs.run_flags", table.concat(cm_runtime_options, " "))
+
+    set_values("before_build", function(target)
+        local _build_dir = target:get("build_dir")
+        local sim_build_dir = path.join(_build_dir, "sim_build")
+        os.tryrm(path.join(sim_build_dir, "simv.vdb"))
+    end)
+end)
+
+target("jobs-gen", function()
+    set_kind("phony")
+    set_default(false)
+    on_run(function()
+        import("TestZhuJiangUtils.xmake.jobs_gen", { rootdir = prj_dir })
+
+        local outdir = os.getenv("OUTDIR") or path.join(prj_dir, ".regression")
+        local covdir = path.absolute(path.join(outdir, "cov.vdb"))
+
+        jobs_gen {
+            prj_dir = prj_dir,
+            tc_dir = tc_dir,
+            all_targets = {
+                "TestAxiReorder",
+                "TestAxiReorderVcsCov",
+            },
+            default_target = "TestAxiReorder",
+            all_testcases = {
+                "001",
+                "002",
+                "003",
+                "004",
+                "005",
+                "006",
+                "007",
+                "008"
+            },
+            target_configs = {
+                TestAxiReorderVcsCov = {
+                    post_gen = function(ctx)
+                        local simv_vdb = path.join(
+                            prj_dir, "build", "vcs", "TestAxiReorderVcsCov", "sim_build", "simv.vdb"
+                        )
+                        local abs_outdir = path.absolute(ctx.outdir)
+
+                        io.writefile(path.join(abs_outdir, "merge_cov.sh"), string.format([[#!/usr/bin/env bash
+cd "$(dirname "$0")" || exit 1
+rm -rf %s
+cp -r %s %s
+mkdir -p %s
+cp -r %s/* %s || true
+mkdir -p %s
+cp -r %s/* %s || true
+urg -dir ./simv.vdb -dbname ./merged.vdb -noreport
+]],
+                            path.join(abs_outdir, "simv.vdb"),
+                            simv_vdb,
+                            path.join(abs_outdir, "simv.vdb"),
+                            path.join(abs_outdir, "simv.vdb", "snps", "coverage", "db", "testdata"),
+                            path.join(covdir, "snps", "coverage", "db", "testdata"),
+                            path.join(abs_outdir, "simv.vdb", "snps", "coverage", "db", "testdata"),
+                            path.join(abs_outdir, "simv.vdb", "snps", "coverage", "db", "common"),
+                            path.join(covdir, "snps", "coverage", "db", "common"),
+                            path.join(abs_outdir, "simv.vdb", "snps", "coverage", "db", "common")
+                        ))
+
+                        io.writefile(path.join(abs_outdir, "view_cov.sh"), [[#!/usr/bin/env bash
+verdi -cov -covdir merged.vdb
+]])
+
+                        io.writefile(path.join(abs_outdir, "clean_cov.sh"), [[#!/usr/bin/env bash
+rm -rf simv.vdb
+rm -rf vdCovLog
+rm -rf cov.vdb
+]])
+                    end,
+                },
+            },
+            extra_env_gen = function(job_info)
+                local s = ""
+                local ss = ""
+                s = s .. string.format("export COVDIR=%s\\n", covdir)
+                ss = ss .. string.format("export DB_PATH=%s\\n", path.absolute(path.join(job_info.outdir, "db")))
+                ss = ss .. string.format("export DB_FILE_NAME=%s.db\\n", job_info.test_name)
+                if os.getenv("VCS_XPROP") then
+                    s = s .. string.format("export VCS_XPROP=%s\\n", os.getenv("VCS_XPROP"))
+                end
+                return s, ss
+            end,
+            extra_clean = "rm -rf ./db || true",
+        }
+    end)
 end)
 
 target("clean", function()
