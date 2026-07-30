@@ -97,7 +97,7 @@ M.io_slv_r_bits_last = dut.io_slv_r_bits_last:chdl()
 local core = dut.u_AxiReorder
 
 M.dbg_ar = {
-    selected_entry = core.selSendAR:chdl(), -- AR仲裁器本拍选择的表项号
+    selected_entry = core["_selSendAR_arb_io_chosen"]:chdl(), -- AR仲裁器本拍选择的表项号
     entries = {},
 }
 

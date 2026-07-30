@@ -37,6 +37,13 @@ local UTAR_src_dir = path.join(UTAR_dir, "src")
 local UTAR_common_dir = path.join(UTAR_src_dir, "common")
 local UTAR_dut_dir = path.join(UTAR_src_dir, "dut")
 local UTAR_axi_component_dir = path.join(UTAR_src_dir, "components", "AXI", "test_zhujiang_utils")
+local UTAR_lua_path = table.concat({
+    path.join(UTAR_tc_dir, "?.lua"),
+    path.join(UTAR_dir, "?.lua"),
+    path.join(UTAR_src_dir, "?.lua"),
+    path.join(UTAR_axi_component_dir, "?.lua"),
+    ";",
+}, ";")
 
 target("init", function()
     set_kind("phony")
@@ -132,6 +139,10 @@ end)
 local function TestAxiReorderCommon(name)
     add_rules("verilua")
     add_toolchains("@vcs")
+
+    -- The project root contains TestBT modules with the same require names.
+    -- Keep this target's modules ahead of Verilua's project-wide Lua paths.
+    add_runenvs("LUA_PATH", UTAR_lua_path)
 
     add_files(
         path.join(UTAR_tc_dir, "*.lua"),
