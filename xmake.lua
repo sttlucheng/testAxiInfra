@@ -169,7 +169,7 @@ local function TestAxiReorderCommon(name)
     local TC = os.getenv("TC")
     if TC then TC = TC:sub(1, 3) else TC = "001" end
     
-    local test_cases = os.files(path.join(tc_dir, "*.lua"))
+    local test_cases = os.files(path.join(UTAR_tc_dir, "*.lua"))
     for _, test_case in ipairs(test_cases) do
         local test_case_file = path.filename(test_case)
         if test_case_file:startswith(TC) then

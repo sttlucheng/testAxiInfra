@@ -130,7 +130,7 @@ local runtime = {
     target_pending_cycles_after_full = 0,
     priority_observation_cycles = 0,
     lower_entry_presented_cycles = 0,
-    lower_entry_ar_fires = 0,
+    lower_entry_ar_fires_after_predecessors = 0,
     competitor_ar_fires_before_target = 0,
     competitor_ar_fires_after_predecessors = 0,
     observer_failure = nil,
@@ -351,7 +351,7 @@ local function error_message(reason)
         runtime.target_pending_cycles_after_full,
         runtime.priority_observation_cycles,
         runtime.lower_entry_presented_cycles,
-        runtime.lower_entry_ar_fires,
+        runtime.lower_entry_ar_fires_after_predecessors,
         runtime.competitor_ar_fires_after_predecessors,
         tostring(runtime.target_guard),
         target_snapshot(),
@@ -554,8 +554,10 @@ monitor.subscribe(function(sample)
             if entry < TARGET_ENTRY and
                 target_transaction ~= nil and
                 target_transaction.slv_ar_cycle == nil then
-                runtime.lower_entry_ar_fires =
-                    runtime.lower_entry_ar_fires + 1
+                if runtime.predecessors_done_cycle ~= nil then
+                    runtime.lower_entry_ar_fires_after_predecessors =
+                        runtime.lower_entry_ar_fires_after_predecessors + 1
+                end
             end
 
             if transaction.kind == "competitor" and
@@ -983,7 +985,7 @@ local function task_test()
         runtime.predecessors_done_cycle,
         runtime.priority_observation_cycles,
         runtime.lower_entry_presented_cycles,
-        runtime.lower_entry_ar_fires,
+        runtime.lower_entry_ar_fires_after_predecessors,
         runtime.competitor_ar_fires_after_predecessors,
         runtime.loop_accept_done_cycle - runtime.full_cycle,
         hex(TARGET_ADDR)
@@ -1046,6 +1048,7 @@ local function task_test()
         "目标没有观察到RLAST握手")
     check(runtime.priority_observation_cycles > 0 and
         runtime.lower_entry_presented_cycles > 0 and
+        runtime.lower_entry_ar_fires_after_predecessors > 0 and
         runtime.competitor_ar_fires_after_predecessors > 0,
         "没有形成同ID前序完成后的外部固定优先级阻塞证据")
     check(all_external_entries_idle(),
@@ -1116,7 +1119,7 @@ local function task_test()
         target_total_ar_wait,
         target_wait_after_predecessors,
         runtime.lower_entry_presented_cycles,
-        runtime.lower_entry_ar_fires,
+        runtime.lower_entry_ar_fires_after_predecessors,
         runtime.competitor_ar_fires_after_predecessors,
         target_transaction.r_beats,
         target_response_wait,
