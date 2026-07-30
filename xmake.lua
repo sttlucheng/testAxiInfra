@@ -25,8 +25,6 @@ local AxiInfra_dir = path.join(prj_dir, "AxiInfra")
 local src_dir = path.join(prj_dir, "src")
 local tc_dir = path.join(prj_dir, "test_cases")
 
-local sim = os.getenv("SIM") or "vcs"
-
 if os.exists(path.join(AxiInfra_dir, "xmake.lua")) then includes(AxiInfra_dir) end
 
 target("init", function()
@@ -60,11 +58,7 @@ target("sim", function()
     set_default(true)
     add_rules("verilua")
 
-    if sim == "verilator" then
-        add_toolchains("@verilator")
-    else
-        add_toolchains("@vcs")
-    end
+    add_toolchains("@vcs")
 
     add_files(
         path.join(tc_dir, "*.lua"),
@@ -79,16 +73,17 @@ target("sim", function()
         path.join(rtl_dir, "verification", "cover", "*.sv")
     )
 
-    add_values("vcs.flags", "+incdir+" .. path.join(rtl_dir, "verification"))
+    set_values("vcs.flags", "-xprop")
+    add_values("vcs.flags", "+define+ASSERT_VERBOSE_CO0_test_for_smokeND_=1", "+define+STOP_COND_=1")
+    add_values("vcs.flags",
+        "+incdir+" .. path.join(rtl_dir, "verification"),
+        "+incdir+" .. path.join(rtl_dir, "verification", "assert"),
+        "+incdir+" .. path.join(rtl_dir, "verification", "assume"),
+        "+incdir+" .. path.join(rtl_dir, "verification", "cover")
+    )
     set_values("cfg.build_dir_name", "sim")
-    -- DUT top module name. If gen-dv parses a different module name, keep this
-    -- value consistent with that --top argument or the simulator top will not
-    -- match the generated signal paths.
     set_values("cfg.top", "AxiSubsysTop")
 
-    -- TC chooses test_cases/NNN_name.lua by its first three characters.
-    -- Example: TC=001 selects test_cases/001_*.lua and exports TC_NAME for
-    -- tc_main.lua. Adding a new numbered test file is enough to add a new case.
     local TC = os.getenv("TC")
     if TC then
         TC = TC:sub(1, 3)
@@ -111,86 +106,5 @@ target("clean", function()
     set_default(false)
     on_run(function()
         os.tryrm(build_dir)
-        cprint("${green underline}[INFO]${clear} build/ removed")
-    end)
-end)
-
-local function _tc_or_default()
-    import("core.base.option")
-    return option.get("tc") or os.getenv("TC") or "000"
-end
-
--- Wrapper around the real sim target. This avoids duplicating Verilua/VCS build
--- rules in custom tasks. If target("sim") changes later, these tasks inherit it.
-local function _run_xmake(action, tc)
-    os.execv("xmake", {action, "-P", prj_dir, "sim"}, {envs = {SIM = "vcs", TC = tc}})
-end
-
--- Build only. Equivalent to: SIM=vcs TC=xxx xmake build -P <project> sim
-task("vcs", function()
-    set_menu {
-        usage = "xmake vcs [options]",
-        description = "Build sim target with VCS",
-        options = {
-            {"t", "tc", "kv", "000", "test case id, e.g. 000/001/002"}
-        }
-    }
-    on_run(function()
-        _run_xmake("build", _tc_or_default())
-    end)
-end)
-
--- Run only. Requires the sim target to have been built already.
--- Equivalent to: SIM=vcs TC=xxx xmake run -P <project> sim
-task("simrun", function()
-    set_menu {
-        usage = "xmake simrun [options]",
-        description = "Run sim target with VCS",
-        options = {
-            {"t", "tc", "kv", "000", "test case id, e.g. 000/001/002"}
-        }
-    }
-    on_run(function()
-        _run_xmake("run", _tc_or_default())
-    end)
-end)
-
--- Build then run. Use this for the common edit/test loop.
-task("vcsall", function()
-    set_menu {
-        usage = "xmake vcsall [options]",
-        description = "Build and run sim target with VCS",
-        options = {
-            {"t", "tc", "kv", "000", "test case id, e.g. 000/001/002"}
-        }
-    }
-    on_run(function()
-        local tc = _tc_or_default()
-        _run_xmake("build", tc)
-        _run_xmake("run", tc)
-    end)
-end)
-
--- Open an FSDB with Verdi. If --fsdb is not provided, the task picks the
--- lexicographically last *.fsdb under build/vcs/sim. If your filenames do not
--- sort by testcase/time, pass -f explicitly.
-task("verdi", function()
-    set_menu {
-        usage = "xmake verdi [options]",
-        description = "Open FSDB waveform with Verdi",
-        options = {
-            {"f", "fsdb", "kv", nil, "fsdb file path"}
-        }
-    }
-    on_run(function()
-        import("core.base.option")
-        local fsdb = option.get("fsdb")
-        if not fsdb then
-            local fsdbs = os.files(path.join(build_dir, "vcs", "sim", "*.fsdb"))
-            table.sort(fsdbs)
-            assert(#fsdbs > 0, "no fsdb found in " .. path.join(build_dir, "vcs", "sim"))
-            fsdb = fsdbs[#fsdbs]
-        end
-        os.execv("verdi", {"-ssf", fsdb})
     end)
 end)

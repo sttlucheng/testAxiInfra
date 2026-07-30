@@ -3,6 +3,7 @@
 .metals/
 .claude/
 .vscode/
+.luajit_pro/
 build/
 ./ut/AxiReorder/.bsp/
 ./ut/AxiReorder/.metals/
