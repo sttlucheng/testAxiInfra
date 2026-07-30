@@ -1,19 +1,53 @@
-local g = tspace.new_group("性能测试点")
+local g = tspace.new_group("微架构测试点")
 
-g:with_tp "AXI 常规请求" "Read" "AR重排表固定优先级" {
-    cond = "先发送63个同id的单拍读请求和1个同id的99拍读请求，然后一直发送不同id的单拍读请求。",
-    check = "",
+g:with_tp "AXI" "Read" "ARTable" "Capacity64" {
+    cond = "在读响应释放表项前连续接收 64 笔相同 ARID 的读事务",
+    check = "AR 重排表的 64 个表项同时有效",
 
     test_type = {
-    stimulus = "CRV",
-    check_type = "Chk+Assert",
+        stimulus = "DT",
+        check_type = "Chk",
     },
 
     priority = "P1",
     test_case = "009",
-    info = "TODO_补充说明",
+}
 
-    opts = {
-        color = "yellow",
+g:with_tp "AXI" "Read" "ARTable" "SameIDDependency" {
+    cond = "64 笔相同 ARID 的读事务依次分配到 entry0 至 entry63",
+    check = "每个表项的 nid 等于其尚未完成的同 ID 前序事务数量",
+
+    test_type = {
+        stimulus = "DT",
+        check_type = "Chk",
     },
+
+    priority = "P1",
+    test_case = "009",
+}
+
+g:with_tp "AXI" "Read" "ARArbitration" "FixedPriority" {
+    cond = "entry63 已满足发送条件，低编号表项持续接收可发送的不同 ID 事务",
+    check = "全部竞争事务入表前 entry63 不得完成下游 AR 握手",
+
+    test_type = {
+        stimulus = "DT",
+        check_type = "Chk",
+    },
+
+    priority = "P1",
+    test_case = "009",
+}
+
+g:with_tp "AXI" "Read" "ARArbitration" "DrainRecovery" {
+    cond = "停止补充低编号竞争事务并等待已有竞争事务排空",
+    check = "entry63 最终完成下游 AR 握手",
+
+    test_type = {
+        stimulus = "DT",
+        check_type = "Chk",
+    },
+
+    priority = "P1",
+    test_case = "009",
 }

@@ -7,6 +7,8 @@ tspace.initialize("AxiReorder UT test points")
 -- 加载其他的测试点文件（这些文件可直接用全局 tspace，不必再 require）
 require "axi_read"
 require "axi_write"
+require "axi_readandwrite"
+require "exception"
 
 -- 生成 markdown 文件
 tspace.to_markdown({

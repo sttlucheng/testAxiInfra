@@ -1,19 +1,27 @@
 local g = tspace.new_group("功能测试点")
 
-g:with_tp "AXI 常规请求" "ReadandWrite" "randomIDReorder" {
-    cond = "同时发送随机id的随机读和写请求",
-    check = "",
+g:with_tp "AXI" "ReadWrite" "Concurrent" "ReadIsolation" {
+    cond = "读事务与写事务同时在途",
+    check = "每笔上游 R 响应仅与对应的读事务匹配",
 
     test_type = {
-    stimulus = "CRV",
-    check_type = "Chk",
+        stimulus = "CRV",
+        check_type = "Chk",
     },
 
     priority = "P1",
-    test_case = "008",
-    info = "TODO_补充说明",
+    test_case = "008_parellel_RandW",
+}
 
-    opts = {
-        color = "yellow",
+g:with_tp "AXI" "ReadWrite" "Concurrent" "WriteIsolation" {
+    cond = "读事务与写事务同时在途",
+    check = "每笔上游 B 响应仅与对应的写事务匹配",
+
+    test_type = {
+        stimulus = "CRV",
+        check_type = "Chk",
     },
+
+    priority = "P1",
+    test_case = "008_parellel_RandW",
 }

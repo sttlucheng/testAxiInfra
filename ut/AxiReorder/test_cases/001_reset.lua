@@ -9,6 +9,14 @@ local function task_reset()
     -- 等待 monitor 采到 reset 释放后的稳定状态。
     env.wait_cycles(2)
 
+    -- env.dut_reset()释放后reset为0；这里再次拉高，显式产生0到1跳变。
+    dut.reset:set_imm(1)
+    env.wait_cycles(2)
+
+    -- 释放reset，以便继续执行复位后的AXI读写检查。
+    dut.reset:set_imm(0)
+    env.wait_cycles(2)
+
     -- 启动 AXI 组件，验证 DUT 复位后仍能正常工作。
     driver.initialize()
     env.wait_cycles(1)
