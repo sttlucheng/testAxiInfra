@@ -156,7 +156,18 @@ local axi_master = AXI4Master(
             enable_randomize_fields = true,
             nr_ar_taskbuf = 64,
             nr_aw_taskbuf = 64,
-            nr_w_taskbuf = 64
+            nr_w_taskbuf = 64,
+
+            -- 反压
+            enable_r_delay = true,
+            r_delay_min = 20,
+            r_delay_range = 20,
+
+            enable_b_delay = true,
+            b_delay_min = 20,
+            b_delay_range = 20,
+
+            random_delay = true,
         },
     }
 )
@@ -367,7 +378,7 @@ function M.write_single(addr, data_hex)
 end
 
 -- 执行一笔非阻塞写。
-function M.noblock_write(addr, burst, len, size, data_hex_vec, strb_hex_vec, axid)
+function M.noblock_write(addr, burst, len, size, data_hex_vec, strb_hex_vec, axid, qos, cache)
 
     local ticket = {
         done = false,
@@ -433,6 +444,8 @@ function M.noblock_write(addr, burst, len, size, data_hex_vec, strb_hex_vec, axi
         strb_hex_vec,
         {
             axid = axid,
+            qos = qos,
+            cache = cache,
             finish_callback = function(task)
 
                 ticket.result = {
@@ -487,7 +500,7 @@ end
 -- 返回：
 --   ret    ：事务提交结果
 --   ticket ：异步结果对象
-function M.noblock_read(addr, burst, len, size, axid)
+function M.noblock_read(addr, burst, len, size, axid, qos, cache)
 
     assert(type(addr) == "number", "addr must be a number")
     assert(type(burst) == "number", "burst must be a number")
@@ -518,6 +531,8 @@ function M.noblock_read(addr, burst, len, size, axid)
 
         {
             axid = axid,
+            qos = qos,
+            cache = cache,
             -- AXI4MasterV2 会在读事务结束时调用这个函数。
             -- task.read_data_hex_str_vec 中每个元素对应一拍 RDATA。
             finish_callback = function(task)

@@ -103,6 +103,9 @@ local function task_test()
             write_data_vec[beat] = axi_stimulus.random_hex_data(32)
             write_strb_vec[beat] = axi_stimulus.make_strb(beat_addr, write_size, 32)
         end
+        
+        local write_cache = math.random(0,15)
+        local write_qos = math.random(0,15)
 
         local write_ticket = submit_write(i, function()
             return driver.noblock_write(
@@ -112,7 +115,9 @@ local function task_test()
                 write_size,
                 write_data_vec,
                 write_strb_vec,
-                write_axid
+                write_axid,
+                write_qos,
+                write_cache
             )
         end)
 

@@ -95,6 +95,8 @@ local function task_test()
         until write_burst == 0 or (write_len + 1) * (2 ^ write_size) <= 4096
         local write_addr = axi_stimulus.random_legal_addr(write_len, write_size, write_burst)
         local write_axid = math.random(0,4095)
+        local write_qos = math.random(0,15)
+        local write_cache = math.random(0,15)
         -- local write_axid = math.random(0, 4095)
         local write_data_vec = {}
         local write_strb_vec = {}
@@ -112,6 +114,8 @@ local function task_test()
         end
 
         local read_axid = math.random(0,4095)
+        local read_qos = math.random(0,15)
+        local read_cache = math.random(0,15)
         local read_burst
         local read_size
         local read_len
@@ -123,6 +127,7 @@ local function task_test()
         until read_burst == 0 or (read_len + 1) * (2 ^ read_size) <= 4096
         local read_addr = axi_stimulus.random_legal_addr(read_len, read_size, read_burst)
 
+        
         -- 使用不同地址，避免并发读写同一地址产生未定义的先后关系。
         local write_ticket = submit_with_retry("write", i, function()
             return driver.noblock_write(
@@ -132,7 +137,9 @@ local function task_test()
                 write_size,
                 write_data_vec,
                 write_strb_vec,
-                write_axid
+                write_axid,
+                write_qos,
+                write_cache
             )
         end)
 
@@ -143,7 +150,9 @@ local function task_test()
                 read_burst,
                 read_len,
                 read_size,
-                read_axid
+                read_axid,
+                read_qos,
+                read_cache
             )
         end)
 
