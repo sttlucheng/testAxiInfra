@@ -6,6 +6,7 @@
 .luajit_pro/
 build/
 verdiLog/
+vdCovLog/
 
 # 编辑器临时文件
 *.swp
