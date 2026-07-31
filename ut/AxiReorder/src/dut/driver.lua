@@ -130,6 +130,8 @@ local axi_master = AXI4Master(
         -- 上层状态机在等待 AR/AW/W 发送或 R/B 返回时持续计数；超过
         -- 该值说明事务可能卡死，组件会触发超时检查，避免仿真无限等待。
         timeout_max = 2000000,
+        --timeout_max = 2000,
+
 
         -- 底层 AXI4MasterAgentV2 的配置。
         -- Agent 内部使用五个独立调度任务驱动/采集 AR、R、AW、W、B，

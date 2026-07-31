@@ -33,7 +33,7 @@ local function task_smoke()
     -- ========================================================
 
     local write_ret = driver.write_single(test_addr, write_data)
-
+    print("-------------------")
     assert(
         write_ret == "Success",
         "\n\n---ERROR---\n\nAXI smoke write failed: " ..

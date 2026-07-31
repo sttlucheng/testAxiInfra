@@ -25,6 +25,6 @@ function M.reset(cycles)
 end
 
 M.clock = clock
-M.reset = reset
-
+--M.reset = reset
+M.reset_chdl = reset
 return M
