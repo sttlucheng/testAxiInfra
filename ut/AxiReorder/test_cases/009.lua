@@ -11,7 +11,7 @@ local monitor = require "dut.monitor"
 
 --[[
 ================================================================================
-009.lua -- 仅依据AXI接口验证AR固定优先级长期阻塞
+009.lua -- 仅依据AXI接口验证AR轮询仲裁能够避免长期阻塞
 ================================================================================
 
 一、激励结构
@@ -29,7 +29,7 @@ local monitor = require "dut.monitor"
      完成、公共Master释放一个task，就提交一笔与初始ID不同的单拍读事务。
      同时未完成的竞争事务使用互不相同的ID。
 
-二、为什么能够验证固定优先级阻塞
+二、通过/失败判定
 
   下游ARID由DUT编码为AR重排表项号，因此它属于AXI外部接口信息。目标作为
   第64笔、且满表前没有表项释放，预期占据最后一个表项，目标真正输出时应在
@@ -40,11 +40,13 @@ local monitor = require "dut.monitor"
       slv_ar.len  = 98
 
   009会从外部R握手确认前63笔同ID单拍事务已经全部完成。从该时刻开始，目标
-  已不存在同ID前序响应约束。如果此后仍持续看到id小于63的下游AR，而目标
-  地址始终没有下游AR握手，则目标的继续等待只能由低编号表项优先输出造成。
+  已不存在同ID前序响应约束。采用轮询仲裁时，即使低编号表项被竞争事务持续
+  补入，目标也应在有限次下游AR握手后得到发送机会并最终收到99拍R响应。
 
-  LOOP足够大时，低编号事务持续替换已释放表项，目标长期收不到下游发送机会，
-  上游AXI Master也就收不到目标的99拍R响应，最终在w_R状态达到timeout_max。
+  本用例不再把“目标在LOOP结束前输出”判为错误，也不要求目标必须是最后一笔
+  下游AR。目标提前输出正是轮询仲裁消除饥饿的正常结果。若RTL仍使用固定低
+  编号优先级，并且LOOP足够大、补流时间覆盖公共AXI Master的timeout_max，
+  目标会一直收不到下游AR和R响应，最终由公共AXI Master在w_R状态直接报超时。
 
 三、内部信号使用约束
 
@@ -67,8 +69,8 @@ local monitor = require "dut.monitor"
       * 从下游AR握手到RLAST的累计/最大响应周期；
       * 第一次/最后一次下游AR和最后一次RLAST周期。
 
-  这些统计不依赖内部状态。目标的固定优先级证据单独统计为“所有同ID前序
-  完成后、目标输出前，低编号表项在下游AR出现的周期和握手次数”。
+  这些统计不依赖内部状态。目标输出前的低编号表项活动仍会作为诊断信息打印，
+  但不再作为失败条件；轮询RTL只需保证目标和其余事务全部正常完成。
 ================================================================================
 ]]
 
@@ -95,9 +97,10 @@ local MAX_LOOP_COUNT =
     math.floor((MAX_AXI_ADDR - COMPETITOR_ADDR_BASE) /
         COMPETITOR_ADDR_STRIDE) + 1
 
--- 公共AXI Master的timeout_max为2,000,000周期。009自身的保护上限设置为
--- 2,200,000周期，使长期阻塞时优先看到Master的w_R超时；只有Master超时
--- 机制没有按预期工作时，009才用外部端口快照在额外200,000周期后终止。
+-- 公共AXI Master的timeout_max为2,000,000周期。下面的2,200,000周期只作为
+-- 单个收尾等待阶段的保护上限，不限制整个LOOP的总运行时间。这样即使轮询
+-- RTL在很大的LOOP下长时间正常运行，009也不会仅因总周期数较大而误报超时；
+-- 固定优先级导致某一笔读长期收不到R时，仍由Master的单事务超时首先报错。
 local TEST_TIMEOUT = 2200000
 local WAIT_TIMEOUT = 100000
 
@@ -126,7 +129,6 @@ local runtime = {
     competitor_accepted = 0,
     competitor_completed = 0,
 
-    target_guard = false,
     target_pending_cycles_after_full = 0,
     priority_observation_cycles = 0,
     lower_entry_presented_cycles = 0,
@@ -302,7 +304,7 @@ local function error_message(reason)
 
     return string.format(
         "\n\n---ERROR---\n\n" ..
-        "009 AR固定优先级阻塞测试失败\n" ..
+        "009 AR轮询防饥饿压力测试失败\n" ..
         "失败原因                   : %s\n" ..
         "当前阶段                   : %s\n" ..
         "当前/已运行周期            : %d / %d\n" ..
@@ -316,15 +318,14 @@ local function error_message(reason)
         "前序完成后的观察周期       : %d\n" ..
         "低编号AR呈现/握手          : %d / %d\n" ..
         "前序完成后竞争AR握手       : %d\n" ..
-        "目标保护                   : %s\n" ..
         "目标状态                   : %s\n\n" ..
         "AXI端口快照：\n%s\n\n" ..
         "已发下游AR且尚未RLAST的外部事务：\n%s\n\n" ..
         "64个外部表项ID周期统计：\n%s\n\n" ..
         "判定说明：64笔同ID事务完成上游AR且没有初始RLAST后立即开始" ..
-        "LOOP补流。前63笔同ID单拍响应全部完成以后，如果仍持续出现" ..
-        "id<63的下游AR，而目标地址%s没有下游AR和R响应，则目标等待由" ..
-        "固定低编号优先级造成。\n\n" ..
+        "LOOP补流。目标在LOOP结束前输出属于轮询仲裁的正常行为，不会" ..
+        "由009主动报错。若目标地址%s长期没有下游AR和R响应，则由公共" ..
+        "AXI Master的w_R超时机制报告仲裁饥饿。\n\n" ..
         "-----------\n\n",
         reason,
         runtime.stage,
@@ -353,7 +354,6 @@ local function error_message(reason)
         runtime.lower_entry_presented_cycles,
         runtime.lower_entry_ar_fires_after_predecessors,
         runtime.competitor_ar_fires_after_predecessors,
-        tostring(runtime.target_guard),
         target_snapshot(),
         port_snapshot(),
         active_entry_report(),
@@ -512,7 +512,8 @@ monitor.subscribe(function(sample)
     end
 
     -- 下游AR地址可唯一定位事务，外部ARID则给出该事务使用的重排表项号。
-    -- 目标在LOOP全部进入DUT前输出会破坏长期阻塞场景，因此当拍记录错误。
+    -- 轮询仲裁下目标可能在LOOP补流期间输出，这是消除饥饿的正确行为，因此
+    -- 此处只记录目标的发送周期和表项ID，不再因为目标提前输出而报告错误。
     if fired(slv_ar) then
         local transaction = transaction_for_addr(slv_ar.bits.addr)
         local entry = tonumber(slv_ar.bits.id)
@@ -577,14 +578,6 @@ monitor.subscribe(function(sample)
                     record_observer_failure(string.format(
                         "目标事务下游ARID错误：期望entry_id=63，实际=%d",
                         entry))
-                end
-                if runtime.target_guard then
-                    record_observer_failure(string.format(
-                        "目标事务在LOOP全部进入DUT以前提前输出：" ..
-                        "目标AR周期=%d，竞争接收=%d/%d",
-                        cycle,
-                        runtime.competitor_accepted,
-                        runtime.loop))
                 end
             end
         end
@@ -695,14 +688,6 @@ end
 local function check_async_failure()
     check(runtime.observer_failure == nil,
         runtime.observer_failure or "monitor观察器报告未知错误")
-
-    if runtime.start_cycle ~= nil then
-        check(current_cycle() - runtime.start_cycle < TEST_TIMEOUT,
-            string.format(
-                "009总运行时间达到保护上限%d周期；公共Master的" ..
-                "2,000,000周期超时检查没有先触发",
-                TEST_TIMEOUT))
-    end
 end
 
 local function advance_one_cycle()
@@ -877,7 +862,6 @@ local function task_test()
 
     runtime.full_cycle = current_cycle()
     runtime.replacement_start_cycle = runtime.full_cycle
-    runtime.target_guard = true
     runtime.stage = "满表后立即循环补入不同ID单拍事务"
 
     print_message(string.format(
@@ -945,53 +929,48 @@ local function task_test()
         end
     end
 
-    -- API提交成功不代表AR已经进入DUT。目标保护保持到最后一笔LOOP事务完成
-    -- 真实上游AR握手，保证停止补流前所有用户指定的竞争事务都已生效。
+    -- API提交成功不代表AR已经进入DUT，因此继续等待最后一笔LOOP事务完成
+    -- 真实上游AR握手，保证所有用户指定的竞争事务都已进入本次压力场景。
+    -- 此阶段不限制目标事务的输出时机：轮询仲裁允许它在补流期间正常输出。
     runtime.stage = "等待全部LOOP事务完成上游AR握手"
     wait_until(function()
         return runtime.competitor_accepted == loop
     end, string.format("%d笔LOOP事务全部进入DUT", loop), TEST_TIMEOUT)
 
-    check(target_transaction.slv_ar_cycle == nil,
-        string.format(
-            "目标在LOOP全部进入DUT以前已经输出，周期=%s；请增大LOOP",
-            tostring(target_transaction.slv_ar_cycle)))
-    check(runtime.predecessors_done_cycle ~= nil,
-        string.format(
-            "LOOP结束时同ID单拍前序只完成%d/63笔，尚不能排除同ID顺序" ..
-            "约束；请增大LOOP",
-            runtime.initial_predecessors_completed))
-    check(runtime.competitor_ar_fires_after_predecessors > 0,
-        "同ID前序全部完成后没有观察到竞争事务下游AR，未形成固定优先级证据")
-
     runtime.loop_accept_done_cycle = current_cycle()
-    runtime.target_guard = false
+    local target_wait_at_loop_end =
+        (target_transaction.slv_ar_cycle or
+            runtime.loop_accept_done_cycle) - runtime.full_cycle
 
     print_message(string.format(
         "LOOP补流阶段完成。\n" ..
         "竞争事务提交/入DUT/完成       : %d/%d/%d\n" ..
-        "同ID单拍前序完成周期          : %d\n" ..
+        "同ID单拍前序完成周期          : %s\n" ..
         "前序完成后观察周期            : %d\n" ..
         "前序完成后低编号AR呈现/握手   : %d/%d\n" ..
         "前序完成后竞争AR握手          : %d\n" ..
-        "目标下游AR                    : 尚未发生\n" ..
+        "目标下游AR周期                : %s\n" ..
         "目标从满表后已等待            : %d周期\n\n" ..
-        "以上证据全部来自AXI外部接口：同ID前序已经全部完成，" ..
-        "低编号竞争事务仍持续输出，而目标地址%s没有下游AR。" ..
-        "现在停止补流并等待低编号事务排空。",
+        "以上统计全部来自AXI外部接口。目标若已输出，说明轮询仲裁已在" ..
+        "补流期间为其提供发送机会；目标若尚未输出，则继续等待，由公共" ..
+        "AXI Master负责在目标长期无R响应时报告w_R超时。目标地址=%s。",
         runtime.competitor_submitted,
         runtime.competitor_accepted,
         runtime.competitor_completed,
-        runtime.predecessors_done_cycle,
+        tostring(runtime.predecessors_done_cycle),
         runtime.priority_observation_cycles,
         runtime.lower_entry_presented_cycles,
         runtime.lower_entry_ar_fires_after_predecessors,
         runtime.competitor_ar_fires_after_predecessors,
-        runtime.loop_accept_done_cycle - runtime.full_cycle,
+        tostring(target_transaction.slv_ar_cycle),
+        target_wait_at_loop_end,
         hex(TARGET_ADDR)
     ))
 
-    runtime.stage = "停止补流并等待目标成为最后一笔下游AR"
+    -- 轮询版本通常在到达这里之前就已经发出目标AR；此时wait_until会立即
+    -- 返回。固定优先级版本若仍让目标饥饿，则公共Master会先在w_R状态达到
+    -- 2,000,000周期超时，从而直接暴露仲裁问题。
+    runtime.stage = "LOOP补流完成后等待目标下游AR"
     wait_until(function()
         return target_transaction.slv_ar_cycle ~= nil
     end, "目标事务完成下游AR握手", TEST_TIMEOUT)
@@ -1000,15 +979,6 @@ local function task_test()
         string.format(
             "目标下游ARID错误：期望63，实际=%s",
             tostring(target_transaction.entry)))
-    check(target_transaction.slv_ar_cycle >=
-        runtime.loop_accept_done_cycle,
-        "目标下游AR周期早于LOOP全部入DUT周期")
-    check(target_transaction.slv_ar_ordinal == expected_total,
-        string.format(
-            "目标不是最后一笔下游AR：目标序号=%s，期望=%d",
-            tostring(target_transaction.slv_ar_ordinal),
-            expected_total))
-
     runtime.stage = "等待目标99拍响应及全部公共Master ticket完成"
     wait_until(all_tickets_done, "全部读事务ticket完成", TEST_TIMEOUT)
     wait_until(all_external_entries_idle,
@@ -1046,11 +1016,6 @@ local function task_test()
             target_transaction.r_beats))
     check(target_transaction.rlast_cycle ~= nil,
         "目标没有观察到RLAST握手")
-    check(runtime.priority_observation_cycles > 0 and
-        runtime.lower_entry_presented_cycles > 0 and
-        runtime.lower_entry_ar_fires_after_predecessors > 0 and
-        runtime.competitor_ar_fires_after_predecessors > 0,
-        "没有形成同ID前序完成后的外部固定优先级阻塞证据")
     check(all_external_entries_idle(),
         "收尾时仍有已发下游AR但未收到RLAST的事务")
 
@@ -1067,7 +1032,7 @@ local function task_test()
         target_transaction.rlast_cycle - target_transaction.slv_ar_cycle
 
     print_message(string.format(
-        "009 AR固定优先级长期阻塞测试通过。\n\n" ..
+        "009 AR轮询防饥饿压力测试通过。\n\n" ..
         "信号使用情况：\n" ..
         "  * AXI Master/Slave来源          = dut.driver公共实例\n" ..
         "  * DUT内部层级/内部表项信号      = 未访问\n" ..
@@ -1083,7 +1048,7 @@ local function task_test()
         "  * 用例总运行周期                = %d\n\n" ..
         "目标事务外部统计：\n" ..
         "  * 地址/下游表项ID               = %s/%d\n" ..
-        "  * 下游AR序号                    = %d/%d（最后一笔）\n" ..
+        "  * 下游AR序号/总事务数           = %d/%d（不要求最后输出）\n" ..
         "  * 上游AR到下游AR等待            = %d周期\n" ..
         "  * 同ID前序全部完成后继续等待    = %d周期\n" ..
         "  * 前序完成后低编号AR呈现周期    = %d周期\n" ..
@@ -1096,10 +1061,10 @@ local function task_test()
         "  * ARREADY等待累计               = %d周期\n" ..
         "  * R响应等待累计                 = %d周期\n" ..
         "  * 最终未完成外部表项映射        = 0\n\n" ..
-        "结论：64笔初始事务满表后立即开始补流。前63笔同ID事务" ..
-        "全部完成以后，外部接口仍持续选择低编号表项，目标地址%s" ..
-        "继续等待且最终是最后一笔下游AR。这是在不读取任何内部信号" ..
-        "条件下得到的固定低编号优先级阻塞证据。",
+        "结论：64笔初始事务满表后立即开始补流，目标地址%s仍在公共" ..
+        "AXI Master超时以前获得下游AR发送机会并完整返回99拍R。用例" ..
+        "不限制目标必须最后输出；在竞争事务持续补入时正常完成目标读，" ..
+        "说明本次运行没有发生AR仲裁长期饥饿。",
         loop,
         runtime.total_submitted,
         runtime.total_accepted,
