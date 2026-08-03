@@ -20,6 +20,7 @@ ut/AxiReorder/.metals/
 ut/AxiReorder/.vscode/
 ut/AxiReorder/.xmake/
 ut/AxiReorder/build/
+ut/AxiReorder/fsdb2vcdLog/
 ut/AxiReorder/vdCovLog/
 ut/AxiReorder/verdiLog/
 ut/AxiReorder/ChiselTemplate/out/
