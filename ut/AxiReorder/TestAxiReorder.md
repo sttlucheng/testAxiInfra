@@ -1,484 +1,168 @@
-# AxiReorder 验证报告
+# AxiReorder 模块验证报告（简版）
 
-> 文档状态：模板 / 待填写  
-> 报告版本：`V0.1`  
-> 验证对象：`AxiReorder`  
+> 验证对象：`AxiReorder`
 > 验证层级：模块级 UT
+> 报告依据：当前 RTL、Lua 验证环境、测试点及测试用例的静态检查，并保留原报告中的覆盖率记录
+> 报告状态：待确认；本文未重新执行回归，不能替代最终签核记录
 
-<!--
-使用说明：
-1. 将所有“待填写”“待确认”替换为实际数据；不适用项填写“N/A”并说明原因。
-2. 报告中的通过结论必须能够追溯到日志、波形、覆盖率数据库或缺陷单。
-3. 发布报告前删除本说明以及其他仅用于填写提示的 HTML 注释。
-4. 不要根据用例名称推断结果；回归结果和覆盖率均以实际产物为准。
--->
+## 1. 验证概述
 
-## 1. 文档信息
+`AxiReorder` 位于上游 AXI Master 与下游 AXI Slave 之间。模块为读写请求分配内部重排表项 ID，下游响应返回后再恢复原始 `RID/BID`。验证重点是同 ID 保序、不同 ID 乱序完成、ID 恢复、读写并发、背压、表项管理和复位行为。
 
-### 1.1 基本信息
+当前验证资产包含 12 个用例文件和 16 个 P1 测试点。14 个测试点已填写反标用例，另外 2 个 Mixed-ID 测试点尚未反标；其中 `Read/ARArbitration/FixedPriority` 的定义与当前轮询仲裁 RTL/TC009 不一致，需要更新测试点后再确认覆盖。
 
-| 项目 | 内容 |
-| --- | --- |
-| 项目/子系统 | 待填写 |
-| DUT 名称 | `AxiReorder` |
-| DUT 版本/提交 | 待填写（Git commit/tag） |
-| RTL 生成时间 | 待填写 |
-| 验证环境版本/提交 | 待填写（Git commit/tag） |
-| 报告覆盖周期 | 待填写（开始日期至结束日期） |
-| 报告作者 | 待填写 |
-| 审核人 | 待填写 |
-| 报告日期 | 待填写 |
-| 最终结论 | 待评审（通过 / 有条件通过 / 不通过） |
+原报告记录的代码覆盖率为 Line 100%、Condition 94.79%、Branch 100%、端口 Toggle 98.64%。当前工作区未保留相应 VDB/URG 报告，所有用例也仅记录为 `RUN` 而不是 `PASS`，因此本报告的结论为：**验证环境和主要场景已建立，但回归通过状态、覆盖率证据及遗留测试点仍需补齐后才能签核。**
 
-### 1.2 修订记录
+## 2. DUT 基本参数
 
-| 版本 | 日期 | 作者 | 变更内容 | 审核人 |
-| --- | --- | --- | --- | --- |
-| V0.1 | 待填写 | 待填写 | 创建验证报告 | 待填写 |
+参数来自 `AxiParams()` 默认值、`AxiReorderTop` 生成配置及 `AxiReorder.scala`。
 
-### 1.3 参考资料
-
-| 编号 | 文档/代码 | 版本或提交 | 用途 |
-| --- | --- | --- | --- |
-| REF-01 | `ChiselTemplate/src/main/scala/xs/infra/axi/AxiReorder.scala` | 待填写 | DUT 设计实现 |
-| REF-02 | `ChiselTemplate/src/test/scala/generator/AxiReorderGen.scala` | 待填写 | DUT 生成配置 |
-| REF-03 | `README.md` | 待填写 | 工程运行说明 |
-| REF-04 | `test_points/*.lua` | 待填写 | 功能与微架构测试点 |
-| REF-05 | AMBA AXI4 Protocol Specification | 待填写 | AXI4 协议依据 |
-
-## 2. 报告摘要
-
-### 2.1 验证结论
-
-<!-- 用 3～5 句话概括验证范围、回归结果、覆盖率、遗留缺陷和最终建议。 -->
-
-待填写。
-
-### 2.2 关键结果
-
-| 指标 | 目标 | 实际结果 | 状态 |
-| --- | ---: | ---: | --- |
-| 计划回归次数 | 待填写 | 待填写 | 待确认 |
-| 用例通过率 | 100% | 100% | 待确认 |
-| P1 测试点覆盖率 | 100% 或已批准豁免 | 待填写 | 待确认 |
-| Line Coverage | 100% | 100% | 待确认 |
-| Condition Coverage | 100% | 94.79% | 待确认 |
-| Branch Coverage | 100% | 100% | 待确认 |
-| Toggle Coverage（ports only） | 100% | 98.64% | 待确认 |
-| Assertion 失败数 | 0 | 0 | 待确认 |
-| 未关闭严重缺陷数 | 0 | 待填写 | 待确认 |
-
-### 2.3 遗留风险
-
-| 风险 ID | 风险描述 | 影响 | 缓解措施/豁免依据 | 责任人 | 状态 |
-| --- | --- | --- | --- | --- | --- |
-| RISK-001 | Mixed-ID Per-ID Order 测试点当前未反标具体用例 | 同 ID 顺序与不同 ID 并发组合的覆盖证据可能不足 | 补充约束随机用例或提供现有日志证据 | 待填写 | Open |
-| RISK-002 | 待填写 | 待填写 | 待填写 | 待填写 | 待填写 |
-
-## 3. DUT 概述
-
-### 3.1 功能说明
-
-`AxiReorder` 位于上游 AXI Master 与下游 AXI Slave 之间，为读、写事务分配内部重排表项 ID，并在响应返回时恢复原始 AXI ID。验证重点包括：
-
-- 相同 ID 事务按接收顺序向下游发出并按序返回；
-- 不同 ID 事务允许乱序完成；
-- 下游使用表项 ID 返回 `R/B`，上游看到恢复后的原始 `RID/BID`；
-- `AW/W` 独立通道在排队、背压和响应释放条件下保持正确关联；
-- 重排表满载、依赖计数更新、仲裁和资源恢复行为正确；
-- 复位期间不产生非法输出，复位后可恢复正常读写。
-
-### 3.2 本次生成配置
-
-以下为当前生成器默认配置，发布报告前应与本次 RTL 产物复核。
-
-| 参数 | 配置值 | 说明 |
+| 参数 | 值 | 说明 |
 | --- | ---: | --- |
-| `addrBits` | 48 | 地址宽度 |
+| `addrBits` | 48 | AXI 地址宽度 |
 | `idBits` | 12 | 上游原始 AXI ID 宽度 |
-| `dataBits` | 256 | 数据宽度（32 Byte/beat） |
+| `dataBits` | 256 | 每拍 32 Byte，`WSTRB` 为 32 bit |
 | `lenBits` | 8 | `AxLEN` 宽度 |
+| `sizeBits` | 3 | `AxSIZE` 宽度 |
 | `lastBits` | 1 | 支持 `RLAST/WLAST` |
-| `buffer` | 64 | 读/写重排表项数 |
-| 下游重映射 ID 有效位宽 | 6 | 由 64 个表项编号决定 |
-| `AW` 队列深度 | 1 | 写地址排队 |
-| `W` entry 队列深度 | 2 | 写数据与表项关联 |
-| `W` 数据队列深度 | 2 | 写数据排队 |
+| `buffer` | 64 | 读、写重排表各 64 项 |
+| 下游重映射 ID | 6 bit | 由 64 个表项编号决定 |
+| `AW` 队列 | 1 项 | `Queue(..., entries=1, pipe=true)` |
+| `W` entry 队列 | 2 项 | 保存写数据对应的表项号 |
+| `W` 数据队列 | 2 项 | 保存写数据及其表项号 |
+| 复位 | 异步、高有效 | 复位时清空重排表有效位 |
 
-### 3.3 接口概览
+主要接口为上游 `io_mst_*` 和下游 `io_slv_*`，均包含 AXI `AW/W/B/AR/R` 五个通道。下游请求 ID 是表项号，上游响应 ID 应恢复为原始请求 ID。
 
-| 接口 | 方向（相对 DUT） | 通道 | 主要检查内容 |
-| --- | --- | --- | --- |
-| `io_mst_*` | 上游侧 | `AW/W/B/AR/R` | 接收原始 ID 请求，返回恢复后的响应 ID |
-| `io_slv_*` | 下游侧 | `AW/W/B/AR/R` | 输出表项 ID 请求，接收携带表项 ID 的响应 |
-| `clock` | 输入 | 时钟 | 所有 AXI 通道的采样时钟 |
-| `reset` | 输入 | 复位 | 高电平有效，复位重排状态 |
+## 3. 验证框架
 
-### 3.4 验证范围
+验证数据流如下：
 
-本报告包含：
-
-- AXI 五通道握手与 payload 透传；
-- 同 ID 读写顺序约束与不同 ID 乱序能力；
-- `RID/BID` 重映射和恢复；
-- `FIXED/INCR/WRAP`、不同 burst 长度、传输大小和响应码组合；
-- 上下游随机延迟、背压、读写并发；
-- 重排表容量、依赖计数、仲裁、浅 FIFO 瓶颈；
-- 定向代码覆盖与结构性不可达项分析；
-- 复位、断言、自动 scoreboard 收尾检查。
-
-本报告不包含：
-
-- CDC、时序收敛、功耗、DFT 和物理实现验证；
-- 系统级互联集成与多模块端到端性能；
-- AXI 协议违规输入的完整鲁棒性验证（除非在本次回归中另有说明）；
-- Formal 证明（如未单独执行）。
-
-## 4. 验证环境
-
-### 4.1 环境架构
-
-```mermaid
-flowchart LR
-    TC[Testcase] --> DRV[AXI4MasterV2]
-    DRV -->|io_mst AW/W/AR| DUT[AxiReorder]
-    DUT -->|io_mst B/R| DRV
-    DUT -->|io_slv AW/W/AR| MEM[AXI4Memory]
-    MEM -->|io_slv B/R| DUT
-    DUT --> MON[Monitor]
-    MON --> SB[Automatic Scoreboard]
-    MON --> COV[Assertions / Coverage Evidence]
+```text
+test_cases -> driver/AXI4Master -> io_mst -> AxiReorder -> io_slv -> AXI4Memory
+                                      \-> monitor -> scoreboard -> 自动检查
 ```
 
-### 4.2 核心组件
-
-| 组件 | 实现 | 职责 |
-| --- | --- | --- |
-| Test runner | `tc_main.lua` | 选择用例、设置随机种子、复位、启动 monitor、执行收尾检查 |
-| Driver | `src/dut/driver.lua` | 提供 AXI Master 激励和下游 AXI Memory/响应注入 |
-| Monitor | `src/dut/monitor.lua` | 按周期采样接口及关键内部状态 |
-| Scoreboard | `src/dut/scoreboard.lua` | 比较通道 payload、检查同 ID 顺序及未完成事务 |
-| Common stimulus | `src/common/axi_stimulus.lua` | 存放生成axi合法地址、burst、数据与 strobe的函数 |
-| Clock/reset | `src/common/clock_reset.lua`、`src/env.lua` | 时钟等待、默认输入和 DUT 复位 |
-| Test-point model | `test_points/*.lua` | 测试点定义及用例反标 |
-
-### 4.3 工具和版本
-
-| 类别 | 工具 | 本次版本 | 备注 |
-| --- | --- | --- | --- |
-| 验证框架 | Verilua | 待填写 | 环境脚本参考 `v3.4.0` |
-| RTL 生成 | Chisel / CIRCT / Mill | 待填写 | `AxiReorderGen` |
-| 仿真器 | Synopsys VCS | 待填写 | 主要仿真器 |
-| 备选仿真器 | Verilator | 待填写或 N/A | 若执行需记录结果 |
-| 覆盖率 | VCS Coverage / URG / Verdi | 待填写 | `line+cond+tgl+branch` |
-| 波形调试 | Verdi | 待填写 | FSDB |
-| 构建系统 | xmake | 待填写 | 仿真目标管理 |
-| 操作系统 | 待填写 | 待填写 | 主机/容器信息 |
-
-### 4.4 随机化与检查策略
-
-- 公共随机入口为 `SEED`；未显式指定时，`tc_main.lua` 使用种子 `1`。
-- 随机用例默认 `LOOP=5000`；`009` 默认 `LOOP=1000`，实际配置须记录在回归清单中。
-- AXI Master 最多管理 64 个并发任务，单任务超时上限为 2,000,000 周期。
-- 下游 Memory 对通道插入随机延迟，并可注入 `OKAY/EXOKAY/SLVERR/DECERR` 响应。
-- monitor 仅在 `valid && ready` 时形成有效握手记录。
-- 每个用例结束时调用 `scoreboard.finish_auto_check()`，确保不存在未匹配请求、响应或 ID 映射。
-
-## 5. 验证执行
-
-### 5.1 执行基线
-
-| 项目 | 本次值 |
+| 文件或目录 | 作用 |
 | --- | --- |
-| RTL commit/tag | 待填写 |
-| TB commit/tag | 待填写 |
-| RTL 文件校验值 | 待填写 |
-| 编译选项 | 待填写 |
-| 仿真模式 | 待填写（normal / coverage / xprop） |
-| 用例集合 | 待填写 |
-| Seed 集合 | 待填写 |
-| `LOOP` 配置 | 待填写 |
-| 回归输出目录 | 待填写 |
-| 覆盖率数据库 | 待填写 |
+| `tc_main.lua` | 读取 `TC_NAME/SEED`，加载用例，执行复位、monitor 启动、用例任务和 scoreboard 收尾检查 |
+| `src/cfg.lua` | 控制 monitor、详细日志和 heartbeat 开关 |
+| `src/env.lua` | 驱动默认空闲值、执行 10 周期复位、启动周期采样任务 |
+| `src/common/clock_reset.lua` | 提供时钟等待和复位操作 |
+| `src/common/axi_stimulus.lua` | 生成合法 burst、地址、数据和 strobe |
+| `src/dut/driver.lua` | 连接上游 AXI Master 和下游 AXI Memory，提供阻塞/非阻塞读写及响应注入接口 |
+| `src/dut/signals.lua` | 汇总 DUT 端口及定向覆盖用例使用的只读内部信号句柄 |
+| `src/dut/monitor.lua` | 逐周期采样端口，只在 `valid && ready` 时形成有效握手记录并通知订阅者 |
+| `src/dut/scoreboard.lua` | 比对 payload、ID 映射和同 ID 顺序；结束时检查所有期望队列为空 |
+| `src/components/AXI/test_zhujiang_utils/` | 提供 `AXI4MasterV2`、`AXI4Memory` 及 AXI 通道模型 |
+| `test_cases/*.lua` | 定向和约束随机测试用例 |
+| `test_points/*.lua` | 功能/微架构测试点及用例反标关系 |
 
-### 5.2 常用命令
+公共随机种子由 `SEED` 指定，未设置时为 `1`。Driver 最多管理 64 个并发事务，单事务超时为 2,000,000 周期；AXI Master 和 Memory 均可插入随机延迟，Memory 可乱序返回 `R/B` 并注入四类 AXI 响应码。
+
+## 4. 验证流程
+
+1. 初始化 Verilua 环境并生成 `AxiReorder` RTL。
+2. 选择 `TC`、`SEED` 和 `LOOP`，编译并运行普通仿真。
+3. `tc_main.lua` 设置随机种子、复位 DUT、启动 monitor，再依次执行用例任务。
+4. monitor 将接口握手送入 scoreboard；用例结束后 `finish_auto_check()` 检查未匹配事务。
+5. 使用 coverage 目标运行选定用例并合并 VDB，检查 Line、Condition、Branch 和端口 Toggle。
+6. 对覆盖缺口运行定向用例，或完成不可达分析和 waiver 评审；最后保存日志、波形和覆盖率报告。
+
+参考命令：
 
 ```bash
-# 初始化 Verilua 环境
 source /nfs/home/yanglucheng/tools/verilua/v3.4.0/verilua.sh
-
-# 生成 RTL
 xmake r -P . rtl
 
-# 单用例仿真；根据需要替换 TC、SEED、LOOP
+# 普通仿真和波形
 TC=004 SEED=1 LOOP=5000 MODE=1 xmake run -P . TestAxiReorder
-
-# 生成波形
 TC=004 SEED=1 LOOP=5000 DUMP=1 MODE=1 xmake run -P . TestAxiReorder
 
 # 覆盖率仿真
 TC=004 SEED=1 LOOP=5000 MODE=1 xmake run -P . TestAxiReorderVcsCov
 
-# 查看波形或覆盖率
+# 调试
 verdi -ssf build/vcs/TestAxiReorder/004.vcd.fsdb
 verdi -cov -covdir build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb
 ```
 
-<!-- 若使用 jobs-gen 批量回归，在此补充生成、提交、合并和日志汇总命令。 -->
+## 5. 测试用例说明
 
-### 5.3 回归配置
+除特别说明外，随机用例默认 `SEED=1`。
 
-> 注意：当前 `jobs-gen` 默认用例列表为 `001` 至 `008`。`000` 以及 `009` 至 `012` 不会自动进入该默认回归，若属于本次签核范围，必须单独调度并在下表记录。
+| TC | 用例 | 类型/默认 LOOP | 验证目标 |
+| --- | --- | --- | --- |
+| 000 | `000_smoke.lua` | DT / 1 次 | 单笔写入后同地址读回，检查基本读写数据通路 |
+| 001 | `001_reset.lua` | DT / 1 次 | 检查复位期间输出静默及复位释放后的读写恢复 |
+| 002 | `002_same_id_write.lua` | CRV / 5000 | 多笔相同 AWID 写事务保序、BID 恢复及随机 burst/响应 |
+| 003 | `003_different_id_write.lua` | CRV / 5000 | 不同 AWID 写事务乱序完成、通道关联及 BID 恢复 |
+| 004 | `004_same_id_read.lua` | CRV / 5000 | 多笔相同 ARID 读事务保序及 RID 恢复 |
+| 005 | `005_different_id_read.lua` | CRV / 5000 | 不同 ARID 读事务乱序完成及 RID 恢复 |
+| 006 | `006_random_id_read.lua` | CRV / 5000 | 随机 ID、地址、burst、size 和响应的读压力测试 |
+| 007 | `007_random_id_write.lua` | CRV / 5000 | 随机 ID、地址、burst、size、strobe 和响应的写压力测试 |
+| 008 | `008_parellel_RandW.lua` | CRV / 5000 | 随机读写并发，检查时间重叠和读写通道隔离 |
+| 009 | `009.lua` | DT/Stress / 1000 | 64 项 AR 表满载、同 ID 依赖及轮询仲裁下的无长期饥饿和排空恢复 |
+| 010 | `010_ReadAfterWrite.lua` | CRV / 5000 | 随机写完成后从同一地址读回，检查数据、strobe 和 ID 恢复 |
+| 012 | `012_linecoverage.lua` | Coverage DT | 定向覆盖 AW entry8..63 分配语句及 entry1..63 的 `nid` 递减语句 |
 
-| 回归 ID | 模式 | 用例范围 | Seed | LOOP | 编译选项 | 开始时间 | 结束时间 | 产物目录 |
-| --- | --- | --- | --- | ---: | --- | --- | --- | --- |
-| REG-001 | normal | 待填写 | 待填写 | 待填写 | 待填写 | 待填写 | 待填写 | 待填写 |
-| REG-002 | coverage | 待填写 | 待填写 | 待填写 | 待填写 | 待填写 | 待填写 | 待填写 |
 
-## 6. 用例结果
 
-### 6.1 用例汇总
+## 6. 测试点说明
 
-状态仅允许填写 `PASS`、`FAIL`、`BLOCKED`、`NOT RUN` 或 `N/A`。
-
-| TC | 用例文件 | 验证目标 | 类型 | Seed/LOOP | 结果 | 日志/波形证据 | 关联缺陷 |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 000 | `000_smoke.lua` | 单笔写入后同地址读回，验证基础数据通路 | DT | 1/1 | RUN | build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb/snps/coverage/db/testdata/TC_000_SEED_default_MODE_default | - |
-| 001 | `001_reset.lua` | 复位期间输出静默，复位释放后读写恢复 | DT | 1/1 | RUN | build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb/snps/coverage/db/testdata/TC_001_SEED_default_MODE_default | 复位信号的toggle覆盖 |
-| 002 | `002_same_id_write.lua` | 相同 AWID 多事务的发出/响应顺序及 BID 恢复 | CRV | 1/5000 | RUN | build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb/snps/coverage/db/testdata/TC_002_SEED_default_MODE_default | 验证同id写事务是否保序进行 |
-| 003 | `003_different_id_write.lua` | 不同 AWID 写事务乱序完成及 BID 恢复 | CRV | 1/5000 | RUN | build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb/snps/coverage/db/testdata/TC_003_SEED_default_MODE_default | 验证不同id写事务是否可以正确进行 |
-| 004 | `004_same_id_read.lua` | 相同 ARID 多事务的发出/响应顺序及 RID 恢复 | CRV | 1/5000 | RUN | build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb/snps/coverage/db/testdata/TC_004_SEED_default_MODE_default | 验证同id读事务是否保序进行 |
-| 005 | `005_different_id_read.lua` | 不同 ARID 读事务乱序完成及 RID 恢复 | CRV | 1/5000 | RUN | build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb/snps/coverage/db/testdata/TC_005_SEED_default_MODE_default | 验证不同id读事务是否可以正确进行 |
-| 006 | `006_random_id_read.lua` | 随机 ID、地址、burst、size 和响应的读压力测试 | CRV | 1/5000 | RUN | build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb/snps/coverage/db/testdata/TC_006_SEED_default_MODE_default | 模拟AXI随机读事务进行测试 |
-| 007 | `007_random_id_write.lua` | 随机 ID、地址、burst、size、strobe 和响应的写压力测试 | CRV | 1/5000 | RUN | build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb/snps/coverage/db/testdata/TC_007_SEED_default_MODE_default | 模拟AXI随机写事务进行测试 |
-| 008 | `008_parellel_RandW.lua` | 随机读写并发及通道隔离 | CRV | 1/5000 | RUN | build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb/snps/coverage/db/testdata/TC_008_SEED_default_MODE_default | 验证读写通道是否独立并行 |
-| 009 | `009.lua` | 64 项 AR 表满载、同 ID 依赖、仲裁阻塞和排空恢复 | DT/Stress | 1/5000 | RUN | build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb/snps/coverage/db/testdata/TC_009_SEED_default_MODE_default | 验证固定优先级是否会一直阻塞AR重排表中的某项 |
-| 010 | `010_ReadAfterWrite.lua` | 进行随机写操作之后从写入数据的地址读出数据 | DT | 1/5000 | RUN | build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb/snps/coverage/db/testdata/TC_010_SEED_default_MODE_default | 覆盖读事务通道的data的toggle |
-| 012 | `012_linecoverage.lua` | 对未覆盖的line进行定向测试 | Coverage DT | 1/1 | RUN | build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb/snps/coverage/db/testdata/TC_012_SEED_default_MODE_default | - |
-
-### 6.2 回归统计
-
-| 分类 | 数量 | 占比 |
-| --- | ---: | ---: |
-| 总运行数 | 待填写 | 100% |
-| PASS | 待填写 | 待填写 |
-| FAIL | 待填写 | 待填写 |
-| BLOCKED | 待填写 | 待填写 |
-| NOT RUN | 待填写 | 待填写 |
-| N/A | 待填写 | 待填写 |
-
-失败项摘要：
-
-| 运行 ID | TC/Seed | 失败现象 | 根因分类 | 缺陷 ID | 处理结论 |
-| --- | --- | --- | --- | --- | --- |
-| 待填写 | 待填写 | 待填写 | RTL / TB / 环境 / 工具 | 待填写 | 待填写 |
-
-## 7. 测试点覆盖
-
-### 7.1 功能与微架构测试点
-
-下表来自当前 `test_points/*.lua` 的反标关系。结果必须结合实际回归证据填写。
-
-| 测试点 | 优先级 | 反标用例 | 预期检查 | 结果/说明 |
-| --- | --- | --- | --- | --- |
-| Read/SameID/ARIssueOrder | P1 | 004 | 后一笔同 ID AR 不先于前一笔完成下游 AR 握手 | 待填写 |
-| Read/SameID/RResponseOrder | P1 | 004 | 后一事务首拍 R 不早于前一事务 RLAST | 待填写 |
-| Read/DifferentID/OutOfOrderCompletion | P1 | 005 | 后接收事务可先完成 | 待填写 |
-| Read/Response/RIDRestore | P1 | 004、005 | 上游 RID 恢复为原始 ARID | 待填写 |
-| Read/MixedID/PerIDOrder | P1 | 未反标 | 重复 ID 与其他 ID 并发时保持每 ID 内部顺序 | 待补用例或证据 |
-| Write/SameID/AWIssueOrder | P1 | 002 | 后一笔同 ID AW 不先于前一笔完成下游 AW 握手 | 待填写 |
-| Write/SameID/BResponseOrder | P1 | 002 | 每个 ID 的 B 顺序与 AW 接收顺序一致 | 待填写 |
-| Write/DifferentID/OutOfOrderCompletion | P1 | 003 | 后接收事务可先完成 | 待填写 |
-| Write/Response/BIDRestore | P1 | 002、003 | 上游 BID 恢复为原始 AWID | 待填写 |
-| Write/MixedID/PerIDOrder | P1 | 未反标 | 重复 ID 与其他 ID 并发时保持每 ID 内部顺序 | 待补用例或证据 |
-| ReadWrite/Concurrent/ReadIsolation | P1 | 008 | R 响应仅匹配对应读事务 | 待填写 |
-| ReadWrite/Concurrent/WriteIsolation | P1 | 008 | B 响应仅匹配对应写事务 | 待填写 |
-| Read/ARTable/Capacity64 | P1 | 009 | 64 个 AR 表项可同时有效 | 待填写 |
-| Read/ARTable/SameIDDependency | P1 | 009 | `nid` 等于同 ID 未完成前序事务数 | 待填写 |
-| Read/ARArbitration/FixedPriority | P1 | 009 | 低编号竞争期间目标 entry 的仲裁行为符合规格 | 待确认规格和当前 RTL 仲裁策略 |
-| Read/ARArbitration/DrainRecovery | P1 | 009 | 竞争停止并排空后目标最终发出 | 待填写 |
-
-### 7.2 覆盖闭环统计
-
-| 优先级 | 总测试点 | 已覆盖 | 未覆盖 | 已豁免 | 覆盖率 |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| P0 | 待填写 | 待填写 | 待填写 | 待填写 | 待填写 |
-| P1 | 16 | 待填写 | 待填写 | 待填写 | 待填写 |
-| P2 | 待填写 | 待填写 | 待填写 | 待填写 | 待填写 |
-| 合计 | 待填写 | 待填写 | 待填写 | 待填写 | 待填写 |
-
-未覆盖测试点：
-
-| 测试点 | 未覆盖原因 | 补充计划或豁免单 | 责任人 | 计划日期 |
-| --- | --- | --- | --- | --- |
-| Read/MixedID/PerIDOrder | 当前测试点未反标用例 | 待填写 | 待填写 | 待填写 |
-| Write/MixedID/PerIDOrder | 当前测试点未反标用例 | 待填写 | 待填写 | 待填写 |
-
-## 8. 覆盖率结果
-
-### 8.1 代码覆盖率
-
-覆盖率目标 `TestAxiReorderVcsCov` 当前配置 `line+cond+tgl+branch`，其中 toggle 仅统计端口。分别记录原始覆盖率和批准豁免后的有效覆盖率。
-
-| 指标 | Covered/Total | 原始覆盖率 | Excluded/Waived | 有效覆盖率 | 目标 | 结论 |
-| --- | --- | ---: | ---: | ---: | ---: | --- |
-| Line | 待填写 | 待填写 | 待填写 | 待填写 | 待填写 | 待确认 |
-| Condition | 待填写 | 待填写 | 待填写 | 待填写 | 待填写 | 待确认 |
-| Branch | 待填写 | 待填写 | 待填写 | 待填写 | 待填写 | 待确认 |
-| Toggle（ports only） | 待填写 | 待填写 | 待填写 | 待填写 | 待填写 | 待确认 |
-
-覆盖率证据：
-
-| 产物 | 路径/链接 | 说明 |
+| 测试点 | 场景与检查标准 | 反标用例 |
 | --- | --- | --- |
-| 原始 VDB | 待填写 | 未合并或单次仿真数据库 |
-| 合并 VDB | 待填写 | 全部签核回归合并结果 |
-| URG HTML/Text 报告 | 待填写 | 可审阅的覆盖率明细 |
-| Exclusion 文件 | 待填写 | 经评审批准的排除规则 |
+| `Read/SameID/ARIssueOrder` | 相同 ARID 同时在途时，后一笔不得先完成下游 AR 握手 | 004 |
+| `Read/SameID/RResponseOrder` | 后一事务首拍 R 不得早于前一事务 RLAST | 004 |
+| `Read/DifferentID/OutOfOrderCompletion` | 不同 ARID 后接收事务允许先完成 | 005 |
+| `Read/Response/RIDRestore` | 下游表项 ID 返回后，上游 RID 恢复为原始 ARID | 004、005 |
+| `Read/MixedID/PerIDOrder` | 重复 ID 与其他 ID 并发时，每个 ID 内部保持顺序 | **未反标** |
+| `Write/SameID/AWIssueOrder` | 相同 AWID 同时在途时，后一笔不得先完成下游 AW 握手 | 002 |
+| `Write/SameID/BResponseOrder` | 每个 AWID 的 B 顺序与 AW 接收顺序一致 | 002 |
+| `Write/DifferentID/OutOfOrderCompletion` | 不同 AWID 后接收事务允许先返回 B | 003 |
+| `Write/Response/BIDRestore` | 下游表项 ID 返回后，上游 BID 恢复为原始 AWID | 002、003 |
+| `Write/MixedID/PerIDOrder` | 重复 ID 与其他 ID 并发时，每个 ID 内部保持顺序 | **未反标** |
+| `ReadWrite/Concurrent/ReadIsolation` | 读写并发时，每笔 R 只匹配对应读事务 | 008 |
+| `ReadWrite/Concurrent/WriteIsolation` | 读写并发时，每笔 B 只匹配对应写事务 | 008 |
+| `Read/ARTable/Capacity64` | 响应释放前连续接收 64 笔读事务，64 个 AR 表项同时有效 | 009 |
+| `Read/ARTable/SameIDDependency` | 64 笔同 ID 请求的 `nid` 等于未完成前序事务数 | 009 |
+| `Read/ARArbitration/FixedPriority` | 测试点描述为固定优先级阻塞，但当前 RTL/TC009 为轮询无饥饿验证 | 009；**语义待更新** |
+| `Read/ARArbitration/DrainRecovery` | 竞争停止并排空后，目标事务最终完成下游 AR 握手 | 009 |
 
-### 8.2 功能覆盖率与断言
+| P1 测试点统计 | 数量 |
+| --- | ---: |
+| 总数 | 16 |
+| 已填写反标用例 | 14 |
+| 未反标 | 2 |
+| 反标率 | 87.5% |
+| 反标后仍需语义评审 | 1 |
 
-| 指标 | 目标 | 结果 | 说明 |
+反标率不等于功能覆盖率。只有对应回归通过且检查证据可追溯时，测试点才能计为已覆盖。
+
+## 7. 覆盖率与遗留项
+
+### 7.1 代码覆盖率
+
+| 指标 | 原报告记录 | 目标 | 当前结论 |
 | --- | ---: | ---: | --- |
-| 测试点覆盖率 | 100% 或批准豁免 | 待填写 | 见第 7 节 |
-| Assertion attempts | N/A | 待填写 | 待填写 |
-| Assertion failures | 0 | 待填写 | 待填写 |
-| Scoreboard failures | 0 | 待填写 | 待填写 |
-| Scoreboard pending items at finish | 0 | 待填写 | 待填写 |
+| Line | 100% | 100% | 数值达标，待 VDB/URG 复核 |
+| Condition | 94.79% | 100% | 未达标，缺口 5.21% |
+| Branch | 100% | 100% | 数值达标，待 VDB/URG 复核 |
+| Toggle（ports only） | 98.64% | 100% | 未达标，缺口 1.36% |
 
-### 8.3 覆盖率豁免
+`xprop.log` 记录 1373/1373 个可插桩赋值成功插桩，XProp instrumentation success rate 为 100%；该数字仅说明插桩完整，不代表 XProp 场景全部通过。
 
-已知需要重点评审的候选项包括：
+### 7.2 遗留项
 
-- TC011 记录的 `_GEN_2` 条件组合 `C1=1、C4=0`：在合法端口事务下与状态不变量互斥；
-- TC012 记录的 64 个写表 `nid-2` 分支：在当前 `buffer=64`、`awq entries=1` 结构下候选为结构性不可达；
-- 仅由非法 AXI 响应、直接修改内部状态或参数未启用功能才能命中的代码，不应通过伪造激励获取覆盖。
+1. 补充 `Read/MixedID/PerIDOrder` 和 `Write/MixedID/PerIDOrder` 的约束随机场景或现有日志反标。
+2. 将 `FixedPriority` 测试点更新为当前 RTL 的轮询仲裁目标，并重新评审 TC009 的检查标准。
+3. 补充每个 TC/Seed/LOOP 的 PASS/FAIL 日志及 scoreboard 收尾结果；`RUN` 不能作为通过结论。
+4. 恢复或归档 coverage VDB、URG 报告和 exclusion 文件，复核 94.79%/98.64% 的来源。
+5. 对未覆盖 condition/toggle 完成可达性分析；waiver 需设计和验证共同批准。
+6. 重新确认原报告引用的 TC011 证据，避免使用已不存在或过期的覆盖率分析。
 
-所有候选项都必须经过设计和验证联合评审后才能计入有效覆盖率。
+## 8. 验证范围与结论
 
-| Waiver ID | 指标/位置 | 未覆盖原因 | 可达性分析/证据 | 影响评估 | 审批人 | 状态 |
-| --- | --- | --- | --- | --- | --- | --- |
-| WVR-001 | `_GEN_2` 指定 condition row | 状态不变量导致不可达 | TC011 日志、波形和代码审查 | 待填写 | 待填写 | 待评审 |
-| WVR-002 | AW entry 0..63 `nid-2` 分支 | 当前队列结构下不可达 | TC012 逐 entry 动态见证与代码审查 | 待填写 | 待填写 | 待评审 |
-| WVR-003 | 待填写 | 待填写 | 待填写 | 待填写 | 待填写 | 待填写 |
+本报告覆盖 AXI 五通道握手和 payload、同 ID 保序、不同 ID 乱序、ID 映射恢复、随机背压、读写并发、表项容量/依赖、轮询仲裁、复位及自动 scoreboard 检查。不包含 CDC、时序、功耗、DFT、系统级性能和 Formal 证明。
 
-## 9. 专项验证结果
-
-### 9.1 复位与 X-Propagation
-
-| 检查项 | 配置/场景 | 结果 | 证据 |
-| --- | --- | --- | --- |
-| 复位期间下游 `AW/AR/WVALID=0` | TC001 | 待填写 | 待填写 |
-| 复位期间上游 `R/BVALID=0` | TC001 | 待填写 | 待填写 |
-| 复位释放后可正常读写 | TC001 | 待填写 | 待填写 |
-| XProp 模式 | 编译选项待填写 | 待填写 | 待填写 |
-| X/Z 检查 | 待填写 | 待填写 | 待填写 |
-
-### 9.2 压力、背压与边界
-
-| 场景 | 主要配置 | 观测结果 | 结论 |
-| --- | --- | --- | --- |
-| 随机同 ID 读/写 | TC002、TC004，LOOP/SEED 待填写 | 待填写 | 待确认 |
-| 随机不同 ID 读/写 | TC003、TC005 至 TC007，LOOP/SEED 待填写 | 待填写 | 待确认 |
-| 并发读写 | TC008，LOOP/SEED 待填写 | 待填写 | 待确认 |
-| 64 项 AR 表满载 | TC009 | 待填写 | 待确认 |
-| AW/W 通道偏斜和浅 FIFO | TC010 | 待填写 | 待确认 |
-| 条件/行覆盖定向场景 | TC011、TC012 | 待填写 | 待确认 |
-
-### 9.3 性能观测（如适用）
-
-<!-- AxiReorder UT 若无独立性能验收要求，可填写 N/A 并说明。 -->
-
-| 指标 | 场景 | 目标 | 实测 | 结论 |
-| --- | --- | ---: | ---: | --- |
-| 无背压请求吞吐 | 待填写 | 待填写 | 待填写 | 待确认 |
-| AR/AW 平均延迟 | 待填写 | 待填写 | 待填写 | 待确认 |
-| 最坏同 ID 阻塞周期 | 待填写 | 待填写 | 待填写 | 待确认 |
-| 仲裁公平性/最大等待 | 待填写 | 待填写 | 待填写 | 待确认 |
-
-## 10. 缺陷分析
-
-### 10.1 缺陷统计
-
-| 严重等级 | 新增 | 已修复并回归 | 已关闭 | 遗留 | 签核要求 |
-| --- | ---: | ---: | ---: | ---: | --- |
-| Blocker | 待填写 | 待填写 | 待填写 | 待填写 | 必须为 0 |
-| Critical | 待填写 | 待填写 | 待填写 | 待填写 | 必须为 0 |
-| Major | 待填写 | 待填写 | 待填写 | 待填写 | 待评审 |
-| Minor | 待填写 | 待填写 | 待填写 | 待填写 | 可带风险签核 |
-
-### 10.2 缺陷明细
-
-| Bug ID | 严重等级 | 标题 | 发现用例 | 根因 | 修复版本 | 回归结果 | 状态 |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 待填写 | 待填写 | 待填写 | 待填写 | 待填写 | 待填写 | 待填写 | 待填写 |
-
-### 10.3 验证环境问题
-
-| Issue ID | 问题描述 | 影响范围 | 规避/修复 | 状态 |
-| --- | --- | --- | --- | --- |
-| 待填写 | 待填写 | 待填写 | 待填写 | 待填写 |
-
-## 11. 签核检查表
-
-| 签核项 | 验收标准 | 结果 | 证据/备注 |
-| --- | --- | --- | --- |
-| 需求与测试点评审完成 | 所有 P0/P1 测试点有用例或批准豁免 | 待确认 | 待填写 |
-| 回归完成 | 计划内运行全部完成，非预期 FAIL 为 0 | 待确认 | 待填写 |
-| 随机稳定性 | 关键 CRV 用例覆盖计划 seed 数且无失败 | 待确认 | 待填写 |
-| 功能覆盖达标 | 达到目标或有批准豁免 | 待确认 | 待填写 |
-| 代码覆盖达标 | 各项达到目标或有批准豁免 | 待确认 | 待填写 |
-| 断言/scoreboard | 失败数为 0，结束时无 pending 项 | 待确认 | 待填写 |
-| 缺陷收敛 | Blocker/Critical 遗留为 0 | 待确认 | 待填写 |
-| Waiver 评审 | 所有 exclusion 均有设计/验证审批 | 待确认 | 待填写 |
-| 结果可复现 | commit、命令、seed、LOOP 和产物路径完整 | 待确认 | 待填写 |
-| 文档评审 | 设计、验证负责人完成审核 | 待确认 | 待填写 |
-
-## 12. 最终结论与审批
-
-### 12.1 最终结论
-
-<!--
-建议格式：
-“基于 <RTL/TB 版本>，已完成 <范围> 验证。共执行 <N> 次仿真，<P> 次通过、
-<F> 次失败；有效代码覆盖率为 <...>，P1 测试点覆盖率为 <...>。当前遗留
-<缺陷/风险>。结论为 <通过/有条件通过/不通过>，适用于 <交付范围>。”
--->
-
-待填写。
-
-### 12.2 审批记录
-
-| 角色 | 姓名 | 意见 | 日期 | 结论 |
-| --- | --- | --- | --- | --- |
-| 验证负责人 | 待填写 | 待填写 | 待填写 | 待审批 |
-| 设计负责人 | 待填写 | 待填写 | 待填写 | 待审批 |
-| 项目负责人 | 待填写 | 待填写 | 待填写 | 待审批 |
-
-## 附录 A：验证产物索引
-
-| 产物 | 路径/链接 | 保留策略 | 备注 |
-| --- | --- | --- | --- |
-| 回归日志 | 待填写 | 待填写 | 每个 TC/Seed 独立保存 |
-| 失败波形 | 待填写 | 待填写 | FSDB |
-| 覆盖率数据库 | 待填写 | 待填写 | VCS VDB |
-| 覆盖率报告 | 待填写 | 待填写 | URG HTML/Text |
-| 测试点报告 | `build/AxiReorder_ut_test_points.md` | 随版本保存 | 由 `test_points/main.lua` 生成 |
-| 缺陷列表 | 待填写 | 待填写 | 缺陷系统导出或链接 |
-| Waiver/Exclusion | 待填写 | 随签核版本保存 | 包含审批记录 |
-
-## 附录 B：术语
-
-| 缩写 | 全称 | 说明 |
-| --- | --- | --- |
-| DUT | Design Under Test | 被测设计 |
-| UT | Unit Test | 模块级验证 |
-| CRV | Constrained-Random Verification | 约束随机验证 |
-| DT | Directed Test | 定向测试 |
-| AXI | Advanced eXtensible Interface | AMBA 总线协议 |
-| ID | Transaction Identifier | AXI 事务标识 |
-| NID | Number of Incomplete Dependencies | 当前事务之前未完成的同 ID 事务数量 |
-| SB | Scoreboard | 自动比对器 |
-| VDB | Verification Database | VCS 覆盖率数据库 |
-| FSDB | Fast Signal Database | Verdi 波形数据库 |
-| Waiver | Coverage Waiver | 经评审批准的覆盖率豁免 |
+基于当前代码检查，AxiReorder 的模块级验证框架和主要用例已具备，Line/Branch 覆盖率记录达到 100%，但 Condition、Toggle、两项 Mixed-ID 测试点、仲裁测试点一致性及回归证据尚未闭环。**最终结论保持“待确认”，完成第 7.2 节遗留项后再进行验证签核。**
