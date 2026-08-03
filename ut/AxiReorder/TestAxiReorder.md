@@ -59,13 +59,13 @@
 | 指标 | 目标 | 实际结果 | 状态 |
 | --- | ---: | ---: | --- |
 | 计划回归次数 | 待填写 | 待填写 | 待确认 |
-| 用例通过率 | 100% | 待填写 | 待确认 |
+| 用例通过率 | 100% | 100% | 待确认 |
 | P1 测试点覆盖率 | 100% 或已批准豁免 | 待填写 | 待确认 |
-| Line Coverage | 待填写 | 待填写 | 待确认 |
-| Condition Coverage | 待填写 | 待填写 | 待确认 |
-| Branch Coverage | 待填写 | 待填写 | 待确认 |
-| Toggle Coverage（ports only） | 待填写 | 待填写 | 待确认 |
-| Assertion 失败数 | 0 | 待填写 | 待确认 |
+| Line Coverage | 100% | 100% | 待确认 |
+| Condition Coverage | 100% | 94.79% | 待确认 |
+| Branch Coverage | 100% | 100% | 待确认 |
+| Toggle Coverage（ports only） | 100% | 98.64% | 待确认 |
+| Assertion 失败数 | 0 | 0 | 待确认 |
 | 未关闭严重缺陷数 | 0 | 待填写 | 待确认 |
 
 ### 2.3 遗留风险
@@ -140,7 +140,7 @@
 
 ```mermaid
 flowchart LR
-    TC[Lua Testcase] --> DRV[Driver / AXI4MasterV2]
+    TC[Testcase] --> DRV[AXI4MasterV2]
     DRV -->|io_mst AW/W/AR| DUT[AxiReorder]
     DUT -->|io_mst B/R| DRV
     DUT -->|io_slv AW/W/AR| MEM[AXI4Memory]
@@ -156,9 +156,9 @@ flowchart LR
 | --- | --- | --- |
 | Test runner | `tc_main.lua` | 选择用例、设置随机种子、复位、启动 monitor、执行收尾检查 |
 | Driver | `src/dut/driver.lua` | 提供 AXI Master 激励和下游 AXI Memory/响应注入 |
-| Monitor | `src/dut/monitor.lua` | 按周期采样接口及关键内部状态并发布事务 |
-| Scoreboard | `src/dut/scoreboard.lua` | 比较通道 payload、检查同 ID 顺序、ID 映射及未完成事务 |
-| Common stimulus | `src/common/axi_stimulus.lua` | 生成合法地址、burst、数据与 strobe |
+| Monitor | `src/dut/monitor.lua` | 按周期采样接口及关键内部状态 |
+| Scoreboard | `src/dut/scoreboard.lua` | 比较通道 payload、检查同 ID 顺序及未完成事务 |
+| Common stimulus | `src/common/axi_stimulus.lua` | 存放生成axi合法地址、burst、数据与 strobe的函数 |
 | Clock/reset | `src/common/clock_reset.lua`、`src/env.lua` | 时钟等待、默认输入和 DUT 复位 |
 | Test-point model | `test_points/*.lua` | 测试点定义及用例反标 |
 
@@ -243,19 +243,18 @@ verdi -cov -covdir build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb
 
 | TC | 用例文件 | 验证目标 | 类型 | Seed/LOOP | 结果 | 日志/波形证据 | 关联缺陷 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 000 | `000_smoke.lua` | 单笔写入后同地址读回，验证基础数据通路 | DT | 待填写 | NOT RUN | 待填写 | - |
-| 001 | `001_reset.lua` | 复位期间输出静默，复位释放后读写恢复 | DT | 待填写 | NOT RUN | 待填写 | - |
-| 002 | `002_same_id_write.lua` | 相同 AWID 多事务的发出/响应顺序及 BID 恢复 | CRV | 待填写 | NOT RUN | 待填写 | - |
-| 003 | `003_different_id_write.lua` | 不同 AWID 写事务乱序完成及 BID 恢复 | CRV | 待填写 | NOT RUN | 待填写 | - |
-| 004 | `004_same_id_read.lua` | 相同 ARID 多事务的发出/响应顺序及 RID 恢复 | CRV | 待填写 | NOT RUN | 待填写 | - |
-| 005 | `005_different_id_read.lua` | 不同 ARID 读事务乱序完成及 RID 恢复 | CRV | 待填写 | NOT RUN | 待填写 | - |
-| 006 | `006_random_id_read.lua` | 随机 ID、地址、burst、size 和响应的读压力测试 | CRV | 待填写 | NOT RUN | 待填写 | - |
-| 007 | `007_random_id_write.lua` | 随机 ID、地址、burst、size、strobe 和响应的写压力测试 | CRV | 待填写 | NOT RUN | 待填写 | - |
-| 008 | `008_parellel_RandW.lua` | 随机读写并发及通道隔离 | CRV | 待填写 | NOT RUN | 待填写 | - |
-| 009 | `009.lua` | 64 项 AR 表满载、同 ID 依赖、仲裁阻塞和排空恢复 | DT/Stress | 待填写 | NOT RUN | 待填写 | - |
-| 010 | `010.lua` | AW/W 浅 FIFO 背压与重排表容量的关系、逆序 B 恢复 | DT | 待填写 | NOT RUN | 待填写 | - |
-| 011 | `011__GEN_2_conditioncoverage.lua` | `_GEN_2` 可达条件组合及不可达组合证明 | Coverage DT | 待填写 | NOT RUN | 待填写 | - |
-| 012 | `012_linecoverage.lua` | 读表 `nid-2`、写表结构性不可达项及 `wWkEtrReg` 更新 | Coverage DT | 待填写 | NOT RUN | 待填写 | - |
+| 000 | `000_smoke.lua` | 单笔写入后同地址读回，验证基础数据通路 | DT | 1/1 | RUN | build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb/snps/coverage/db/testdata/TC_000_SEED_default_MODE_default | - |
+| 001 | `001_reset.lua` | 复位期间输出静默，复位释放后读写恢复 | DT | 1/1 | RUN | build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb/snps/coverage/db/testdata/TC_001_SEED_default_MODE_default | 复位信号的toggle覆盖 |
+| 002 | `002_same_id_write.lua` | 相同 AWID 多事务的发出/响应顺序及 BID 恢复 | CRV | 1/5000 | RUN | build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb/snps/coverage/db/testdata/TC_002_SEED_default_MODE_default | 验证同id写事务是否保序进行 |
+| 003 | `003_different_id_write.lua` | 不同 AWID 写事务乱序完成及 BID 恢复 | CRV | 1/5000 | RUN | build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb/snps/coverage/db/testdata/TC_003_SEED_default_MODE_default | 验证不同id写事务是否可以正确进行 |
+| 004 | `004_same_id_read.lua` | 相同 ARID 多事务的发出/响应顺序及 RID 恢复 | CRV | 1/5000 | RUN | build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb/snps/coverage/db/testdata/TC_004_SEED_default_MODE_default | 验证同id读事务是否保序进行 |
+| 005 | `005_different_id_read.lua` | 不同 ARID 读事务乱序完成及 RID 恢复 | CRV | 1/5000 | RUN | build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb/snps/coverage/db/testdata/TC_005_SEED_default_MODE_default | 验证不同id读事务是否可以正确进行 |
+| 006 | `006_random_id_read.lua` | 随机 ID、地址、burst、size 和响应的读压力测试 | CRV | 1/5000 | RUN | build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb/snps/coverage/db/testdata/TC_006_SEED_default_MODE_default | 模拟AXI随机读事务进行测试 |
+| 007 | `007_random_id_write.lua` | 随机 ID、地址、burst、size、strobe 和响应的写压力测试 | CRV | 1/5000 | RUN | build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb/snps/coverage/db/testdata/TC_007_SEED_default_MODE_default | 模拟AXI随机写事务进行测试 |
+| 008 | `008_parellel_RandW.lua` | 随机读写并发及通道隔离 | CRV | 1/5000 | RUN | build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb/snps/coverage/db/testdata/TC_008_SEED_default_MODE_default | 验证读写通道是否独立并行 |
+| 009 | `009.lua` | 64 项 AR 表满载、同 ID 依赖、仲裁阻塞和排空恢复 | DT/Stress | 1/5000 | RUN | build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb/snps/coverage/db/testdata/TC_009_SEED_default_MODE_default | 验证固定优先级是否会一直阻塞AR重排表中的某项 |
+| 010 | `010_ReadAfterWrite.lua` | 进行随机写操作之后从写入数据的地址读出数据 | DT | 1/5000 | RUN | build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb/snps/coverage/db/testdata/TC_010_SEED_default_MODE_default | 覆盖读事务通道的data的toggle |
+| 012 | `012_linecoverage.lua` | 对未覆盖的line进行定向测试 | Coverage DT | 1/1 | RUN | build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb/snps/coverage/db/testdata/TC_012_SEED_default_MODE_default | - |
 
 ### 6.2 回归统计
 
