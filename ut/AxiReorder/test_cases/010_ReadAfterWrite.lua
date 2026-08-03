@@ -21,7 +21,7 @@ local axi_stimulus = require "common.axi_stimulus"
 -- AXI4Memory 的数据宽度为 256 bit，即每个内存项包含 32 个字节。
 local DATA_BYTES = 32
 local DATA_HEX_CHARS = DATA_BYTES * 2
-local MAX_INCR_LEN = 99
+--local MAX_INCR_LEN = 99
 local MAX_BURST_BYTES = 4096
 local TASK_TIMEOUT = 2000000
 
@@ -199,12 +199,10 @@ local function task_test()
         local len
         local size
 
-        -- 与 008 相同：INCR burst 限制为最多 100 拍，且所有 burst 都不得
+        -- 所有 burst 都不得
         -- 跨越 4KB 边界。FIXED burst 的 footprint 只有一拍大小。
         repeat
-            burst, len = axi_stimulus.random_burst_len {
-                max_incr_len = MAX_INCR_LEN,
-            }
+            burst, len = axi_stimulus.random_burst_len ()
             size = math.random(0, 5)
         until burst == 0 or (len + 1) * (2 ^ size) <= MAX_BURST_BYTES
 

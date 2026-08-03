@@ -89,8 +89,8 @@ local function task_test()
         local write_size
         -- 确保生成的burst footprint不超过4KB
         repeat
-            -- AXI slave组件要求len要小于100，不是协议的要求，大于99会报错，跑不了仿真
-            write_burst, write_len = axi_stimulus.random_burst_len({ max_incr_len = 99 })
+            
+            write_burst, write_len = axi_stimulus.random_burst_len()
             write_size = math.random(0, 5)
         until write_burst == 0 or (write_len + 1) * (2 ^ write_size) <= 4096
         local write_addr = axi_stimulus.random_legal_addr(write_len, write_size, write_burst)
@@ -121,8 +121,8 @@ local function task_test()
         local read_len
         -- 确保生成的burst footprint不超过4KB
         repeat
-            -- AXI slave组件要求len要小于100，不是协议的要求，大于99会报错，跑不了仿真
-            read_burst, read_len = axi_stimulus.random_burst_len({ max_incr_len = 99 })
+            
+            read_burst, read_len = axi_stimulus.random_burst_len()
             read_size = math.random(0, 5)
         until read_burst == 0 or (read_len + 1) * (2 ^ read_size) <= 4096
         local read_addr = axi_stimulus.random_legal_addr(read_len, read_size, read_burst)

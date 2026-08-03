@@ -78,7 +78,7 @@ local function task_test()
         local write_size
         -- 确保生成的burst footprint不超过4KB
         repeat
-            write_burst, write_len = axi_stimulus.random_burst_len({ max_incr_len = 99 })
+            write_burst, write_len = axi_stimulus.random_burst_len()
             write_size = math.random(0, 5)
         until write_burst == 0 or (write_len + 1) * (2 ^ write_size) <= 4096
 
