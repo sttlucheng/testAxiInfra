@@ -6,7 +6,7 @@ local signals = require "dut.signals"
 实现方法
 ========
 
-本用例覆盖九类定向 condition 组合。
+本用例覆盖十类定向 condition 组合。
 
 一、覆盖 AxiReorder.sv:1736 缺失的 condition 组合：
 --
@@ -198,6 +198,15 @@ local signals = require "dut.signals"
 -- BVALID=1、BID=6'h32 一个完整周期，得到 (0,1)；再保持 BID 不变并拉高
 -- BREADY 完成 B 握手。最后用新事务重新占用 entry50，恢复 64 项满表状态。
 --
+-- 十、覆盖 AxiReorder.sv:1926 缺失的 condition 组合：
+--
+--   _awinfo_63_nid_done_T_126 & (io_slv_b_bits_id[5:0] == 6'h3c)
+--              0                              1
+--
+-- 继续复用相同的合法 B 响应流程，目标改为 entry60：BREADY=0 时保持
+-- BVALID=1、BID=6'h3c 一个完整周期，覆盖 (0,1)；随后保持 payload 不变并
+-- 拉高 BREADY 完成握手，最后用新事务重新占用 entry60，恢复满表状态。
+--
 -- 整个过程仅通过合法 AXI valid/ready 握手和 AXI reset 推进，不
 -- force/deposit DUT 内部信号，因此 condition 覆盖来自真实可达状态。
 --]]
@@ -213,6 +222,7 @@ local wbitsq_deq_entry_have_sent_aw = core["_GEN_132"]:chdl()
 local awinfo_63_nid_done = core["_awinfo_63_nid_done_T_126"]:chdl()
 local aw_b_id_2f_condition = core["_GEN_113"]:chdl()
 local aw_b_id_32_condition = core["_GEN_116"]:chdl()
+local aw_b_id_3c_condition = core["_GEN_126"]:chdl()
 local TIMEOUT = 200
 local LAST_ENTRY = 63
 
@@ -285,9 +295,17 @@ local line1906_replacement = {
     data = 0x6201,
 }
 
+local line1926_replacement = {
+    name = "condition coverage line1926 replacement entry60",
+    id = 0x4F2,
+    addr = 0x58040,
+    data = 0x6202,
+}
+
 local b_condition_replacements = {
     [47] = line1900_replacement,
     [50] = line1906_replacement,
+    [60] = line1926_replacement,
 }
 
 local blocked_when_full = {
@@ -1199,9 +1217,10 @@ local function task_condition_coverage()
     -- 写表已满但 wq 已排空，在释放 entry0 前覆盖第 41700 行。
     cover_awq_enq_valid_full_table_condition()
 
-    -- 在返回 entry0 的 B 之前，分别用 entry47/50 覆盖第 1900/1906 行。
+    -- 在返回 entry0 的 B 之前，分别用 entry47/50/60 覆盖三个 B-ID 条件。
     cover_aw_b_id_condition(1900, 0x2F, aw_b_id_2f_condition, line1900_replacement)
     cover_aw_b_id_condition(1906, 0x32, aw_b_id_32_condition, line1906_replacement)
+    cover_aw_b_id_condition(1926, 0x3C, aw_b_id_3c_condition, line1926_replacement)
 
     -- Leave entry63 occupied but create a lower free entry.
     send_b_response(initial_transactions[0], 0)
