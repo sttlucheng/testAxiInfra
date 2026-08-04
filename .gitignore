@@ -30,3 +30,4 @@ ut/AxiReorder/.fsm.sch.verilog.xml
 ut/AxiReorder/novas.conf
 ut/AxiReorder/novas.rc
 ut/AxiReorder/ucli.key
+ut/AxiReorder/coverage_exclude.el
