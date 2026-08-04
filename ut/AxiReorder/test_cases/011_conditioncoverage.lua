@@ -6,7 +6,7 @@ local signals = require "dut.signals"
 实现方法
 ========
 
-本用例覆盖十二类定向 condition 组合。
+本用例覆盖十三类定向 condition 组合。
 
 一、覆盖 AxiReorder.sv:1736 缺失的 condition 组合：
 --
@@ -244,6 +244,30 @@ local signals = require "dut.signals"
 -- 3. 覆盖采样后，依次完成原 entry63、entry0 和新 entry62 的下游 AR，随后
 --    返回全部剩余 R。reset 只用于场景开始前初始化空闲仲裁器，不取消任何
 --    未完成事务。
+--
+-- 十三、覆盖 FastQueue_1.sv:72 缺失的子条件组合：
+--
+--   io_deq_ready & _driver_io_deq_valid
+--         1                  0
+--
+-- FastQueue_1 是 AxiReorder 内保存写数据的 wbitsq。该组合复用最终填表时的
+-- 第一笔合法写事务：
+--
+-- 1. 正常完成该事务的上游 AW/W 和下游 AW/W 握手。下游 W 握手后，wbitsq
+--    的 driver 已经出队并变空，因此 _driver_io_deq_valid=0；但尚未返回 B，
+--    对应写 entry 仍有效且 haveSendAW=1。
+--
+-- 2. FastQueue 的出队 payload 寄存器在空队列时保留刚出队的 entry 编号，
+--    因而 AxiReorder 的 _GEN_132 仍读取到该 entry 的 haveSendAW=1。此时单独
+--    拉高下游 io_slv_w_ready，使 FastQueue 的
+--
+--      io_deq_ready = _GEN_132 & io_slv_w_ready = 1
+--
+--    同时 driver 仍为空，稳定得到缺失的 (1,0)。因为 io_slv_w_valid=0，
+--    该周期不会产生额外 W 握手。
+--
+-- 3. 保持目标组合跨过完整时钟沿后撤销 WREADY。该事务继续由原流程保留，
+--    最终通过正常 B 响应结束；整个过程不使用 force/deposit 或 reset 清理。
 --]]
 
 local clock = dut.clock:chdl()
@@ -254,6 +278,9 @@ local wq_enq_ready = core["_wq_io_enq_ready"]:chdl()
 local wbitsq_deq_valid = core["_wbitsq_io_deq_valid"]:chdl()
 local wbitsq_deq_entry = core["_wbitsq_io_deq_bits_entry"]:chdl()
 local wbitsq_deq_entry_have_sent_aw = core["_GEN_132"]:chdl()
+local wbitsq_fastqueue = core.wbitsq
+local wbitsq_io_deq_ready = wbitsq_fastqueue.io_deq_ready:chdl()
+local wbitsq_driver_deq_valid = wbitsq_fastqueue["_driver_io_deq_valid"]:chdl()
 local awinfo_63_nid_done = core["_awinfo_63_nid_done_T_126"]:chdl()
 local aw_b_id_2f_condition = core["_GEN_113"]:chdl()
 local aw_b_id_32_condition = core["_GEN_116"]:chdl()
@@ -800,14 +827,59 @@ local function accept_slv_w(transaction)
     wait_negedge()
 end
 
-local function allocate_and_hold_write(transaction, expected_entry, is_target, cover_wready_condition)
+local function cover_fastqueue1_empty_driver_ready_condition(transaction, expected_entry)
+    -- W 已经正常出队，但 B 尚未返回，写 entry 及其 haveSendAW 仍保持为 1。
+    -- FastQueue 的空 driver 保留刚出队的 payload，因此 _GEN_132 仍指向该 entry。
+    assert_equal(wbitsq_deq_valid:get(), 0, transaction.name .. " wbitsq empty after W")
+    assert_equal(wbitsq_driver_deq_valid:get(), 0, "FastQueue_1.sv:72 driver valid")
+    assert_equal(wbitsq_deq_entry:get(), expected_entry, transaction.name .. " retained W entry")
+    assert_equal(
+        signals.dbg_aw.entries[expected_entry].valid:get(),
+        1,
+        transaction.name .. " entry retained before B"
+    )
+    assert_equal(
+        signals.dbg_aw.entries[expected_entry].have_sent:get(),
+        1,
+        transaction.name .. " haveSendAW after downstream AW"
+    )
+    assert_equal(wbitsq_deq_entry_have_sent_aw:get(), 1, "FastQueue line72 retained _GEN_132")
+
+    -- 空队列继续声明 READY 是合法的；VALID=0 保证这一拍不会产生 W 握手。
+    dut.io_slv_w_ready:set_imm(1)
+    settle_combination()
+
+    assert_equal(wbitsq_io_deq_ready:get(), 1, "FastQueue_1.sv:72 io_deq_ready")
+    assert_equal(wbitsq_driver_deq_valid:get(), 0, "FastQueue_1.sv:72 _driver_io_deq_valid")
+    assert_equal(dut.io_slv_w_valid:get(), 0, "no downstream WVALID with empty wbitsq")
+
+    -- 保持 io_deq_ready/_driver_io_deq_valid=1/0 跨过完整时钟沿供覆盖器采样。
+    env.wait_cycles(1)
+    finish_handshake_edge()
+    assert_equal(wbitsq_io_deq_ready:get(), 1, "FastQueue line72 sampled io_deq_ready")
+    assert_equal(wbitsq_driver_deq_valid:get(), 0, "FastQueue line72 sampled driver valid")
+    assert_equal(wbitsq_deq_valid:get(), 0, transaction.name .. " wbitsq remains empty")
+
+    dut.io_slv_w_ready:set_imm(0)
+    wait_negedge()
+
+    print(
+        "Covered FastQueue_1.sv:72 subcondition row " ..
+        "io_deq_ready/_driver_io_deq_valid = 1/0"
+    )
+end
+
+local function allocate_and_hold_write(transaction, expected_entry, is_target, cover_wready_conditions)
     accept_mst_aw(transaction, expected_entry, is_target)
     accept_mst_w(transaction)
-    if cover_wready_condition then
+    if cover_wready_conditions then
         cover_wbitsq_ready_before_downstream_aw(transaction, expected_entry)
     end
     accept_slv_aw(transaction, expected_entry)
     accept_slv_w(transaction)
+    if cover_wready_conditions then
+        cover_fastqueue1_empty_driver_ready_condition(transaction, expected_entry)
+    end
 
     assert_entry_valid(
         expected_entry,
@@ -1454,6 +1526,7 @@ local function task_condition_coverage()
     wait_negedge()
 
     for entry = 0, LAST_ENTRY do
+        -- entry0 同时覆盖下游 AW 前的 AxiReorder:41756 和 W 出队后的 FastQueue_1:72。
         allocate_and_hold_write(initial_transactions[entry], entry, false, entry == 0)
     end
     assert_all_entries(1, "full-table layout")
