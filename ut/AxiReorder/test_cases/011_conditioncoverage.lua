@@ -6,7 +6,7 @@ local signals = require "dut.signals"
 实现方法
 ========
 
-本用例覆盖十类定向 condition 组合。
+本用例覆盖十一类定向 condition 组合。
 
 一、覆盖 AxiReorder.sv:1736 缺失的 condition 组合：
 --
@@ -207,6 +207,25 @@ local signals = require "dut.signals"
 -- BVALID=1、BID=6'h3c 一个完整周期，覆盖 (0,1)；随后保持 payload 不变并
 -- 拉高 BREADY 完成握手，最后用新事务重新占用 entry60，恢复满表状态。
 --
+-- 十一、覆盖 RRArbiter64_UInt0.sv:136 缺失的子条件组合：
+--
+--   io_in_63_valid & (ctrl_validMask_grantMask_lastGrant != 6'h3f)
+--          1                              0
+--
+-- 1. reset 后 lastGrant=0。保持下游 ARREADY=0，以 64 个不同 ID 的上游 AR
+--    填满 entry0..63，使所有 entry 的 nid=0、haveSendAR=0。
+--
+-- 2. 依次允许 entry1..63 完成下游 AR 握手。entry63 握手后 lastGrant=63，
+--    但它的 haveSendAR=1，所以此时 io_in_63_valid=0。
+--
+-- 3. 合法返回 entry63 的单拍 R，将 entry63 释放；保持下游 ARREADY=0，再发送
+--    一笔不同 ID 的新 AR。由于 entry0..62 仍占用，新请求只能分配到 entry63。
+--    新 entry63 的 valid/nid/haveSendAR=1/0/0，所以 io_in_63_valid=1；同时没有
+--    新的下游 AR 握手，lastGrant 仍为63，稳定得到缺失的 (1,0)。
+--
+-- 4. 覆盖采样后继续完成 entry0 和新 entry63 的下游 AR，再返回全部剩余 R，
+--    使所有读事务正常结束，不依赖 force/deposit 或 reset 取消事务。
+--
 -- 整个过程仅通过合法 AXI valid/ready 握手和 AXI reset 推进，不
 -- force/deposit DUT 内部信号，因此 condition 覆盖来自真实可达状态。
 --]]
@@ -223,6 +242,9 @@ local awinfo_63_nid_done = core["_awinfo_63_nid_done_T_126"]:chdl()
 local aw_b_id_2f_condition = core["_GEN_113"]:chdl()
 local aw_b_id_32_condition = core["_GEN_116"]:chdl()
 local aw_b_id_3c_condition = core["_GEN_126"]:chdl()
+local ar_rr_arbiter = core.selSendAR_arb
+local ar_rr_input_63_valid = ar_rr_arbiter.io_in_63_valid:chdl()
+local ar_rr_last_grant = ar_rr_arbiter.ctrl_validMask_grantMask_lastGrant:chdl()
 local TIMEOUT = 200
 local LAST_ENTRY = 63
 
@@ -319,6 +341,12 @@ local blocked_read_when_full = {
     name = "condition coverage AR blocked by full read table",
     id = 0x180,
     addr = 0x30000,
+}
+
+local rr_line136_replacement = {
+    name = "RRArbiter line136 replacement entry63",
+    id = 0x181,
+    addr = 0x31000,
 }
 
 local initial_transactions = {}
@@ -814,6 +842,99 @@ local function send_r_response(transaction, entry, before_handshake)
     )
 end
 
+local function cover_rr_arbiter_line136_subcondition()
+    driver.drive {
+        io_slv_ar_ready = 0,
+        io_mst_r_ready = 1,
+        io_slv_aw_ready = 0,
+        io_slv_w_ready = 0,
+        io_mst_b_ready = 0,
+    }
+    clear_mst_ar()
+    clear_slv_r()
+    wait_negedge()
+
+    assert_equal(ar_rr_last_grant:get(), 0, "RRArbiter line136 reset lastGrant")
+
+    -- 下游 AR 被阻塞，64 笔不同 ID 的请求按最低空闲项填满 entry0..63。
+    for entry = 0, LAST_ENTRY do
+        accept_mst_ar(read_transactions[entry], entry)
+    end
+
+    assert_equal(ar_rr_input_63_valid:get(), 1, "RRArbiter line136 initial io_in_63_valid")
+    assert_equal(ar_rr_last_grant:get(), 0, "RRArbiter line136 lastGrant before arbitration")
+
+    -- lastGrant=0 且全部 entry 可发送时，轮询顺序为 entry1..63。
+    -- 每次只开放一拍 ARREADY，避免 entry63 后继续回绕握手 entry0。
+    for entry = 1, LAST_ENTRY do
+        assert_equal(
+            signals.dbg_ar.selected_entry:get(),
+            entry,
+            string.format("RRArbiter line136 selected entry%d", entry)
+        )
+        accept_slv_ar(read_transactions[entry], entry)
+        assert_equal(
+            ar_rr_last_grant:get(),
+            entry,
+            string.format("RRArbiter line136 lastGrant after entry%d", entry)
+        )
+    end
+
+    assert_equal(ar_rr_last_grant:get(), 63, "RRArbiter line136 lastGrant reached entry63")
+    assert_equal(ar_rr_input_63_valid:get(), 0, "entry63 no longer requests after downstream AR")
+
+    -- entry63 已合法发出下游 AR，现在返回末拍 R 释放它；R 不改变 lastGrant。
+    send_r_response(read_transactions[63], 63)
+    assert_equal(ar_rr_last_grant:get(), 63, "RRArbiter line136 lastGrant retained after R")
+
+    -- entry0..62 仍占用，因此新 AR 只能重新分配到 entry63。
+    -- ARREADY 保持为 0，使新 entry63 不会在同一场景内再次发往下游。
+    accept_mst_ar(rr_line136_replacement, 63)
+    settle_combination()
+
+    assert_equal(signals.dbg_ar.entries[63].valid:get(), 1, "line136 replacement valid")
+    assert_equal(signals.dbg_ar.entries[63].nid:get(), 0, "line136 replacement nid")
+    assert_equal(signals.dbg_ar.entries[63].have_sent:get(), 0, "line136 replacement haveSendAR")
+    assert_equal(ar_rr_input_63_valid:get(), 1, "RRArbiter64_UInt0.sv:136 operand 1")
+    assert_equal(ar_rr_last_grant:get(), 63, "RRArbiter64_UInt0.sv:136 operand 2 is false")
+    assert_equal(signals.dbg_ar.selected_entry:get(), 0, "line136 wrap-around chooses entry0")
+
+    -- 保持 io_in_63_valid/lastGrant = 1/63 跨过一个完整时钟沿，覆盖子条件 10。
+    env.wait_cycles(1)
+    finish_handshake_edge()
+    wait_negedge()
+    assert_equal(ar_rr_input_63_valid:get(), 1, "RRArbiter line136 sampled operand 1")
+    assert_equal(ar_rr_last_grant:get(), 63, "RRArbiter line136 sampled lastGrant")
+
+    print(
+        "Covered RRArbiter64_UInt0.sv:136 subcondition row " ..
+        "io_in_63_valid/(lastGrant != 63) = 1/0"
+    )
+
+    -- 完成尚未发送的 entry0 和新 entry63 的下游 AR，然后返回全部剩余 R。
+    accept_slv_ar(read_transactions[0], 0)
+    accept_slv_ar(rr_line136_replacement, 63)
+
+    for entry = 0, 62 do
+        send_r_response(read_transactions[entry], entry)
+    end
+    send_r_response(rr_line136_replacement, 63)
+
+    for entry = 0, LAST_ENTRY do
+        assert_equal(
+            signals.dbg_ar.entries[entry].valid:get(),
+            0,
+            string.format("RRArbiter line136 cleanup entry%d", entry)
+        )
+    end
+
+    dut.io_mst_r_ready:set_imm(0)
+    dut.io_slv_ar_ready:set_imm(0)
+    clear_mst_ar()
+    clear_slv_r()
+    wait_negedge()
+end
+
 local function assert_all_entries(expected, description)
     for entry = 0, LAST_ENTRY do
         assert_entry_valid(
@@ -1195,6 +1316,7 @@ end
 local function task_condition_coverage()
     cover_all_ar_nid_decrement_conditions()
     cover_ar_should_send_63_invalid_condition()
+    cover_rr_arbiter_line136_subcondition()
     cover_all_aw_nid_decrement_conditions()
 
     -- Use direct, deterministic channel driving.  Each retained entry has
