@@ -6,7 +6,7 @@ local signals = require "dut.signals"
 实现方法
 ========
 
-本用例覆盖八类定向 condition 组合。
+本用例覆盖九类定向 condition 组合。
 
 一、覆盖 AxiReorder.sv:1736 缺失的 condition 组合：
 --
@@ -189,6 +189,15 @@ local signals = require "dut.signals"
 -- entry47 的真实 B 握手，再撤销 BVALID。最后发一笔新事务重新占用 entry47，
 -- 恢复满表布局，避免影响后续第 1931 行的既有覆盖场景。
 --
+-- 九、覆盖 AxiReorder.sv:1906 缺失的 condition 组合：
+--
+--   _awinfo_63_nid_done_T_126 & (io_slv_b_bits_id[5:0] == 6'h32)
+--              0                              1
+--
+-- 复用第 1900 行的合法 B 响应流程，但目标改为 entry50：先以 BREADY=0 保持
+-- BVALID=1、BID=6'h32 一个完整周期，得到 (0,1)；再保持 BID 不变并拉高
+-- BREADY 完成 B 握手。最后用新事务重新占用 entry50，恢复 64 项满表状态。
+--
 -- 整个过程仅通过合法 AXI valid/ready 握手和 AXI reset 推进，不
 -- force/deposit DUT 内部信号，因此 condition 覆盖来自真实可达状态。
 --]]
@@ -203,6 +212,7 @@ local wbitsq_deq_entry = core["_wbitsq_io_deq_bits_entry"]:chdl()
 local wbitsq_deq_entry_have_sent_aw = core["_GEN_132"]:chdl()
 local awinfo_63_nid_done = core["_awinfo_63_nid_done_T_126"]:chdl()
 local aw_b_id_2f_condition = core["_GEN_113"]:chdl()
+local aw_b_id_32_condition = core["_GEN_116"]:chdl()
 local TIMEOUT = 200
 local LAST_ENTRY = 63
 
@@ -266,6 +276,18 @@ local line1900_replacement = {
     id = 0x4F0,
     addr = 0x58000,
     data = 0x6200,
+}
+
+local line1906_replacement = {
+    name = "condition coverage line1906 replacement entry50",
+    id = 0x4F1,
+    addr = 0x58020,
+    data = 0x6201,
+}
+
+local b_condition_replacements = {
+    [47] = line1900_replacement,
+    [50] = line1906_replacement,
 }
 
 local blocked_when_full = {
@@ -1097,56 +1119,59 @@ local function cover_awq_enq_valid_full_table_condition()
     )
 end
 
-local function cover_aw_b_id_2f_condition()
-    -- entry47 的下游 AW/W 已完成，故 6'h2f 是合法的下游 B ID；
-    -- wbitsq 为空也证明前面的 W 已经完成，不会留下额外 W 响应。
-    assert_all_entries(1, "AxiReorder.sv:1900 B condition precondition")
-    assert_equal(
-        signals.dbg_aw.entries[47].have_sent:get(),
-        1,
-        "AxiReorder.sv:1900 entry47 haveSendAW"
-    )
-    assert_equal(wbitsq_deq_valid:get(), 0, "AxiReorder.sv:1900 wbitsq drained")
+local function cover_aw_b_id_condition(rtl_line, entry, condition_wire, replacement_transaction)
+    local line_name = string.format("AxiReorder.sv:%d", rtl_line)
 
-    -- BVALID=1、BREADY=0 使第 1 项为 0，同时不发生 B 握手或释放 entry47。
+    -- 目标 entry 的下游 AW/W 已完成，故 entry 编号是合法的下游 B ID；
+    -- wbitsq 为空也证明前面的 W 已经完成，不会留下额外 W 响应。
+    assert_all_entries(1, line_name .. " B condition precondition")
+    assert_equal(
+        signals.dbg_aw.entries[entry].have_sent:get(),
+        1,
+        line_name .. " target haveSendAW"
+    )
+    assert_equal(wbitsq_deq_valid:get(), 0, line_name .. " wbitsq drained")
+
+    -- BVALID=1、BREADY=0 使第 1 项为 0，同时不发生 B 握手或释放目标 entry。
     dut.io_mst_b_ready:set_imm(0)
-    set_slv_b(0x2F, true)
+    set_slv_b(entry, true)
     settle_combination()
 
-    assert_equal(awinfo_63_nid_done:get(), 0, "AxiReorder.sv:1900 condition term 1")
-    assert_equal(dut.io_slv_b_bits_id:get(), 0x2F, "AxiReorder.sv:1900 B ID term 2")
-    assert_equal(aw_b_id_2f_condition:get(), 0, "AxiReorder.sv:1900 condition result")
-    assert_equal(dut.io_slv_b_valid:get(), 1, "AxiReorder.sv:1900 BVALID")
-    assert_equal(dut.io_mst_b_valid:get(), 1, "AxiReorder.sv:1900 upstream BVALID")
-    assert_equal(dut.io_mst_b_ready:get(), 0, "AxiReorder.sv:1900 BREADY")
+    assert_equal(awinfo_63_nid_done:get(), 0, line_name .. " condition term 1")
+    assert_equal(dut.io_slv_b_bits_id:get(), entry, line_name .. " B ID term 2")
+    assert_equal(condition_wire:get(), 0, line_name .. " condition result")
+    assert_equal(dut.io_slv_b_valid:get(), 1, line_name .. " BVALID")
+    assert_equal(dut.io_mst_b_valid:get(), 1, line_name .. " upstream BVALID")
+    assert_equal(dut.io_mst_b_ready:get(), 0, line_name .. " BREADY")
 
     -- READY=0 时保持 BVALID、BID 和 BRESP 不变，覆盖 0/1 但不发生握手。
     env.wait_cycles(1)
     finish_handshake_edge()
-    assert_equal(awinfo_63_nid_done:get(), 0, "AxiReorder.sv:1900 sampled term 1")
-    assert_equal(aw_b_id_2f_condition:get(), 0, "AxiReorder.sv:1900 sampled condition")
-    assert_entry_valid(47, 1, "AxiReorder.sv:1900 entry47 retained before B handshake")
+    assert_equal(awinfo_63_nid_done:get(), 0, line_name .. " sampled term 1")
+    assert_equal(condition_wire:get(), 0, line_name .. " sampled condition")
+    assert_entry_valid(entry, 1, line_name .. " target retained before B handshake")
 
     -- 保持 VALID 和 payload，拉高 READY 完成这笔真实 B 响应，然后才撤销 VALID。
     dut.io_mst_b_ready:set_imm(1)
     settle_combination()
-    assert_equal(dut.io_slv_b_ready:get(), 1, "AxiReorder.sv:1900 downstream BREADY")
-    assert_equal(dut.io_mst_b_bits_id:get(), initial_transactions[47].id, "line1900 restored BID")
+    assert_equal(dut.io_slv_b_ready:get(), 1, line_name .. " downstream BREADY")
+    assert_equal(dut.io_mst_b_bits_id:get(), initial_transactions[entry].id, line_name .. " restored BID")
 
     env.wait_cycles(1)
     finish_handshake_edge()
     clear_slv_b()
     wait_negedge()
-    assert_entry_valid(47, 0, "AxiReorder.sv:1900 entry47 released after B")
+    assert_entry_valid(entry, 0, line_name .. " target released after B")
 
-    -- 重新占用 entry47，使后续测试仍从 64 项全满的既有状态继续。
-    allocate_and_hold_write(line1900_replacement, 47, false)
-    assert_all_entries(1, "AxiReorder.sv:1900 full table restored")
+    -- 重新占用目标 entry，使后续测试仍从 64 项全满的既有状态继续。
+    allocate_and_hold_write(replacement_transaction, entry, false)
+    assert_all_entries(1, line_name .. " full table restored")
 
-    print(
-        "Covered AxiReorder.sv:1900 condition row " ..
-        "_awinfo_63_nid_done_T_126/id_match = 0/1"
-    )
+    print(string.format(
+        "Covered AxiReorder.sv:%d condition row " ..
+        "_awinfo_63_nid_done_T_126/id_match = 0/1",
+        rtl_line
+    ))
 end
 
 local function task_condition_coverage()
@@ -1174,8 +1199,9 @@ local function task_condition_coverage()
     -- 写表已满但 wq 已排空，在释放 entry0 前覆盖第 41700 行。
     cover_awq_enq_valid_full_table_condition()
 
-    -- 在返回 entry0 的 B 之前覆盖第 1900 行的缺失 0/1 组合。
-    cover_aw_b_id_2f_condition()
+    -- 在返回 entry0 的 B 之前，分别用 entry47/50 覆盖第 1900/1906 行。
+    cover_aw_b_id_condition(1900, 0x2F, aw_b_id_2f_condition, line1900_replacement)
+    cover_aw_b_id_condition(1906, 0x32, aw_b_id_32_condition, line1906_replacement)
 
     -- Leave entry63 occupied but create a lower free entry.
     send_b_response(initial_transactions[0], 0)
@@ -1190,7 +1216,7 @@ local function task_condition_coverage()
 
     send_b_response(replacement, 0)
     for entry = 1, LAST_ENTRY do
-        local transaction = entry == 47 and line1900_replacement or initial_transactions[entry]
+        local transaction = b_condition_replacements[entry] or initial_transactions[entry]
         send_b_response(transaction, entry)
     end
     assert_all_entries(0, "final cleanup")
