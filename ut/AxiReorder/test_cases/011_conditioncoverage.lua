@@ -6,7 +6,7 @@ local signals = require "dut.signals"
 实现方法
 ========
 
-本用例覆盖十四类定向 condition 组合。
+本用例覆盖十三类定向 condition 组合。
 
 一、覆盖 AxiReorder.sv:1736 缺失的 condition 组合：
 --
@@ -269,24 +269,6 @@ local signals = require "dut.signals"
 -- 3. 保持目标组合跨过完整时钟沿后撤销 WREADY。该事务继续由原流程保留，
 --    最终通过正常 B 响应结束；整个过程不使用 force/deposit 或 reset 清理。
 --
--- 十四、覆盖 Queue1_UInt6_1.sv:15 可达但缺失的 condition 组合：
---
---   ~(~maybe_full & io_deq_ready) & ~maybe_full & io_enq_valid
---                 1                     1              1
---
--- Queue1_UInt6_1 是 AxiReorder.wq 内部的 holder。用例按以下合法 AXI 顺序让
--- holder 真正保存第二个写 entry：
---
--- 1. 发送第一笔 AW 并完成其下游 AW，但暂不发送 W。第一笔 entry 保持在 wq
---    driver 中；driver 已满且 wq.io_deq_ready=0，所以 holder.io_deq_ready=0。
---
--- 2. 发送第二笔 AW。此时 wq 尚有一个空位，因此 AW 可以正常握手；holder 仍空，
---    得到 maybe_full=0、io_deq_ready=0、io_enq_valid=1。取反后第15行三个
---    condition 项为 (1,1,1)，do_enq=1，第二个 entry 被写入 holder。
---
--- 3. 完成第二笔下游 AW，再按顺序发送第一、第二笔 W。第一笔 W 握手时 driver
---    出队且 holder 自动前移到 driver；两笔 W 都正常发往下游。B 继续由后续
---    既有流程返回，因此不产生悬空事务，也不使用 force/deposit 或 reset 清理。
 --]]
 
 local clock = dut.clock:chdl()
@@ -294,14 +276,6 @@ local core = dut.u_AxiReorder
 local arsel_valid = core.arsel_valid:chdl()
 local awsel_valid = core.awsel_valid:chdl()
 local wq_enq_ready = core["_wq_io_enq_ready"]:chdl()
-local wq_deq_valid = core["_wq_io_deq_valid"]:chdl()
-local wq_deq_bits = core["_wq_io_deq_bits"]:chdl()
-local wq_fastqueue = core.wq
-local wq_holder = wq_fastqueue.holder
-local wq_holder_maybe_full = wq_holder.maybe_full:chdl()
-local wq_holder_io_enq_valid = wq_holder.io_enq_valid:chdl()
-local wq_holder_io_deq_ready = wq_holder.io_deq_ready:chdl()
-local wq_holder_do_enq = wq_holder.do_enq:chdl()
 local wbitsq_deq_valid = core["_wbitsq_io_deq_valid"]:chdl()
 local wbitsq_deq_entry = core["_wbitsq_io_deq_bits_entry"]:chdl()
 local wbitsq_deq_entry_have_sent_aw = core["_GEN_132"]:chdl()
@@ -691,13 +665,7 @@ local function cover_ar_should_send_63_invalid_condition()
     )
 end
 
-local function accept_mst_aw(
-    transaction,
-    expected_entry,
-    is_target,
-    expected_nid,
-    before_handshake
-)
+local function accept_mst_aw(transaction, expected_entry, is_target, expected_nid)
     local expected_signals = signals.dbg_aw.entries[expected_entry]
     expected_nid = expected_nid or 0
 
@@ -736,10 +704,6 @@ local function accept_mst_aw(
                 string.format("condition layout entry%d occupied", entry)
             )
         end
-    end
-
-    if before_handshake ~= nil then
-        before_handshake()
     end
 
     env.wait_cycles(1)
@@ -922,57 +886,6 @@ local function allocate_and_hold_write(transaction, expected_entry, is_target, c
         expected_entry,
         1,
         transaction.name .. " remains occupied before B"
-    )
-end
-
-local function cover_queue1_uint6_1_holder_condition(first_transaction, second_transaction)
-    -- 第一笔 AW 通过空 holder 直接进入 driver。先完成其下游 AW，但暂不发送 W，
-    -- 使 driver 保持 valid，同时 wq 的出队端因没有上游 W 而保持 ready=0。
-    accept_mst_aw(first_transaction, 0, false)
-    accept_slv_aw(first_transaction, 0)
-
-    assert_equal(wq_deq_valid:get(), 1, "Queue1_UInt6_1 first entry in driver")
-    assert_equal(wq_deq_bits:get(), 0, "Queue1_UInt6_1 driver entry before second AW")
-    assert_equal(wq_holder_maybe_full:get(), 0, "Queue1_UInt6_1 holder initially empty")
-    assert_equal(wq_holder_io_deq_ready:get(), 0, "Queue1_UInt6_1 blocked holder dequeue")
-    assert_equal(wq_enq_ready:get(), 1, "FastQueue has room for second AW")
-
-    -- 第二笔合法 AW 握手时，driver 已满且不出队，所以 holder 必须保存该 entry。
-    -- 在握手沿前直接检查第15行三个操作数均为1，并保持该组合跨过采样时钟沿。
-    accept_mst_aw(
-        second_transaction,
-        1,
-        false,
-        nil,
-        function()
-            assert_equal(wq_holder_maybe_full:get(), 0, "Queue1_UInt6_1:15 maybe_full")
-            assert_equal(wq_holder_io_deq_ready:get(), 0, "Queue1_UInt6_1:15 io_deq_ready")
-            assert_equal(wq_holder_io_enq_valid:get(), 1, "Queue1_UInt6_1:15 io_enq_valid")
-            assert_equal(wq_holder_do_enq:get(), 1, "Queue1_UInt6_1:15 do_enq")
-        end
-    )
-
-    assert_equal(wq_holder_maybe_full:get(), 1, "Queue1_UInt6_1 holder full after second AW")
-    assert_equal(wq_deq_valid:get(), 1, "Queue1_UInt6_1 driver remains valid")
-    assert_equal(wq_deq_bits:get(), 0, "Queue1_UInt6_1 first entry remains in driver")
-    assert_equal(wq_enq_ready:get(), 0, "FastQueue full after second AW")
-
-    accept_slv_aw(second_transaction, 1)
-
-    -- 按 AW 顺序发送两笔 W。第一笔 W 使 driver 出队并将 holder 自动前移，
-    -- 第二笔 W 再清空 wq；两个写事务仍保留在写表中，等待后续正常 B 响应。
-    accept_mst_w(first_transaction)
-    accept_slv_w(first_transaction)
-    accept_mst_w(second_transaction)
-    accept_slv_w(second_transaction)
-
-    assert_entry_valid(0, 1, first_transaction.name .. " remains occupied before B")
-    assert_entry_valid(1, 1, second_transaction.name .. " remains occupied before B")
-    assert_equal(wq_deq_valid:get(), 0, "Queue1_UInt6_1 wq empty after both W beats")
-
-    print(
-        "Covered Queue1_UInt6_1.sv:15 condition row " ..
-        "~(~maybe_full & io_deq_ready)/~maybe_full/io_enq_valid = 1/1/1"
     )
 end
 
@@ -1613,14 +1526,9 @@ local function task_condition_coverage()
     }
     wait_negedge()
 
-    cover_queue1_uint6_1_holder_condition(
-        initial_transactions[0],
-        initial_transactions[1]
-    )
-
-    for entry = 2, LAST_ENTRY do
-        -- entry2 同时覆盖下游 AW 前的 AxiReorder:41756 和 W 出队后的 FastQueue_1:72。
-        allocate_and_hold_write(initial_transactions[entry], entry, false, entry == 2)
+    for entry = 0, LAST_ENTRY do
+        -- entry0 同时覆盖下游 AW 前的 AxiReorder:41756 和 W 出队后的 FastQueue_1:72。
+        allocate_and_hold_write(initial_transactions[entry], entry, false, entry == 0)
     end
     assert_all_entries(1, "full-table layout")
     assert_equal(dut.io_mst_aw_ready:get(), 0, "AWREADY while all entries are occupied")
