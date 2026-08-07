@@ -69,8 +69,54 @@ AXI AWINFO中的LOCK/REGION/PROT字段未被设计使用，按接口配置固定
             & io_mst_w_bits_last
 
       因此 io_deq_ready=1 必然要求 _driver_io_deq_valid=1。
-      当 _driver_io_deq_valid=0 时，io_deq_ready 必然为0，
-      子条件组合1/0在逻辑结构上不可达。
+      当 _driver_io_deq_valid=0 时，io_deq_ready 必然为0，子条件组合1/0在逻辑结构上不可达。
+
+  #### wire do_enq = ~(~maybe_full & io_deq_ready) & ~maybe_full & io_enq_valid;
+    
+    Exclude组合：
+      1 / 0 / 1
+
+    Exclude原因：
+      第二个操作数为0要求：
+
+        ~maybe_full = 0
+        maybe_full = 1
+
+      maybe_full=1表示FastQueue_1的holder已满。在所有合法队列状态下，
+      holder已满意味着driver也已占用FastQueue_1处于满状态：
+
+        waterline[2] = 1
+
+      因此FastQueue_1不再允许新的写数据入队：
+
+        io_enq_ready = ~waterline[2] = 0
+
+      在AxiReorder中，wbitsq的入队有效信号由合法的上游W握手产生：
+
+        io_mst_w_ready_0 =
+            _wbitsq_io_enq_ready
+          & _wq_io_deq_valid
+
+        wbitsq_io_enq_valid =
+            io_mst_w_ready_0
+          & io_mst_w_valid
+
+      当holder已满时：
+
+        _wbitsq_io_enq_ready = 0
+        io_mst_w_ready_0 = 0
+        wbitsq_io_enq_valid = 0
+
+      Queue1_AxiWEtrBundle_1的io_enq_valid直接连接到wbitsq_io_enq_valid，因此：
+
+        maybe_full = 1
+          =>
+        io_enq_valid = 0
+
+      这与组合1/0/1要求的io_enq_valid=1矛盾。
+
+      即使下游在当前周期接收一笔W，FastQueue_1也只能在时钟沿后更新队列状态并重新允许入队。
+      此时holder已经开始清空，~maybe_full将变为1，仍然无法形成1/0/1。
 
 # branch
 无
