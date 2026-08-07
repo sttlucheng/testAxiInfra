@@ -31,6 +31,7 @@ AXI AWINFO中的LOCK/REGION/PROT字段未被设计使用，按接口配置固定
 
     由于_arsel_T_1 = ~_arsel_res_bits_T且_arsel_res_bits_T = rvld，_arsel_res_bits_T_1 = rvld + 64'h1，所以_arsel_T_1[0] = ~rvld[0]、_arsel_res_bits_T_1[0]= rvld[0] + 1 = ~rvld[0],因此该condition中_arsel_T_1[0]和_arsel_res_bits_T_1[0]必须相同，需要exclaude不同的condition。
 
+  #### 
 
 # branch
 无
