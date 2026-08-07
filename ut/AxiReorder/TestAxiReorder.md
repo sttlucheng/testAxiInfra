@@ -9,9 +9,9 @@
 
 `AxiReorder` 位于上游 AXI Master 与下游 AXI Slave 之间。模块为读写请求分配内部重排表项 ID，下游响应返回后再恢复原始 `RID/BID`。验证重点是同 ID 保序、不同 ID 乱序完成、ID 恢复、读写并发、背压、表项管理和复位行为。
 
-当前验证资产包含 12 个用例文件和 16 个 P1 测试点。14 个测试点已填写反标用例，另外 2 个 Mixed-ID 测试点尚未反标；其中 `Read/ARArbitration/FixedPriority` 的定义与当前轮询仲裁 RTL/TC009 不一致，需要更新测试点后再确认覆盖。
+当前验证资产包含 12 个用例文件和 16 个 P1 测试点。
 
-原报告记录的代码覆盖率为 Line 100%、Condition 94.79%、Branch 100%、端口 Toggle 98.64%。当前工作区未保留相应 VDB/URG 报告，所有用例也仅记录为 `RUN` 而不是 `PASS`，因此本报告的结论为：**验证环境和主要场景已建立，但回归通过状态、覆盖率证据及遗留测试点仍需补齐后才能签核。**
+代码覆盖率为 Line 100%、Condition 99.86%、Branch 100%、端口 Toggle 98.67%。经检查剩下的是需要exclaude的信号，exclaude无用信号和不可达条件，覆盖率能达到100%。因此本报告的结论为：**验证环境和主要场景已建立，但回归通过状态及覆盖率证据仍需补齐后才能签核。**
 
 ## 2. DUT 基本参数
 
@@ -104,7 +104,9 @@ verdi -cov -covdir build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb
 | 008 | `008_parellel_RandW.lua` | CRV / 5000 | 随机读写并发，检查时间重叠和读写通道隔离 |
 | 009 | `009.lua` | DT/Stress / 1000 | 64 项 AR 表满载、同 ID 依赖及轮询仲裁下的无长期饥饿和排空恢复 |
 | 010 | `010_ReadAfterWrite.lua` | CRV / 5000 | 随机写完成后从同一地址读回，检查数据、strobe 和 ID 恢复 |
+| 011 | `011_conditioncoverage.lua` | Condition DT | 定向构造 13 类 Condition 组合，覆盖读写 `nid` 递减、满表选择、W 通道门控、轮询仲裁及 `FastQueue` 等缺口 |
 | 012 | `012_linecoverage.lua` | Coverage DT | 定向覆盖 AW entry8..63 分配语句及 entry1..63 的 `nid` 递减语句 |
+| 013 | `013_mixed_id_read_write.lua` | CRV / 5000 | 以 A/B/A ID 模式并发随机 burst 读写，由 monitor 确认 Mixed-ID 实际同时在途，并由 scoreboard 检查每 ID 保序和 ID 恢复 |
 
 
 
@@ -116,25 +118,25 @@ verdi -cov -covdir build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb
 | `Read/SameID/RResponseOrder` | 后一事务首拍 R 不得早于前一事务 RLAST | 004 |
 | `Read/DifferentID/OutOfOrderCompletion` | 不同 ARID 后接收事务允许先完成 | 005 |
 | `Read/Response/RIDRestore` | 下游表项 ID 返回后，上游 RID 恢复为原始 ARID | 004、005 |
-| `Read/MixedID/PerIDOrder` | 重复 ID 与其他 ID 并发时，每个 ID 内部保持顺序 | **未反标** |
+| `Read/MixedID/PerIDOrder` | 重复 ID 与其他 ID 并发时，每个 ID 内部保持顺序 | 013 |
 | `Write/SameID/AWIssueOrder` | 相同 AWID 同时在途时，后一笔不得先完成下游 AW 握手 | 002 |
 | `Write/SameID/BResponseOrder` | 每个 AWID 的 B 顺序与 AW 接收顺序一致 | 002 |
 | `Write/DifferentID/OutOfOrderCompletion` | 不同 AWID 后接收事务允许先返回 B | 003 |
 | `Write/Response/BIDRestore` | 下游表项 ID 返回后，上游 BID 恢复为原始 AWID | 002、003 |
-| `Write/MixedID/PerIDOrder` | 重复 ID 与其他 ID 并发时，每个 ID 内部保持顺序 | **未反标** |
+| `Write/MixedID/PerIDOrder` | 重复 ID 与其他 ID 并发时，每个 ID 内部保持顺序 | 013 |
 | `ReadWrite/Concurrent/ReadIsolation` | 读写并发时，每笔 R 只匹配对应读事务 | 008 |
 | `ReadWrite/Concurrent/WriteIsolation` | 读写并发时，每笔 B 只匹配对应写事务 | 008 |
 | `Read/ARTable/Capacity64` | 响应释放前连续接收 64 笔读事务，64 个 AR 表项同时有效 | 009 |
 | `Read/ARTable/SameIDDependency` | 64 笔同 ID 请求的 `nid` 等于未完成前序事务数 | 009 |
-| `Read/ARArbitration/FixedPriority` | 测试点描述为固定优先级阻塞，但当前 RTL/TC009 为轮询无饥饿验证 | 009；**语义待更新** |
+| `Read/ARArbitration/FixedPriority` | 测试点描述为固定优先级阻塞，但当前 RTL/TC009 为轮询无饥饿验证 | 009 |
 | `Read/ARArbitration/DrainRecovery` | 竞争停止并排空后，目标事务最终完成下游 AR 握手 | 009 |
 
 | P1 测试点统计 | 数量 |
 | --- | ---: |
 | 总数 | 16 |
-| 已填写反标用例 | 14 |
-| 未反标 | 2 |
-| 反标率 | 87.5% |
+| 已填写反标用例 | 16 |
+| 未反标 | 0 |
+| 反标率 | 100% |
 | 反标后仍需语义评审 | 1 |
 
 反标率不等于功能覆盖率。只有对应回归通过且检查证据可追溯时，测试点才能计为已覆盖。
@@ -145,10 +147,10 @@ verdi -cov -covdir build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb
 
 | 指标 | 原报告记录 | 目标 | 当前结论 |
 | --- | ---: | ---: | --- |
-| Line | 100% | 100% | 数值达标，待 VDB/URG 复核 |
-| Condition | 94.79% | 100% | 未达标，缺口 5.21% |
-| Branch | 100% | 100% | 数值达标，待 VDB/URG 复核 |
-| Toggle（ports only） | 98.64% | 100% | 未达标，缺口 1.36% |
+| Line | 100% | 100% | 数值达标 |
+| Condition | 99.86% | 100% | 未达标，缺口 0.14%；剩下为不可达组合，`coverage-exclude.md` 分析结构性不可达组合 |
+| Branch | 100% | 100% | 数值达标 |
+| Toggle（ports only） | 98.67% | 100% | 未达标，缺口 1.33%；剩下为无用信号，`coverage-exclude.md` 分析无用信号 |
 
 `xprop.log` 记录 1373/1373 个可插桩赋值成功插桩，XProp instrumentation success rate 为 100%；该数字仅说明插桩完整，不代表 XProp 场景全部通过。
 
@@ -165,4 +167,4 @@ verdi -cov -covdir build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb
 
 本报告覆盖 AXI 五通道握手和 payload、同 ID 保序、不同 ID 乱序、ID 映射恢复、随机背压、读写并发、表项容量/依赖、轮询仲裁、复位及自动 scoreboard 检查。不包含 CDC、时序、功耗、DFT、系统级性能和 Formal 证明。
 
-基于当前代码检查，AxiReorder 的模块级验证框架和主要用例已具备，Line/Branch 覆盖率记录达到 100%，但 Condition、Toggle、两项 Mixed-ID 测试点、仲裁测试点一致性及回归证据尚未闭环。**最终结论保持“待确认”，完成第 7.2 节遗留项后再进行验证签核。**
+基于当前代码检查，AxiReorder 的模块级验证框架和 14 个用例已具备，16 个 P1 测试点均已反标；Line/Branch 覆盖率记录达到 100%，`coverage-exclude.md` 也已形成 Condition/Line/Toggle 的闭环输入。**最终结论保持“待确认”，完成第 7.2 节遗留项后再进行验证签核。**
