@@ -118,5 +118,40 @@ AXI AWINFO中的LOCK/REGION/PROT字段未被设计使用，按接口配置固定
       即使下游在当前周期接收一笔W，FastQueue_1也只能在时钟沿后更新队列状态并重新允许入队。
       此时holder已经开始清空，~maybe_full将变为1，仍然无法形成1/0/1。
 
+  #### wire do_enq = ~(~maybe_full & io_deq_ready) & ~maybe_full & io_enq_valid;
+
+    Exclude组合：
+      1 / 0 / 1
+
+    Exclude原因：
+      第二个操作数为0要求：
+
+        ~maybe_full = 0
+        maybe_full = 1
+
+      maybe_full=1表示FastQueue的holder已满。此时队列处于满状态：
+
+        waterline[2] = 1
+        _wq_io_enq_ready = ~waterline[2] = 0
+
+      AxiReorder中wq的入队有效信号来自合法AW握手：
+
+        io_mst_aw_ready_0 =
+            awsel_valid
+          & _wq_io_enq_ready
+          & _awq_io_enq_ready
+
+        wq_io_enq_valid =
+            io_mst_aw_ready_0
+          & io_mst_aw_valid
+
+      当holder已满时，_wq_io_enq_ready=0，因此：
+
+        io_mst_aw_ready_0 = 0
+        wq_io_enq_valid = 0
+        holder.io_enq_valid = 0
+
+      这与组合1/0/1要求的io_enq_valid=1矛盾。
+
 # branch
 无
