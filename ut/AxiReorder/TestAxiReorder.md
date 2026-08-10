@@ -9,7 +9,7 @@
 
 `AxiReorder` 位于上游 AXI Master 与下游 AXI Slave 之间。模块为读写请求分配内部重排表项 ID，下游响应返回后再恢复原始 `RID/BID`。验证重点是同 ID 保序、不同 ID 乱序完成、ID 恢复、读写并发、背压、表项管理和复位行为。
 
-当前验证资产包含 12 个用例文件和 16 个 P1 测试点。
+当前验证资产包含 14 个用例文件和 16 个 P1 测试点。
 
 代码覆盖率为 Line 100%、Condition 99.86%、Branch 100%、端口 Toggle 98.67%。经检查剩下的是需要exclaude的信号，exclaude无用信号和不可达条件，覆盖率能达到100%。因此本报告的结论为：**验证环境和主要场景已建立，但回归通过状态及覆盖率证据仍需补齐后才能签核。**
 
@@ -156,12 +156,8 @@ verdi -cov -covdir build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb
 
 ### 7.2 遗留项
 
-1. 补充 `Read/MixedID/PerIDOrder` 和 `Write/MixedID/PerIDOrder` 的约束随机场景或现有日志反标。
-2. 将 `FixedPriority` 测试点更新为当前 RTL 的轮询仲裁目标，并重新评审 TC009 的检查标准。
-3. 补充每个 TC/Seed/LOOP 的 PASS/FAIL 日志及 scoreboard 收尾结果；`RUN` 不能作为通过结论。
-4. 恢复或归档 coverage VDB、URG 报告和 exclusion 文件，复核 94.79%/98.64% 的来源。
-5. 对未覆盖 condition/toggle 完成可达性分析；waiver 需设计和验证共同批准。
-6. 重新确认原报告引用的 TC011 证据，避免使用已不存在或过期的覆盖率分析。
+1. 补充每个 TC/Seed/LOOP 的 PASS/FAIL 日志及 scoreboard 收尾结果；`RUN` 不能作为通过结论。
+2. 恢复或归档 coverage VDB、URG 报告和 exclusion 文件，复核 94.79%/98.64% 的来源。
 
 ## 8. 验证范围与结论
 
