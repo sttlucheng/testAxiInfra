@@ -148,9 +148,9 @@ verdi -cov -covdir build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb
 | 指标 | 原报告记录 | 目标 | 当前结论 |
 | --- | ---: | ---: | --- |
 | Line | 100% | 100% | 数值达标 |
-| Condition | 99.86% | 100% | 未达标，缺口 0.14%；剩下为不可达组合，`coverage-exclude.md` 分析结构性不可达组合 |
+| Condition | 99.86% | 100% | 未达标，缺口 0.14%；剩下为不可达组合，`CoverageExclude.md` 分析结构性不可达组合 |
 | Branch | 100% | 100% | 数值达标 |
-| Toggle（ports only） | 98.67% | 100% | 未达标，缺口 1.33%；剩下为无用信号，`coverage-exclude.md` 分析无用信号 |
+| Toggle（ports only） | 98.67% | 100% | 未达标，缺口 1.33%；剩下为无用信号，`CoverageExclude.md` 分析无用信号 |
 
 `xprop.log` 记录 1373/1373 个可插桩赋值成功插桩，XProp instrumentation success rate 为 100%；该数字仅说明插桩完整，不代表 XProp 场景全部通过。
 
@@ -167,4 +167,4 @@ verdi -cov -covdir build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb
 
 本报告覆盖 AXI 五通道握手和 payload、同 ID 保序、不同 ID 乱序、ID 映射恢复、随机背压、读写并发、表项容量/依赖、轮询仲裁、复位及自动 scoreboard 检查。不包含 CDC、时序、功耗、DFT、系统级性能和 Formal 证明。
 
-基于当前代码检查，AxiReorder 的模块级验证框架和 14 个用例已具备，16 个 P1 测试点均已反标；Line/Branch 覆盖率记录达到 100%，`coverage-exclude.md` 也已形成 Condition/Line/Toggle 的闭环输入。**最终结论保持“待确认”，完成第 7.2 节遗留项后再进行验证签核。**
+基于当前代码检查，AxiReorder 的模块级验证框架和 14 个用例已具备，16 个 P1 测试点均已反标；Line/Branch 覆盖率记录达到 100%，`CoverageExclude.md` 也已形成 Condition/Line/Toggle 的闭环输入。**最终结论保持“待确认”，完成第 7.2 节遗留项后再进行验证签核。**
