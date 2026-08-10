@@ -62,5 +62,5 @@ g:with_tp "AXI" "Read" "MixedID" "PerIDOrder" {
     },
 
     priority = "P1",
-    info = "需约束重复 ID 与不同 ID 同时在途后再反标用例",
+    info = "013_mixed_id_read_write",
 }
