@@ -51,3 +51,29 @@ g:with_tp "AXI" "Read" "ARArbitration" "DrainRecovery" {
     priority = "P1",
     test_case = "009",
 }
+
+g:with_tp "AxiReorder" "SlaveEntryID" "ReadNoEarlyReuse" {
+    cond =
+        "Slave侧已完成一笔AR握手并取得重排表项ID；" ..
+        "延迟该表项对应的RVALID/RREADY/RLAST完成握手，" ..
+        "期间继续接收其他读事务",
+    check =
+        "在该表项的RLAST握手完成前，不得再次发生相同重排表项ID的Slave AR握手；" ..
+        "RLAST握手完成后，该表项ID允许被新读事务重新使用",
+    test_type = {stimulus = "None",check_type = "Assert",}
+    priority = "P0",
+    info = "这里的ID是AxiReorder读重排表项ID，不是上游ARID",
+}
+
+g:with_tp "AxiReorder" "SlaveEntryID" "WriteNoEarlyReuse" {
+    cond =
+        "Slave侧已完成一笔AW握手并取得重排表项ID；" ..
+        "允许对应W事务完成，但延迟该表项对应的BVALID/BREADY握手，" ..
+        "期间继续接收其他写事务",
+    check =
+        "在该表项的B握手完成前，不得再次发生相同重排表项ID的Slave AW握手；" ..
+        "B握手完成后，该表项ID允许被新写事务重新使用",
+    test_type = {stimulus = "None",check_type = "Assert",}
+    priority = "P0",
+    info = "这里的ID是AxiReorder写重排表项ID，不是上游AWID；读写表分别检查",
+}
