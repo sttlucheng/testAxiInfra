@@ -77,3 +77,124 @@ g:with_tp "AxiReorder" "SlaveEntryID" "WriteNoEarlyReuse" {
     priority = "P0",
     info = "这里的ID是AxiReorder写重排表项ID，不是上游AWID；读写表分别检查",
 }
+
+g:with_tp "Scoreboard" "Reset" "AddressChannel" "ReadyAfterReset" {
+    cond = "reset 连续经过至少两个有效采样周期",
+    check = "上游 ARREADY 与 AWREADY 均为 1，读写地址重排表可接收新事务",
+
+    test_type = {
+        stimulus = "None",
+        check_type = "Chk",
+    },
+
+    priority = "P0",
+    test_case = "001_reset",
+    info = "检测逻辑：scoreboard.lua 的 reset_auto_check 地址通道状态检查",
+}
+
+g:with_tp "Scoreboard" "Reset" "WriteDataChannel" "BlockedWithoutAW" {
+    cond = "reset 连续经过至少两个有效采样周期，且复位后尚未接收 AW",
+    check = "上游 WREADY 为 0，不接收没有对应写地址的 W 数据",
+
+    test_type = {
+        stimulus = "None",
+        check_type = "Chk",
+    },
+
+    priority = "P0",
+    test_case = "001_reset",
+    info = "检测逻辑：scoreboard.lua 的 reset_auto_check 写数据通道状态检查",
+}
+
+g:with_tp "Scoreboard" "Reset" "DownstreamRequest" "NoValid" {
+    cond = "reset 连续经过至少两个有效采样周期",
+    check = "下游 ARVALID、AWVALID、WVALID 均为 0，不发出读写请求",
+
+    test_type = {
+        stimulus = "None",
+        check_type = "Chk",
+    },
+
+    priority = "P0",
+    test_case = "001_reset",
+    info = "检测逻辑：scoreboard.lua 的 reset_auto_check 下游请求静默检查",
+}
+
+g:with_tp "Scoreboard" "Reset" "UpstreamResponse" "NoValid" {
+    cond = "reset 连续经过至少两个有效采样周期，且下游响应输入保持无效",
+    check = "上游 RVALID、BVALID 均为 0，不产生读写响应",
+
+    test_type = {
+        stimulus = "None",
+        check_type = "Chk",
+    },
+
+    priority = "P0",
+    test_case = "001_reset",
+    info = "检测逻辑：scoreboard.lua 的 reset_auto_check 上游响应静默检查",
+}
+
+g:with_tp "ScoreboardMonitor" "Reset" "OutstandingState" "Clear" {
+    cond = "存在未完成读写事务时进入 reset，随后释放 reset 并发起新事务",
+    check = "复位前保存的通道期望、读写事务和 Slave 表项占用记录全部取消，不与复位后事务交叉匹配",
+
+    test_type = {
+        stimulus = "None",
+        check_type = "Assert",
+    },
+
+    priority = "P0",
+    info = "检测逻辑：scoreboard.lua 的复位队列重建与 monitor.lua 的 outstanding 状态清空",
+}
+
+g:with_tp "Monitor" "InternalAR" "SendEligibility" "CanSend" {
+    cond = "下游 ARVALID 为 1，AR 仲裁器选中一个读重排表项",
+    check = "选中表项必须同时满足 valid=1、nid=0、have_sent=0",
+
+    test_type = {
+        stimulus = "None",
+        check_type = "Assert",
+    },
+
+    priority = "P0",
+    info = "检测逻辑：monitor.lua 的 check_internal 读表项 can_send 断言",
+}
+
+g:with_tp "Monitor" "InternalAR" "SelectedEntry" "IDMatch" {
+    cond = "下游 ARVALID 为 1，AR 仲裁器已经给出 selected_entry",
+    check = "下游 ARID 等于 selected_entry，发送事务来自仲裁器选中的读表项",
+
+    test_type = {
+        stimulus = "None",
+        check_type = "Assert",
+    },
+
+    priority = "P0",
+    info = "检测逻辑：monitor.lua 的 check_internal 下游 ARID 断言",
+}
+
+g:with_tp "Monitor" "InternalAW" "DependencyGate" "HeadNID" {
+    cond = "写事务队首有效，监测队首表项 nid 与下游 AWVALID",
+    check = "仅当队首表项 nid=0 时下游 AWVALID 为 1；nid 非 0 时下游 AWVALID 为 0",
+
+    test_type = {
+        stimulus = "None",
+        check_type = "Assert",
+    },
+
+    priority = "P0",
+    info = "检测逻辑：monitor.lua 的 check_internal 写队首依赖门控断言",
+}
+
+g:with_tp "Monitor" "InternalAW" "HeadEntry" "IDMatch" {
+    cond = "写事务队首有效且下游 AWVALID 为 1",
+    check = "下游 AWID 等于 head_entry，发送事务来自当前写队首表项",
+
+    test_type = {
+        stimulus = "None",
+        check_type = "Assert",
+    },
+
+    priority = "P0",
+    info = "检测逻辑：monitor.lua 的 check_internal 下游 AWID 断言",
+}

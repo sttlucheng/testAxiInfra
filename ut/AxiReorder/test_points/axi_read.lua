@@ -64,3 +64,44 @@ g:with_tp "AXI" "Read" "MixedID" "PerIDOrder" {
     priority = "P1",
     info = "013_mixed_id_read_write",
 }
+
+g:with_tp "Scoreboard" "Read" "ARChannel" "PayloadMatch" {
+    cond = "上游 AR 完成握手，随后对应读事务在下游 AR 通道完成握手",
+    check =
+        "下游 ARADDR、ARLEN、ARSIZE、ARBURST、ARLOCK、ARCACHE、ARPROT、" ..
+        "ARQOS、ARREGION 与已接收的上游读事务逐字段匹配",
+
+    test_type = {
+        stimulus = "None",
+        check_type = "Chk",
+    },
+
+    priority = "P1",
+    info = "检测逻辑：scoreboard.lua 的 AR 非顺序事务匹配；下游 ARID 为重排表项 ID，另行检查",
+}
+
+g:with_tp "Scoreboard" "Read" "RChannel" "PayloadMatch" {
+    cond = "下游 R 通道完成握手，随后对应响应在上游 R 通道完成握手",
+    check = "上游 RDATA、RRESP、RLAST 与已接收的下游 R 响应逐字段匹配",
+
+    test_type = {
+        stimulus = "None",
+        check_type = "Chk",
+    },
+
+    priority = "P1",
+    info = "检测逻辑：scoreboard.lua 的 R 非顺序响应匹配；RID 恢复由既有 RIDRestore 测试点覆盖",
+}
+
+g:with_tp "Scoreboard" "Read" "Completion" "NoPendingTransaction" {
+    cond = "测试用例结束并调用自动检查收尾逻辑",
+    check = "所有已接收的 AR 请求均已匹配下游 AR，且对应读事务均已通过 RLAST 完成",
+
+    test_type = {
+        stimulus = "None",
+        check_type = "Chk",
+    },
+
+    priority = "P0",
+    info = "检测逻辑：scoreboard.lua 的 finish_auto_check 读事务及 AR/R 期望项清空检查",
+}
