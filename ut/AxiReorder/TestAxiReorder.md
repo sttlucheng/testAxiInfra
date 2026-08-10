@@ -7,15 +7,13 @@
 
 ## 1. 验证概述
 
-`AxiReorder` 位于上游 AXI Master 与下游 AXI Slave 之间。模块为读写请求分配内部重排表项 ID，下游响应返回后再恢复原始 `RID/BID`。验证重点是同 ID 保序、不同 ID 乱序完成、ID 恢复、读写并发、背压、表项管理和复位行为。
+`AxiReorder` 位于 AXIXbar 上游，用于处理可能发生同ID请求去往不同 Slave 造成的乱序返回。模块为读写请求分配内部重排表项 ID，响应返回后再恢复原始 `RID/BID`。验证重点是同 ID 保序、不同 ID 乱序完成、ID 恢复、读写并发、背压、表项管理和复位行为。
 
-当前验证资产包含 14 个用例文件和 16 个 P1 测试点。
+当前验证资产包含 14 个用例文件、 13 个 P0 测试点和 21 个 P1 测试点。
 
 代码覆盖率为 Line 100%、Condition 99.86%、Branch 100%、端口 Toggle 98.67%。经检查剩下的是需要exclaude的信号，exclaude无用信号和不可达条件，覆盖率能达到100%。因此本报告的结论为：**验证环境和主要场景已建立，但回归通过状态及覆盖率证据仍需补齐后才能签核。**
 
 ## 2. DUT 基本参数
-
-参数来自 `AxiParams()` 默认值、`AxiReorderTop` 生成配置及 `AxiReorder.scala`。
 
 | 参数 | 值 | 说明 |
 | --- | ---: | --- |
@@ -59,6 +57,11 @@ test_cases -> driver/AXI4Master -> io_mst -> AxiReorder -> io_slv -> AXI4Memory
 | `test_points/*.lua` | 功能/微架构测试点及用例反标关系 |
 
 公共随机种子由 `SEED` 指定，未设置时为 `1`。Driver 最多管理 64 个并发事务，单事务超时为 2,000,000 周期；AXI Master 和 Memory 均可插入随机延迟，Memory 可乱序返回 `R/B` 并注入四类 AXI 响应码。
+
+todo  AXImaster，slave参数
+
+todo scoreboard对比表
+| | |
 
 ## 4. 验证流程
 
@@ -112,7 +115,7 @@ verdi -cov -covdir build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb
 
 ## 6. 测试点说明
 
-| 测试点 | 场景与检查标准 | 反标用例 |
+| 测试点 | 场景与检查标准 | 反标用例/检查载体 |
 | --- | --- | --- |
 | `Read/SameID/ARIssueOrder` | 相同 ARID 同时在途时，后一笔不得先完成下游 AR 握手 | 004 |
 | `Read/SameID/RResponseOrder` | 后一事务首拍 R 不得早于前一事务 RLAST | 004 |
@@ -130,16 +133,38 @@ verdi -cov -covdir build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb
 | `Read/ARTable/SameIDDependency` | 64 笔同 ID 请求的 `nid` 等于未完成前序事务数 | 009 |
 | `Read/ARArbitration/FixedPriority` | 测试点描述为固定优先级阻塞，但当前 RTL/TC009 为轮询无饥饿验证 | 009 |
 | `Read/ARArbitration/DrainRecovery` | 竞争停止并排空后，目标事务最终完成下游 AR 握手 | 009 |
+| `AxiReorder/SlaveEntryID/ReadNoEarlyReuse` | Slave 接收使用某个读重排表项 ID 的 AR 后，在该表项对应的 `RVALID && RREADY && RLAST` 握手完成前，不得再次接收相同表项 ID 的 AR；完成后允许合法复用 | 公共 monitor 常开断言 |
+| `AxiReorder/SlaveEntryID/WriteNoEarlyReuse` | Slave 接收使用某个写重排表项 ID 的 AW 后，在该表项对应的 `BVALID && BREADY` 握手完成前，不得再次接收相同表项 ID 的 AW；完成后允许合法复用 | 公共 monitor 常开断言 |
+| `Scoreboard/Read/ARChannel/PayloadMatch` | 下游 AR 握手时，除重排表项 ID 外的地址及控制字段必须与已接收的上游读事务逐字段匹配 | 公共 scoreboard 自动检查 |
+| `Scoreboard/Read/RChannel/PayloadMatch` | 上游 R 握手时，`RDATA/RRESP/RLAST` 必须与已接收的下游 R 响应逐字段匹配 | 公共 scoreboard 自动检查 |
+| `Scoreboard/Read/Completion/NoPendingTransaction` | 用例收尾时，AR/R 期望项及所有上游 ID 的未完成读事务必须清空 | 公共 scoreboard 收尾检查 |
+| `Scoreboard/Write/AWChannel/PayloadAndOrderMatch` | 下游 AW 握手顺序必须与上游 AW 接收顺序一致，除重排表项 ID 外的地址及控制字段必须逐字段匹配 | 公共 scoreboard 自动检查 |
+| `Scoreboard/Write/WChannel/PayloadAndOrderMatch` | 下游 W 握手顺序及 `WDATA/WSTRB/WLAST` 必须与上游 W 接收记录一致 | 公共 scoreboard 自动检查 |
+| `Scoreboard/Write/BChannel/ResponseMatch` | 上游 B 握手时，`BRESP` 必须与已接收的下游 B 响应匹配 | 公共 scoreboard 自动检查 |
+| `Scoreboard/Write/Completion/NoPendingTransaction` | 用例收尾时，AW/W/B 期望项及所有上游 ID 的未完成写事务必须清空 | 公共 scoreboard 收尾检查 |
+| `Scoreboard/Reset/AddressChannel/ReadyAfterReset` | reset 连续经过至少两个有效采样周期后，`ARREADY/AWREADY` 必须为 1 | 001；公共 scoreboard 自动检查 |
+| `Scoreboard/Reset/WriteDataChannel/BlockedWithoutAW` | reset 后尚未接收 AW 时，`WREADY` 必须为 0，不得接收无对应地址的 W 数据 | 001；公共 scoreboard 自动检查 |
+| `Scoreboard/Reset/DownstreamRequest/NoValid` | reset 期间下游 `ARVALID/AWVALID/WVALID` 必须均为 0 | 001；公共 scoreboard 自动检查 |
+| `Scoreboard/Reset/UpstreamResponse/NoValid` | reset 期间且下游响应输入无效时，上游 `RVALID/BVALID` 必须均为 0 | 001；公共 scoreboard 自动检查 |
+| `ScoreboardMonitor/Reset/OutstandingState/Clear` | 未完成事务中途复位时，scoreboard 期望队列、读写事务表及 monitor 表项占用记录必须清空，不得与复位后事务交叉匹配 | 公共 scoreboard/monitor 常开检查 |
+| `Monitor/InternalAR/SendEligibility/CanSend` | 下游 `ARVALID=1` 时，仲裁器选中表项必须满足 `valid=1、nid=0、have_sent=0` | 公共 monitor 常开断言 |
+| `Monitor/InternalAR/SelectedEntry/IDMatch` | 下游 `ARVALID=1` 时，`ARID` 必须等于仲裁器的 `selected_entry` | 公共 monitor 常开断言 |
+| `Monitor/InternalAW/DependencyGate/HeadNID` | 写队首有效时，仅 `nid=0` 允许下游 `AWVALID=1`，`nid!=0` 时必须保持为 0 | 公共 monitor 常开断言 |
+| `Monitor/InternalAW/HeadEntry/IDMatch` | 写队首有效且下游 `AWVALID=1` 时，`AWID` 必须等于 `head_entry` | 公共 monitor 常开断言 |
 
-| P1 测试点统计 | 数量 |
+| 测试点统计 | 数量 |
 | --- | ---: |
-| 总数 | 16 |
-| 已填写反标用例 | 16 |
-| 未反标 | 0 |
-| 反标率 | 100% |
+| 总数 | 34 |
+| P0 | 13 |
+| P1 | 21 |
+| 已关联测试用例 | 20 |
+| 公共 scoreboard 自动/收尾检查 | 12 |
+| 公共 monitor 常开断言 | 7 |
+| 未关联检查载体 | 0 |
+| 已关联检查载体比例 | 100% |
 | 反标后仍需语义评审 | 1 |
 
-反标率不等于功能覆盖率。只有对应回归通过且检查证据可追溯时，测试点才能计为已覆盖。
+测试用例、scoreboard 与 monitor 的检查载体统计允许重叠。反标或关联常开检查不等于功能覆盖率，只有对应回归通过、自动检查实际启用且检查证据可追溯时，测试点才能计为已覆盖。`SlaveEntryID` 及 monitor 内部检查中的 ID 均指 AxiReorder 读写重排表项 ID，而不是上游 `ARID/AWID`。`Read/ARArbitration/FixedPriority` 与当前轮询仲裁实现仍存在语义差异，需单独评审。
 
 ## 7. RTL Bug 修复记录
 
@@ -171,3 +196,4 @@ verdi -cov -covdir build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb
 本报告覆盖 AXI 五通道握手和 payload、同 ID 保序、不同 ID 乱序、ID 映射恢复、随机背压、读写并发、表项容量/依赖、轮询仲裁、复位及自动 scoreboard 检查。不包含 CDC、时序、功耗、DFT、系统级性能和 Formal 证明。
 
 基于当前代码检查，AxiReorder 的模块级验证框架和 14 个用例已具备，16 个 P1 测试点均已反标；Line/Branch 覆盖率记录达到 100%，`CoverageExclude.md` 也已形成 Condition/Line/Toggle 的闭环输入。**最终结论保持“待确认”，完成第 8.2 节遗留项后再进行验证签核。**
+
