@@ -141,11 +141,18 @@ verdi -cov -covdir build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb
 
 反标率不等于功能覆盖率。只有对应回归通过且检查证据可追溯时，测试点才能计为已覆盖。
 
-## 7. 覆盖率与遗留项
+## 7. RTL Bug 修复记录
 
-### 7.1 代码覆盖率
+| Bug ID | 发现方式 | 问题现象与根因 | 修复内容 |
+| --- | :--- | :--- | --- |
+| 1 | TC=009 | 固定优先级的仲裁器阻塞AR重排表表末事务 | 将固定优先级仲裁器替换成轮询仲裁器|
+| 2 | line覆盖率未达100% | nid更新逻辑中部分情况不可达，鉴定未死代码 | 更新nid更新逻辑 |
 
-| 指标 | 原报告记录 | 目标 | 当前结论 |
+## 8. 覆盖率与遗留项
+
+### 8.1 代码覆盖率
+
+| 指标 | 实际 | 目标 | 当前结论 |
 | --- | ---: | ---: | --- |
 | Line | 100% | 100% | 数值达标 |
 | Condition | 99.86% | 100% | 未达标，缺口 0.14%；剩下为不可达组合，`CoverageExclude.md` 分析结构性不可达组合 |
@@ -154,13 +161,13 @@ verdi -cov -covdir build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb
 
 `xprop.log` 记录 1373/1373 个可插桩赋值成功插桩，XProp instrumentation success rate 为 100%；该数字仅说明插桩完整，不代表 XProp 场景全部通过。
 
-### 7.2 遗留项
+### 8.2 遗留项
 
 1. 补充每个 TC/Seed/LOOP 的 PASS/FAIL 日志及 scoreboard 收尾结果；`RUN` 不能作为通过结论。
 2. 恢复或归档 coverage VDB、URG 报告和 exclusion 文件，复核 94.79%/98.64% 的来源。
 
-## 8. 验证范围与结论
+## 9. 验证范围与结论
 
 本报告覆盖 AXI 五通道握手和 payload、同 ID 保序、不同 ID 乱序、ID 映射恢复、随机背压、读写并发、表项容量/依赖、轮询仲裁、复位及自动 scoreboard 检查。不包含 CDC、时序、功耗、DFT、系统级性能和 Formal 证明。
 
-基于当前代码检查，AxiReorder 的模块级验证框架和 14 个用例已具备，16 个 P1 测试点均已反标；Line/Branch 覆盖率记录达到 100%，`CoverageExclude.md` 也已形成 Condition/Line/Toggle 的闭环输入。**最终结论保持“待确认”，完成第 7.2 节遗留项后再进行验证签核。**
+基于当前代码检查，AxiReorder 的模块级验证框架和 14 个用例已具备，16 个 P1 测试点均已反标；Line/Branch 覆盖率记录达到 100%，`CoverageExclude.md` 也已形成 Condition/Line/Toggle 的闭环输入。**最终结论保持“待确认”，完成第 8.2 节遗留项后再进行验证签核。**
