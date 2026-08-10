@@ -15,12 +15,86 @@ local cfg = require "cfg"
 local M = {}
 local subscribers = {}
 
+-- 下游Slave接口上的ID并不是上游AXI ID，而是AxiReorder分配的重排表项号。
+-- 读、写通路各自拥有一套独立的重排表，所以这里分别记录已被Slave接收、
+-- 但尚未收到最终响应的读表项和写表项。table的key是重排表项ID，value是
+-- 首次接收该事务的采样周期，既用于判断表项是否仍被占用，也用于断言报错时
+-- 给出前一笔事务的起始周期，方便从波形中定位问题。
+local slave_read_outstanding = {}
+local slave_write_outstanding = {}
+
 -- 订阅者列表。monitor是唯一读取DUT端口的模块；scoreboard、日志器等
 -- 消费者都从这里取得同一份采样结果，避免各模块自行读取端口而造成采样
 -- 时刻不一致。当前scoreboard.lua会在加载时注册M.observe回调。
 function M.subscribe(callback)
     assert(type(callback) == "function", "monitor subscriber must be a function")
     subscribers[#subscribers + 1] = callback
+end
+
+-- 判断一个AXI通道是否在当前采样周期完成了valid/ready握手。只有握手成功
+-- 才表示Slave真正接收了请求或DUT真正接收了响应；单独出现valid不能改变
+-- 在途状态，否则通道发生反压时会被重复记录。
+local function channel_fired(channel)
+    return channel.valid == 1 and channel.ready == 1
+end
+
+local function clear_slave_outstanding()
+    -- reset可能在任意事务阶段到来。复位时逐项清空monitor保存的状态，使复位
+    -- 释放后的第一笔事务不会与复位前已经取消的事务产生误报。
+    for id in pairs(slave_read_outstanding) do
+        slave_read_outstanding[id] = nil
+    end
+    for id in pairs(slave_write_outstanding) do
+        slave_write_outstanding[id] = nil
+    end
+end
+
+local function check_slave_entry_id_reuse(sample)
+    if sample.reset == 1 then
+        clear_slave_outstanding()
+        return
+    end
+
+    local slv_ar = sample.io.slv_ar
+    local slv_aw = sample.io.slv_aw
+    local slv_r = sample.io.slv_r
+    local slv_b = sample.io.slv_b
+
+    -- 先处理本拍完成的响应，再检查本拍新接收的地址请求。这样当旧事务的
+    -- RLAST/B与新事务在同一个时钟沿握手时，该表项已经完成，可以合法复用，
+    -- 不会被monitor误判成两笔未完成事务占用了同一表项。
+    if channel_fired(slv_r) and slv_r.bits.last == 1 then
+        slave_read_outstanding[slv_r.bits.id] = nil
+    end
+    if channel_fired(slv_b) then
+        slave_write_outstanding[slv_b.bits.id] = nil
+    end
+
+    -- AR握手后，对应读表项必须一直保持占用，直到相同表项ID的最后一个
+    -- R beat（RVALID && RREADY && RLAST）完成握手。若占用期间Slave再次
+    -- 接收相同表项ID，说明AxiReorder提前复用了尚未完成的读重排表项。
+    if channel_fired(slv_ar) then
+        local id = slv_ar.bits.id
+        local previous_cycle = slave_read_outstanding[id]
+        assert(previous_cycle == nil, string.format(
+            "slave AR accepted reorder entry id %s at cycle %s, but the read transaction accepted at cycle %s has not completed with an RLAST handshake",
+            tostring(id), tostring(sample.cycles), tostring(previous_cycle)
+        ))
+        slave_read_outstanding[id] = sample.cycles
+    end
+
+    -- AW握手后，对应写表项必须一直保持占用，直到相同表项ID的B响应完成
+    -- BVALID && BREADY握手。若在此之前再次接收相同表项ID，说明AxiReorder
+    -- 提前复用了尚未完成的写重排表项。读写表独立，因此不会跨AR/AW误报。
+    if channel_fired(slv_aw) then
+        local id = slv_aw.bits.id
+        local previous_cycle = slave_write_outstanding[id]
+        assert(previous_cycle == nil, string.format(
+            "slave AW accepted reorder entry id %s at cycle %s, but the write transaction accepted at cycle %s has not completed with a B handshake",
+            tostring(id), tostring(sample.cycles), tostring(previous_cycle)
+        ))
+        slave_write_outstanding[id] = sample.cycles
+    end
 end
 
 local function check_internal(sample)
@@ -245,6 +319,7 @@ function M.sample(cycles)
 
         
     end
+    check_slave_entry_id_reuse(sample)
     check_internal(sample)
 
 
