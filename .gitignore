@@ -18,6 +18,8 @@ ucli.key
 ut/AxiReorder/.bsp/
 ut/AxiReorder/.metals/
 ut/AxiReorder/.vscode/
+ut/AxiReorder/.codex/
+ut/AxiReorder/.agents/
 ut/AxiReorder/.xmake/
 ut/AxiReorder/build/
 ut/AxiReorder/fsdb2vcdLog/
