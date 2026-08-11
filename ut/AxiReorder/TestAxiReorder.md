@@ -261,6 +261,8 @@ verdi -cov -covdir build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb
 | Branch | 100% | 100% | 数值达标 |
 | Toggle（ports only） | 98.67% | 100% | 未达标，缺口 1.33%；剩下为无用信号，`CoverageExclude.md` 分析无用信号 |
 
+![AxiReorder 排除项处理后的代码覆盖率结果](AxiReorderCoverage.png)
+
 ### 8.2 遗留项
 
 ## 9. 验证范围与结论
