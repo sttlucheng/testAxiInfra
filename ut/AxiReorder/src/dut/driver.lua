@@ -158,6 +158,18 @@ local axi_master = AXI4Master(
             nr_aw_taskbuf = 64,
             nr_w_taskbuf = 64,
 
+            enable_ar_delay = false,
+            ar_delay_min = 1,
+            ar_delay_range = 5,
+
+            enable_aw_delay = false,
+            aw_delay_min = 1,
+            aw_delay_range = 5,
+
+            enable_w_delay = false,
+            w_delay_min = 1,
+            w_delay_range = 3,
+
             -- 反压
             enable_r_delay = true,
             r_delay_min = 20,
