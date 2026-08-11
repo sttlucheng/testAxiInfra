@@ -36,9 +36,28 @@
 
 验证数据流如下：
 
-```text
-test_cases -> driver/AXI4Master -> io_mst -> AxiReorder -> io_slv -> AXI4Memory
-                                      \-> monitor -> scoreboard -> 自动检查
+```mermaid
+flowchart LR
+    TC["test_cases/*.lua<br/>定向/约束随机场景"] -->|"读写任务、响应注入规则"| DRV["driver.lua"]
+    DRV -->|"创建并配置"| MASTER["AXI4MasterV2"]
+    DRV -->|"创建并配置"| MEMORY["AXI4Memory"]
+
+    MASTER -->|"AR/AW/W<br/>上游原始 ID"| MST["io_mst_*"]
+    MST --> DUT["AxiReorder"]
+    DUT --> SLV["io_slv_*"]
+    SLV -->|"AR/AW/W<br/>重排表项 ID"| MEMORY
+
+    MEMORY -->|"R/B<br/>重排表项 ID"| SLV
+    SLV --> DUT
+    DUT --> MST
+    MST -->|"R/B<br/>恢复原始 RID/BID"| MASTER
+
+    MST -.->|"逐周期采样"| MON["monitor.lua"]
+    SLV -.->|"逐周期采样"| MON
+    DUT -.->|"表项与仲裁内部信号"| MON
+    MON -->|"发布同一拍 sample"| SB["scoreboard.lua"]
+    SB -->|"valid && ready"| CHECK["payload、ID 映射、同 ID 顺序检查"]
+    SB -->|"finish_auto_check()"| FINISH["期望队列与未完成事务零遗留"]
 ```
 
 | 文件或目录 | 作用 |
@@ -58,10 +77,68 @@ test_cases -> driver/AXI4Master -> io_mst -> AxiReorder -> io_slv -> AXI4Memory
 
 公共随机种子由 `SEED` 指定，未设置时为 `1`。Driver 最多管理 64 个并发事务，单事务超时为 2,000,000 周期；AXI Master 和 Memory 均可插入随机延迟，Memory 可乱序返回 `R/B` 并注入四类 AXI 响应码。
 
-todo  AXImaster，slave参数
+### 3.1 AXI Master 参数配置
 
-todo scoreboard对比表
-| | |
+| 参数 | 当前值 | 作用 |
+| --- | ---: | --- |
+| `clock_chdl` | `dut.clock` | Master 事务状态机及五个 AXI 通道均按 DUT 时钟上升沿推进 |
+| `cycles_chdl` | `dut.cycles` | 提供日志时间戳和调试周期计数 |
+| `nr_task` | 64 | 最多同时管理 64 个未完成读写事务 |
+| `timeout_max` | 2,000,000 周期 | 单个事务等待 AR/AW/W 握手或 R/B 返回的最大周期数，超时触发断言 |
+| `nr_ar_taskbuf` | 64 | AR 通道待发送任务缓冲深度 |
+| `nr_aw_taskbuf` | 64 | AW 通道待发送任务缓冲深度 |
+| `nr_w_taskbuf` | 64 | W 通道待发送任务缓冲深度 |
+| `enable_ar/aw/w_delay` | `false`（默认值） | Master 不延迟 AR/AW/W valid 的发起 |
+| `enable_r_delay` | `true` | 在 Master 的 `RREADY` 上插入反压 |
+| `r_delay_min/range` | 20 / 20 | `RREADY` 随机等待 20 至 40 周期后拉高 |
+| `enable_b_delay` | `true` | 在 Master 的 `BREADY` 上插入反压 |
+| `b_delay_min/range` | 20 / 20 | `BREADY` 随机等待 20 至 40 周期后拉高 |
+| `random_delay` | `true` | 已启用通道使用 `min + [0, range]` 的随机时延 |
+| `enable_randomize_fields` | `true` | 通道事务结束后随机化非握手 payload，检查 DUT 是否错误依赖无效周期字段 |
+| `verbose` | `true` | 打印 Master Agent 事务及通道日志 |
+
+### 3.2 AXI Memory 参数配置
+
+| 参数 | 当前值 | 作用 |
+| --- | ---: | --- |
+| `clock_chdl` | `dut.clock` | 请求接收、存储访问及响应发送均按 DUT 时钟上升沿推进 |
+| `cycles_chdl` | `dut.cycles` | 计算响应就绪周期并提供日志时间戳 |
+| `data_width` | 256 bit | 每拍数据宽度为 32 Byte，对应常用 `AxSIZE=5` |
+| `enable_ar_delay` | `true` | 随机推迟 `ARREADY`，模拟读地址接收反压 |
+| `ar_delay_min/range` | 20 / 20 | AR 接收延迟为 20 至 40 周期 |
+| `enable_aw_delay` | `true` | 随机推迟 `AWREADY`，模拟写地址接收反压 |
+| `aw_delay_min/range` | 20 / 20 | AW 接收延迟为 20 至 40 周期 |
+| `enable_w_delay` | `true` | 随机推迟 `WREADY`，模拟写数据接收反压 |
+| `w_delay_min/range` | 20 / 20 | W 接收延迟为 20 至 40 周期 |
+| `enable_r_delay` | `true` | 推迟 `RVALID` 及读数据返回 |
+| `r_delay_min/range` | 100 / 100 | R 响应延迟为 100 至 200 周期 |
+| `enable_b_delay` | `true` | 推迟 `BVALID` 写响应返回 |
+| `b_delay_min/range` | 100 / 100 | B 响应延迟为 100 至 200 周期 |
+| `random_delay` | `true` | 所有已启用通道使用 `min + [0, range]` 的随机时延 |
+| `shuffle_r` | `true` | 多笔读事务待返回时随机选择可返回事务，允许不同 ID 的 R 乱序完成 |
+| `shuffle_b` | `true` | 多笔写事务待返回时随机选择可返回事务，允许不同 ID 的 B 乱序完成 |
+| `nr_r/w/b_taskbuf` | 64 / 64 / 64（默认值） | R、W、B 内部任务缓冲深度；driver 未覆盖组件默认值 |
+| `resp_hook` | 已启用 | 按通道、地址、ID、len、size、burst 匹配响应注入规则；未命中时返回 OKAY |
+| `enable_randomize_fields` | `true` | 响应完成或通道空闲时随机化非握手 payload |
+| `verbose` | `false` | 日常回归不打印 Memory 详细日志 |
+
+### 3.3 Scoreboard 对比逻辑
+
+Monitor 每周期统一采样 DUT 上下游接口，只有 `valid && ready` 时才将握手记录发布给 scoreboard。Scoreboard 根据 AXI 通道的顺序约束选择 FIFO 或非顺序匹配：
+
+| 对比项 | 期望记录来源 | 实际结果来源 | 对比字段/规则 | 匹配方式 |
+| --- | --- | --- | --- | --- |
+| AW 请求 | 上游 `mst_aw` 握手 | 下游 `slv_aw` 握手 | `addr/len/size/burst/lock/cache/prot/qos/region` 必须一致 | FIFO；下游 AW 顺序与上游接收顺序一致 |
+| W 数据 | 上游 `mst_w` 握手 | 下游 `slv_w` 握手 | `data/strb/last` 必须一致 | FIFO；逐 beat 顺序对比 |
+| AR 请求 | 上游 `mst_ar` 握手 | 下游 `slv_ar` 握手 | `addr/len/size/burst/lock/cache/prot/qos/region` 必须找到完整匹配项 | 非顺序；允许不同上游 ID 的读请求重排发送 |
+| R 响应 | 下游 `slv_r` 握手 | 上游 `mst_r` 握手 | `data/resp/last` 必须找到完整匹配项 | 非顺序；允许不同 ID 的读响应乱序完成 |
+| B 响应 | 下游 `slv_b` 握手 | 上游 `mst_b` 握手 | `resp` 必须找到匹配项 | 非顺序；允许不同 ID 的写响应乱序完成 |
+| 读 ID 与同 ID 顺序 | 上游 ARID、AR 字段和下游读表项 ID | 下游 R 表项 ID及上游 RID | 下游表项 ID 必须属于当前上游 ARID 的队首未完成事务；RLAST 后出队 | 每个上游 ARID 独立 FIFO |
+| 写 ID 与同 ID 顺序 | 上游 AWID、AW 字段和下游写表项 ID | 下游 B 表项 ID及上游 BID | 下游表项 ID 必须属于当前上游 AWID 的队首未完成事务；B 完成后出队 | 每个上游 AWID 独立 FIFO |
+| reset 状态 | reset 连续有效至少两个采样周期 | DUT 上下游握手状态 | `ARREADY/AWREADY=1`、`WREADY=0`，且下游请求与上游响应 valid 均为 0 | 周期断言，同时清空全部期望队列和读写事务表 |
+| 用例收尾 | 仿真期间累计的全部期望项 | `finish_auto_check()` | AW/W/AR/R/B 期望项以及每个 ID 的读写事务队列均必须为空 | 零遗留检查，发现未完成或未匹配事务即失败 |
+
+下游 `ARID/AWID` 是 AxiReorder 分配的重排表项 ID，并非上游原始 AXI ID，因此地址通道 payload 对比不直接比较 ID。Scoreboard 通过读写事务表建立“上游原始 ID－下游表项 ID”的关联，再分别检查 RID/BID 恢复和同 ID FIFO 顺序；不同 ID 之间允许乱序。任一字段不匹配、响应无对应请求、同 ID 顺序错误或用例结束仍有遗留事务都会立即触发断言。
 
 ## 4. 验证流程
 
