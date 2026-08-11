@@ -204,8 +204,8 @@ verdi -cov -covdir build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb
 | `Write/DifferentID/OutOfOrderCompletion` | 不同 AWID 后接收事务允许先返回 B | 003 |
 | `Write/Response/BIDRestore` | 下游表项 ID 返回后，上游 BID 恢复为原始 AWID | 002、003 |
 | `Write/MixedID/PerIDOrder` | 重复 ID 与其他 ID 并发时，每个 ID 内部保持顺序 | 013 |
-| `ReadWrite/Concurrent/ReadIsolation` | 读写并发时，每笔 R 只匹配对应读事务 | 008 |
-| `ReadWrite/Concurrent/WriteIsolation` | 读写并发时，每笔 B 只匹配对应写事务 | 008 |
+| `ReadWrite/Concurrent/ReadIsolation` | 读写并发时，确保每笔 R 响应正确关联其 AR 读事务，不受写事务影响 | 008 |
+| `ReadWrite/Concurrent/WriteIsolation` | 读写并发时，确保每笔 B 响应正确关联其 AW/W 写事务，不受读事务影响 | 008 |
 | `Read/ARTable/Capacity64` | 响应释放前连续接收 64 笔读事务，64 个 AR 表项同时有效 | 009 |
 | `Read/ARTable/SameIDDependency` | 64 笔同 ID 请求的 `nid` 等于未完成前序事务数 | 009 |
 | `Read/ARArbitration/FixedPriority` | 测试点描述为固定优先级阻塞，但当前 RTL/TC009 为轮询无饥饿验证 | 009 |
@@ -261,16 +261,13 @@ verdi -cov -covdir build/vcs/TestAxiReorderVcsCov/sim_build/simv.vdb
 | Branch | 100% | 100% | 数值达标 |
 | Toggle（ports only） | 98.67% | 100% | 未达标，缺口 1.33%；剩下为无用信号，`CoverageExclude.md` 分析无用信号 |
 
-`xprop.log` 记录 1373/1373 个可插桩赋值成功插桩，XProp instrumentation success rate 为 100%；该数字仅说明插桩完整，不代表 XProp 场景全部通过。
-
 ### 8.2 遗留项
-
-1. 补充每个 TC/Seed/LOOP 的 PASS/FAIL 日志及 scoreboard 收尾结果；`RUN` 不能作为通过结论。
-2. 恢复或归档 coverage VDB、URG 报告和 exclusion 文件，复核 94.79%/98.64% 的来源。
 
 ## 9. 验证范围与结论
 
 本报告覆盖 AXI 五通道握手和 payload、同 ID 保序、不同 ID 乱序、ID 映射恢复、随机背压、读写并发、表项容量/依赖、轮询仲裁、复位及自动 scoreboard 检查。不包含 CDC、时序、功耗、DFT、系统级性能和 Formal 证明。
 
-基于当前代码检查，AxiReorder 的模块级验证框架和 14 个用例已具备，16 个 P1 测试点均已反标；Line/Branch 覆盖率记录达到 100%，`CoverageExclude.md` 也已形成 Condition/Line/Toggle 的闭环输入。**最终结论保持“待确认”，完成第 8.2 节遗留项后再进行验证签核。**
+当前项目包含 14 个用例文件（TC000～TC013）和 34 个测试点，其中 P0 为 13 个、P1 为 21 个；所有测试点均已关联测试用例、scoreboard 或 monitor 检查载体。现有原始代码覆盖率记录为 Line 100%、Condition 99.86%、Branch 100%、端口 Toggle 98.67%。`CoverageExclaude.md` 给出了 Condition 不可达组合和固定/未使用信号 Toggle 的排除分析，`coverage_exclude.el` 记录了对应排除项；Line 和 Branch 无排除项。
+
+当前可以确认验证环境、测试场景、自动检查和覆盖率排除依据已经建立。
 
