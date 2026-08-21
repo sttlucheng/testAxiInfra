@@ -10,3 +10,6 @@
 [submodule "ut/AxiNarrowToWide/src/components"]
 	path = ut/AxiNarrowToWide/src/components
 	url = git@github.com:OpenXiangShan-Nanhu/TestZhuJiangUtils-AXI.git
+[submodule "ut/AxiNarrowToWide/test_points"]
+	path = ut/AxiNarrowToWide/test_points
+	url = git@github.com:OpenXiangShan-Nanhu/TestZhuJiangDocs.git
