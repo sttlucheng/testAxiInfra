@@ -25,6 +25,7 @@ if os.exists(path.join(AxiInfra_dir, "xmake.lua")) then includes(AxiInfra_dir) e
 local build_dir = path.join(prj_dir, "build")
 local build_BT_dir = path.join(build_dir, "rtl", "BT")
 local build_UTAR_dir = path.join(build_dir, "rtl", "UTAR")
+local build_UTANTW_dir = path.join(build_dir, "rtl", "UTANTW")
 
 local BT_tc_dir = path.join(prj_dir, "test_cases")
 local BT_src_dir = path.join(prj_dir, "src")
@@ -42,6 +43,22 @@ local UTAR_lua_path = table.concat({
     path.join(UTAR_dir, "?.lua"),
     path.join(UTAR_src_dir, "?.lua"),
     path.join(UTAR_axi_component_dir, "?.lua"),
+    ";",
+}, ";")
+
+local UTANTW_dir = path.join(prj_dir, "ut", "AxiNarrowToWide")
+local UTANTW_tc_dir = path.join(UTANTW_dir, "test_cases")
+local UTANTW_src_dir = path.join(UTANTW_dir, "src")
+local UTANTW_common_dir = path.join(UTANTW_src_dir, "common")
+local UTANTW_dut_dir = path.join(UTANTW_src_dir, "dut")
+local UTANTW_axi_component_dir = path.join(
+    UTANTW_src_dir, "components", "AXI", "test_zhujiang_utils", "src", "test_zhujiang_utils"
+)
+local UTANTW_lua_path = table.concat({
+    path.join(UTANTW_tc_dir, "?.lua"),
+    path.join(UTANTW_dir, "?.lua"),
+    path.join(UTANTW_src_dir, "?.lua"),
+    path.join(UTANTW_axi_component_dir, "?.lua"),
     ";",
 }, ";")
 
@@ -84,6 +101,21 @@ target("AxiReorderTop", function()
         os.tryrm(build_UTAR_dir)
         os.mkdir(build_UTAR_dir)
         os.cp(path.join(AxiInfra_dir, "build", "rtl_AxiReorder", "*"), build_UTAR_dir)
+    end)
+end)
+
+target("AxiNarrowToWideTop", function()
+    set_kind("phony")
+    set_default(false)
+    on_build(function()
+        import("core.base.task")
+        os.tryrm(path.join(AxiInfra_dir, "build", "rtl_AxiNarrowToWide"))
+        os.tryrm(path.join(AxiInfra_dir, "out", "*.dep"))
+        os.cd(AxiInfra_dir)
+        task.run("rtl", { ["main-function"] = "AxiNarrowToWide" })
+        os.tryrm(build_UTANTW_dir)
+        os.mkdir(build_UTANTW_dir)
+        os.cp(path.join(AxiInfra_dir, "build", "rtl_AxiNarrowToWide", "*"), build_UTANTW_dir)
     end)
 end)
 
@@ -194,6 +226,64 @@ end
 target("TestAxiReorder", function()
     set_default(true)
     TestAxiReorderCommon("TestAxiReorder")
+end)
+
+local function TestAxiNarrowToWideCommon(name)
+    add_rules("verilua")
+    add_toolchains("@vcs")
+
+    add_runenvs("LUA_PATH", UTANTW_lua_path)
+
+    add_files(
+        path.join(UTANTW_tc_dir, "*.lua"),
+        path.join(UTANTW_src_dir, "*.lua"),
+        path.join(UTANTW_common_dir, "*.lua"),
+        path.join(UTANTW_dut_dir, "*.lua"),
+        path.join(UTANTW_axi_component_dir, "*.lua"),
+        path.join(build_UTANTW_dir, "*.sv"),
+        path.join(build_UTANTW_dir, "verification", "*.sv"),
+        path.join(build_UTANTW_dir, "verification", "assert", "*.sv"),
+        path.join(build_UTANTW_dir, "verification", "assume", "*.sv"),
+        path.join(build_UTANTW_dir, "verification", "cover", "*.sv")
+    )
+    set_values("cfg.build_dir_name", name)
+    set_values("cfg.top", "AxiWidthCvt128To256")
+    set_values("cfg.user_cfg", path.join(UTANTW_src_dir, "cfg.lua"))
+    set_values("cfg.vcs_no_initreg", "1")
+    add_values("cfg.tb_gen_flags",
+        "+incdir+" .. path.join(build_UTANTW_dir, "verification"),
+        "+incdir+" .. path.join(build_UTANTW_dir, "verification", "assert"),
+        "+incdir+" .. path.join(build_UTANTW_dir, "verification", "assume"),
+        "+incdir+" .. path.join(build_UTANTW_dir, "verification", "cover"),
+        "--single-unit"
+    )
+    set_values("vcs.flags", "-xprop")
+    add_values("vcs.flags", "+define+ASSERT_VERBOSE_COND_=1", "+define+STOP_COND_=1")
+    add_values("vcs.flags",
+        "+incdir+" .. path.join(build_UTANTW_dir, "verification"),
+        "+incdir+" .. path.join(build_UTANTW_dir, "verification", "assert"),
+        "+incdir+" .. path.join(build_UTANTW_dir, "verification", "assume"),
+        "+incdir+" .. path.join(build_UTANTW_dir, "verification", "cover")
+    )
+    set_values("vcs.run_flags", "+vcs+lic+wait")
+
+    local TC = os.getenv("TC")
+    if TC then TC = TC:sub(1, 3) else TC = "000" end
+
+    local test_cases = os.files(path.join(UTANTW_tc_dir, "*.lua"))
+    for _, test_case in ipairs(test_cases) do
+        local test_case_file = path.filename(test_case)
+        if test_case_file:startswith(TC) then
+            add_runenvs("TC_NAME", path.basename(test_case_file))
+        end
+    end
+
+    set_values("cfg.lua_main", path.join(UTANTW_dir, "tc_main.lua"))
+end
+
+target("TestAxiNarrowToWide", function()
+    set_default(false)
+    TestAxiNarrowToWideCommon("TestAxiNarrowToWide")
 end)
 
 target("TestAxiReorderVcsCov", function()
