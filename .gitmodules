@@ -4,3 +4,6 @@
 [submodule "AxiInfra"]
 	path = AxiInfra
 	url = git@github.com:OpenXiangShan-Nanhu/AxiInfra.git
+[submodule "ut/AxiReorder/src/components/AXI/test_zhujiang_utils"]
+	path = ut/AxiReorder/src/components/AXI/test_zhujiang_utils
+	url = git@github.com:OpenXiangShan-Nanhu/TestZhuJiangUtils-AXI.git
