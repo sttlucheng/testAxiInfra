@@ -36,7 +36,7 @@ local UTAR_tc_dir = path.join(UTAR_dir, "test_cases")
 local UTAR_src_dir = path.join(UTAR_dir, "src")
 local UTAR_common_dir = path.join(UTAR_src_dir, "common")
 local UTAR_dut_dir = path.join(UTAR_src_dir, "dut")
-local UTAR_axi_component_dir = path.join(UTAR_src_dir, "components", "AXI", "test_zhujiang_utils")
+local UTAR_axi_component_dir = path.join(UTAR_src_dir, "components", "AXI", "test_zhujiang_utils","src","test_zhujiang_utils")
 local UTAR_lua_path = table.concat({
     path.join(UTAR_tc_dir, "?.lua"),
     path.join(UTAR_dir, "?.lua"),
