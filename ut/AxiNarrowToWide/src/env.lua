@@ -1,6 +1,22 @@
 local clock_reset = require "common.clock_reset"
+local signals = require "dut.signals"
+local monitor = require "dut.monitor"
+require "dut.scoreboard"
 
 local M = {}
+local has_monitor_task = false
+
+local function monitor_task()
+    local cycles = dut.cycles:get()
+    while true do
+        monitor.sample(cycles)
+        if cycles % 10000 == 0 then
+            print("Running...", cycles)
+        end
+        signals.clock:posedge()
+        cycles = cycles + 1
+    end
+end
 
 function M.drive_default()
     dut.io_mst_aw_valid:set(0)
@@ -54,6 +70,13 @@ end
 
 function M.wait_cycles(n)
     clock_reset.wait_cycles(n)
+end
+
+function M.launch_monitor_task()
+    if not has_monitor_task then
+        has_monitor_task = true
+        scheduler:append_task(nil, "axi_narrow_to_wide_monitor", monitor_task, true)
+    end
 end
 
 function M.test_success()

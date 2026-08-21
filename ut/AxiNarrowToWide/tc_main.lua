@@ -1,4 +1,5 @@
 local env = require "env"
+local scoreboard = require "dut.scoreboard"
 local tc_name = assert(os.getenv "TC_NAME", "failed to get TC_NAME")
 
 fork {
@@ -16,10 +17,13 @@ fork {
         local tc = require(tc_name)
 
         env.dut_reset()
+        env.launch_monitor_task()
         for _, task in ipairs(tc.tasks) do
             task()
         end
 
+        env.wait_cycles(1)
+        scoreboard.finish_auto_check()
         env.test_success()
         sim.finish()
     end,
