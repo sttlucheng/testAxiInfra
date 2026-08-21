@@ -1,12 +1,17 @@
 ## 编译和工具生成目录
 .xmake/
 .metals/
+.bsp/
 .claude/
+.codex/
+.agents/
+.agent/
 .vscode/
 .luajit_pro/
 build/
 verdiLog/
 vdCovLog/
+fsdb2vcdLog/
 
 # 编辑器临时文件
 *.swp
@@ -14,22 +19,11 @@ vdCovLog/
 novas.conf
 novas.rc
 ucli.key
+.fsm.sch.verilog.xml
+\[VERILUA\]
+\[verilua.LuaUtils\]
+coverage_exclude.el
 
-ut/AxiReorder/.bsp/
-ut/AxiReorder/.metals/
-ut/AxiReorder/.vscode/
-ut/AxiReorder/.codex/
-ut/AxiReorder/.agents/
-ut/AxiReorder/.xmake/
-ut/AxiReorder/build/
-ut/AxiReorder/fsdb2vcdLog/
-ut/AxiReorder/vdCovLog/
-ut/AxiReorder/verdiLog/
+# 模块特有的生成文件
 ut/AxiReorder/ChiselTemplate/out/
 ut/AxiReorder/ChiselTemplate/.scalafmt.conf
-
-ut/AxiReorder/.fsm.sch.verilog.xml
-ut/AxiReorder/novas.conf
-ut/AxiReorder/novas.rc
-ut/AxiReorder/ucli.key
-ut/AxiReorder/coverage_exclude.el

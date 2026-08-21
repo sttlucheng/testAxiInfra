@@ -7,9 +7,9 @@
 [submodule "ut/AxiReorder/src/components/AXI/test_zhujiang_utils"]
 	path = ut/AxiReorder/src/components/AXI/test_zhujiang_utils
 	url = git@github.com:OpenXiangShan-Nanhu/TestZhuJiangUtils-AXI.git
-[submodule "ut/AxiNarrowToWide/src/components"]
-	path = ut/AxiNarrowToWide/src/components
+[submodule "ut/AxiNarrowToWide/src/components/AXI/test_zhujiang_utils"]
+	path = ut/AxiNarrowToWide/src/components/AXI/test_zhujiang_utils
 	url = git@github.com:OpenXiangShan-Nanhu/TestZhuJiangUtils-AXI.git
-[submodule "ut/AxiNarrowToWide/test_points"]
-	path = ut/AxiNarrowToWide/test_points
+[submodule "ut/AxiNarrowToWide/TestZhuJiangDocs"]
+	path = ut/AxiNarrowToWide/TestZhuJiangDocs
 	url = git@github.com:OpenXiangShan-Nanhu/TestZhuJiangDocs.git
