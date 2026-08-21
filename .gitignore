@@ -9,6 +9,7 @@
 .vscode/
 .luajit_pro/
 build/
+.regression/
 verdiLog/
 vdCovLog/
 fsdb2vcdLog/
@@ -16,6 +17,8 @@ fsdb2vcdLog/
 # 编辑器临时文件
 *.swp
 *.log
+*.vcd
+*.fsdb
 novas.conf
 novas.rc
 ucli.key

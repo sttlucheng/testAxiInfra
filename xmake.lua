@@ -22,6 +22,9 @@ local prj_dir = os.projectdir()
 local AxiInfra_dir = path.join(prj_dir, "AxiInfra")
 if os.exists(path.join(AxiInfra_dir, "xmake.lua")) then includes(AxiInfra_dir) end
 
+local UTANTW_docs_xmake = path.join(prj_dir, "ut", "AxiNarrowToWide", "TestZhuJiangDocs", "xmake.lua")
+if os.exists(UTANTW_docs_xmake) then includes(UTANTW_docs_xmake) end
+
 local build_dir = path.join(prj_dir, "build")
 local build_BT_dir = path.join(build_dir, "rtl", "BT")
 local build_UTAR_dir = path.join(build_dir, "rtl", "UTAR")
